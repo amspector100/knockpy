@@ -278,6 +278,15 @@ def blockdiag_to_blocks(M, groups):
 		blocks.append(M[full_inds].copy())
 	return blocks
 
+def blocks_to_blockdiag(blocks, block_inds):
+	"""
+	Given a list of square matrices, arranges them into a permuted block-diagonal
+	matrix according to block_inds.
+	:param blocks: A list of m block matrices.
+	:param block_inds: A p-length numpy array with values from 1 to
+	returns: p x p block-diagonal numpy array. 
+	"""
+
 def block_diag_sparse(*arrs):
 	""" Given a list of 2D torch tensors, creates a sparse block-diagonal matrix
 	See https://github.com/pytorch/pytorch/issues/31942

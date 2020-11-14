@@ -6,7 +6,7 @@ import scipy.linalg
 
 from .utilities import calc_group_sizes, preprocess_groups
 from .utilities import shift_until_PSD, scale_until_PSD
-from . import utilities
+from . import utilities, smatrix
 
 
 ### Base Knockoff Class and Gaussian Knockoffs
@@ -21,7 +21,7 @@ class KnockoffGenerator():
 
         raise NotImplementedError()
 
-    def S(self):
+    def fetch_S(self):
         """ Fetches knockoff S-matrix."""
 
         raise NotImplementedError
@@ -101,7 +101,12 @@ def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies, verbos
    # Calculate MX knockoff moments...
     n, p = X.shape
     invSigma_S = np.dot(invSigma, S)
-    mu_k = X - np.dot(X - mu, invSigma_S)  # This is a bottleneck??
+    print(X.shape)
+    print(mu.shape)
+    hm = X - mu.reshape(1, -1)
+    np.dot(hm, invSigma_S)
+
+    mu_k = X - np.dot(X - mu.reshape(1, -1), invSigma_S)  # This is a bottleneck??
     Vk = 2 * S - np.dot(S, invSigma_S)
 
     # Account for numerical errors
@@ -202,16 +207,18 @@ class GaussianSampler(KnockoffGenerator):
         self.n = X.shape[0]
         self.p = X.shape[1]
         if mu is None:
-            mu = X.mean(axis=1)
+            mu = X.mean(axis=0)
         self.mu = mu
         if Sigma is None:
-            Sigma = utilities.estimate_covariance(X, tol=1e-2)
+            Sigma, invSigma = utilities.estimate_covariance(
+                X, tol=1e-2
+            )
         self.Sigma = Sigma
         if invSigma is None:
             invSigma = utilities.chol2inv(Sigma)
         self.invSigma = invSigma
         if groups is None:
-            groups = np.arange(1, p+1, 1)
+            groups = np.arange(1, self.p+1, 1)
         self.groups = groups
         self.sample_tol = sample_tol
         self.verbose = verbose
@@ -223,11 +230,11 @@ class GaussianSampler(KnockoffGenerator):
         if self.S is None:
             if self.verbose:
                 print(f"Computing knockoff S matrix...")
-            self.S = compute_S_matrix(
+            self.S = smatrix.compute_S_matrix(
                 Sigma=self.Sigma, groups=self.groups, method=self.method, **self.kwargs
             )
 
-    def S(self):
+    def fetch_S(self):
         return self.S
 
     def sample_knockoffs(self):
@@ -302,37 +309,38 @@ class FXSampler(KnockoffGenerator):
         self.X = X.copy()
         self.n = X.shape[0]
         self.p = X.shape[1]
-        if n < 2*p:
+        if self.n < 2*self.p:
             raise np.linalg.LinAlgError(
-                f"FX knockoffs can't be generated with n ({n}) < 2p ({2*p})"
+                f"FX knockoffs can't be generated with n ({self.n}) < 2p ({2*self.p})"
             )
 
         # Rescale 
         self.scale = np.sqrt(np.diag(np.dot(self.X.T, self.X)))
         self.X = self.X / self.scale.reshape(1, -1)
         self.Sigma = np.dot(self.X.T, self.X)
+        self.invSigma = utilities.chol2inv(self.Sigma)
 
         # Other parameters
         if groups is None:
-            groups = np.arange(1, p+1, 1)
+            groups = np.arange(1, self.p+1, 1)
         self.groups = groups
         self.sample_tol = sample_tol
         self.verbose = verbose
 
         # Save S information and possibly compute S matrix
         if S is not None:
-            S = S / np.outer(scale, scale)
+            S = S / np.outer(self.scale, self.scale)
         self.S = S
         self.method = method
         self.kwargs = kwargs
         if self.S is None:
             if self.verbose:
                 print(f"Computing knockoff S matrix...")
-            self.S = compute_S_matrix(
+            self.S = smatrix.compute_S_matrix(
                 Sigma=self.Sigma, groups=self.groups, method=self.method, **self.kwargs
             )
 
-    def S(self):
+    def fetch_S(self):
         """ Rescales S to the same scale as the initial X input """
         return self.S * np.outer(self.scale, self.scale)
 
@@ -340,10 +348,10 @@ class FXSampler(KnockoffGenerator):
         """ Samples knockoffs. returns n x p knockoff matrix."""
         self.check_PSD_condition(self.Sigma, self.S)
         self.knockoffs = produce_FX_gaussian_knockoffs(
-            X=X,
-            invSigma=invSigma,
-            S=S,
-            copies=copies,
-            scale=scale
+            X=self.X,
+            invSigma=self.invSigma,
+            S=self.S,
+            copies=1,
+            scale=self.scale
         )[:, :, 0]
         return self.knockoffs

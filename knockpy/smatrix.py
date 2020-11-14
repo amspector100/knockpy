@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.fcluster.hierarchy as hierarchy
+import scipy.cluster.hierarchy as hierarchy
 from . import mrc
 from . import mac
 from . import graphs
@@ -121,7 +121,7 @@ def compute_S_matrix(
 	(projected gradient descent).
 	:param max_block: The maximum block in the block-diagonal
 	approximation of Sigma.
-	:param n_processes: Number of parallel processes to use
+	:param num_processes: Number of parallel processes to use
 	if Sigma is approximated as a block-diagonal matrix. 
 	:param **kwargs: kwargs to one of the downstream
 	functions.
@@ -157,24 +157,29 @@ def compute_S_matrix(
 		else:
 			blocks = merge_groups(groups, max_block)
 		Sigma_blocks = mrc.blockdiag_to_blocks(Sigma, blocks)
+		group_blocks = []
+		for j in range(int(blocks.min()), int(blocks.max())+1):
+			group_blocks.append(utilities.preprocess_groups(groups[blocks == j]))
+		print(len(Sigma_blocks))
+		print(len(group_blocks))
 		# Recursive subcall for each block. Possibly use multiprocessing.
 		S_blocks = utilities.apply_pool(
 			func=compute_S_matrix,
 			constant_inputs={
-				'groups':groups,
 				'method':method,
 				'solver':solver,
 				'max_block':p,
 			},
-			inputs=Sigma_blocks,
-			n_processes=n_processes
+            Sigma=Sigma_blocks,
+            groups=group_blocks,
+            num_processes=num_processes
 		)
 		S = np.zeros((p,p))
 		block_id = 1
-		for block in blocks:
-			block_inds = np.where(groups == block_id)[0]
+		for Sigma_block, S_block in zip(Sigma_blocks, S_blocks):
+			block_inds = np.where(blocks == block_id)[0]
 			block_inds = np.ix_(block_inds, block_inds)
-			S[block_inds] = block
+			S[block_inds] = S_block
 			block_id += 1
 		return S * scale_matrix
 
@@ -194,7 +199,7 @@ def compute_S_matrix(
 		S = mrc.solve_maxent(
 			Sigma=Sigma, **kwargs
 		)
-	elif method == "sdp":
+	elif method == "sdp" or method == "asdp":
 		S = mac.solve_group_SDP(
 			Sigma,
 			groups,

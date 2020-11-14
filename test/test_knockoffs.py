@@ -4,7 +4,7 @@ import unittest
 from .context import knockpy
 from statsmodels.stats.moment_helpers import cov2corr
 
-from knockpy import utilities, graphs, knockoffs, mrc
+from knockpy import graphs, utilities, mac, mrc, smatrix, knockoffs
 
 
 class CheckSMatrix(unittest.TestCase):
@@ -69,7 +69,7 @@ class TestEquicorrelated(CheckSMatrix):
             for i in range(p):
                 V[i, i] = 1
             expected_gamma = min(1, 2*(1-rho))
-            gamma = knockoffs.calc_min_group_eigenvalue(
+            gamma = mac.calc_min_group_eigenvalue(
                 Sigma=V, groups=groups, 
             )
             np.testing.assert_almost_equal(
@@ -82,7 +82,7 @@ class TestEquicorrelated(CheckSMatrix):
         V = np.dot(V.T, V) + 0.1*np.eye(p)
         V = cov2corr(V)
         expected_gamma = min(1, 2*np.linalg.eigh(V)[0].min())
-        gamma = knockoffs.calc_min_group_eigenvalue(
+        gamma = mac.calc_min_group_eigenvalue(
             Sigma=V, groups=groups
         )
         np.testing.assert_almost_equal(
@@ -105,7 +105,7 @@ class TestEquicorrelated(CheckSMatrix):
         expected_S = expected_gamma*np.eye(p)
 
         # Equicorrelated
-        S = knockoffs.equicorrelated_block_matrix(Sigma=V, groups=groups)
+        S = mac.solve_equicorrelated(Sigma=V, groups=groups)
 
         # Test to make sure the answer is expected
         np.testing.assert_almost_equal(
@@ -125,7 +125,7 @@ class TestEquicorrelated(CheckSMatrix):
         # Create random groups
         groups = np.random.randint(1, p, size=(p))
         groups = utilities.preprocess_groups(groups)
-        S = knockoffs.equicorrelated_block_matrix(Sigma=V, groups=groups)
+        S = mac.solve_equicorrelated(Sigma=V, groups=groups)
 
         # Check S properties
         self.check_S_properties(V, S, groups)
@@ -144,7 +144,7 @@ class TestSDP(CheckSMatrix):
 
         # S matrix
         trivial_groups = np.arange(0, p, 1) + 1
-        S_triv = knockoffs.compute_S_matrix(
+        S_triv = smatrix.compute_S_matrix(
             Sigma=corr_matrix,
             groups=trivial_groups,
             method='sdp',
@@ -157,14 +157,15 @@ class TestSDP(CheckSMatrix):
         self.check_S_properties(corr_matrix, S_triv, trivial_groups)
 
         # Repeat for gaussian_knockoffs method
-        _, S_triv2 = knockoffs.gaussian_knockoffs(
+        ksampler = knockoffs.GaussianSampler(
             X=X,
             Sigma=corr_matrix,
             groups=trivial_groups, 
-            return_S=True,
             verbose=False,
             method='sdp',
         )
+        S_triv2 = ksampler.fetch_S()
+
         np.testing.assert_array_almost_equal(
             S_triv2, np.eye(p), decimal = 2, 
             err_msg = 'solve_group_SDP does not produce optimal S matrix (daibarber graphs)'
@@ -175,11 +176,12 @@ class TestSDP(CheckSMatrix):
         _,_,_,_, expected_out, _ = graphs.daibarber2016_graph(
             n = n, p = p, gamma = 0
         )
-        _, S_harder = knockoffs.gaussian_knockoffs(
+        ksampler = knockoffs.GaussianSampler(
             X = X, Sigma = corr_matrix, groups = groups, 
-            return_S = True, verbose = False,
+            verbose = False,
             method = 'sdp'
         )
+        S_harder = ksampler.fetch_S()
         np.testing.assert_almost_equal(
             S_harder, expected_out, decimal = 2,
             err_msg = 'solve_group_SDP does not produce optimal S matrix (daibarber graphs)'
@@ -187,15 +189,15 @@ class TestSDP(CheckSMatrix):
         self.check_S_properties(corr_matrix, S_harder, groups)
 
         # Repeat for ASDP
-        _, S_harder_ASDP = knockoffs.gaussian_knockoffs(
+        ksampler = knockoffs.GaussianSampler(
             X=X,
             Sigma=corr_matrix,
             groups=groups,
             method='ASDP',
-            return_S=True,
             verbose=False,
             max_block=10
         )
+        S_harder_ASDP = ksampler.fetch_S()
         np.testing.assert_almost_equal(
             S_harder_ASDP, expected_out, decimal = 2,
             err_msg = 'solve_group_ASDP does not produce optimal S matrix (daibarber graphs)'
@@ -209,7 +211,7 @@ class TestSDP(CheckSMatrix):
         p = 100
         rho = 0.8
         V = rho*np.ones((p,p)) + (1-rho)*np.eye(p)
-        S = knockoffs.solve_group_SDP(V, verbose=True)
+        S = mac.solve_group_SDP(V, verbose=True)
         expected = (2 - 2*rho) * np.eye(p)
         np.testing.assert_almost_equal(
             S, expected, decimal = 2,
@@ -219,7 +221,7 @@ class TestSDP(CheckSMatrix):
         # Repeat for scaled cov matrix
         scale = 5
         V = scale*V
-        S = knockoffs.compute_S_matrix(
+        S = smatrix.compute_S_matrix(
             Sigma=V, method='sdp', verbose=True
         )
         expected = (2 - 2*rho) * np.eye(p)
@@ -239,7 +241,7 @@ class TestSDP(CheckSMatrix):
 
         # Solve SDP
         for tol in [1e-3, 0.01, 0.02]:
-            S = knockoffs.compute_S_matrix(
+            S = smatrix.compute_S_matrix(
                 Sigma=V, 
                 groups=groups,
                 method='sdp', 
@@ -268,7 +270,7 @@ class TestSDP(CheckSMatrix):
 
         # Helper function
         def SDP_solver():
-            return knockoffs.solve_group_SDP(V, groups)
+            return mac.solve_group_SDP(V, groups)
 
         # Make sure the value error increases 
         self.assertRaisesRegex(
@@ -357,7 +359,7 @@ class TestMRCSolvers(CheckSMatrix):
         S_MVR = mrc.solve_mvr(Sigma=V, smoothing=smoothing)
         # Not implemented yet
         #S_ENT = mrc.solve_maxent(Sigma=V, smoothing=smoothing)
-        S_SDP = knockoffs.solve_SDP(Sigma=V, tol=1e-5)
+        S_SDP = mac.solve_SDP(Sigma=V, tol=1e-5)
         mvr_mean = np.diag(S_MVR).mean()
         sdp_mean = np.diag(S_SDP).mean()
         self.assertTrue(
@@ -492,7 +494,7 @@ class TestMRCSolvers(CheckSMatrix):
             )
 
             # Use SDP as baseline
-            init_S = knockpy.knockoffs.solve_group_SDP(Sigma, groups)
+            init_S = knockpy.mac.solve_group_SDP(Sigma, groups)
             sdp_mvr_loss = mrc.mvr_loss(Sigma, init_S)
 
             # Apply gradient solver
@@ -551,7 +553,7 @@ class TestMRCSolvers(CheckSMatrix):
             )
 
             # Use SDP as baseline
-            init_S = knockpy.knockoffs.solve_group_SDP(Sigma, groups)
+            init_S = knockpy.mac.solve_group_SDP(Sigma, groups)
             init_loss = mrc.mvr_loss(Sigma, init_S)
 
             # Apply gradient solver
@@ -611,17 +613,15 @@ class CheckValidKnockoffs(unittest.TestCase):
     ):
 
         # S matrix
-        all_knockoffs, S = knockoffs.gaussian_knockoffs(
+        ksampler = knockoffs.GaussianSampler(
             X=X,
             mu=mu,
             Sigma=Sigma,
-            return_S=True,
             verbose=True,
             **kwargs
         )
-
-        # Extract knockoffs
-        Xk = all_knockoffs[:, :, -1]
+        S = ksampler.fetch_S()
+        Xk = ksampler.sample_knockoffs()
 
         # Test knockoff mean
         if mu is None:
@@ -673,7 +673,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
         # Easiest test
         method1 = 'hello'
-        out1 = knockoffs.parse_method(method1, None, None)
+        out1 = smatrix.parse_method(method1, None, None)
         self.assertTrue(
             out1 == method1, 
             "parse method fails to return non-None methods"
@@ -682,7 +682,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
         # Default is mvr
         p = 1000
         groups = np.arange(1, p+1, 1)
-        out2 = knockoffs.parse_method(None, groups, p)
+        out2 = smatrix.parse_method(None, groups, p)
         self.assertTrue(
             out2 == 'mvr', 
             "parse method fails to return mvr by default"
@@ -690,7 +690,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
         # Otherwise SDP
         groups[-1] = 1
-        out2 = knockoffs.parse_method(None, groups, p)
+        out2 = smatrix.parse_method(None, groups, p)
         self.assertTrue(
             out2 == 'sdp', 
             "parse method fails to return SDP for grouped knockoffs"
@@ -699,7 +699,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
         # Otherwise ASDP
         p = 1001
         groups = np.ones(p)
-        out2 = knockoffs.parse_method(None, groups, p)
+        out2 = smatrix.parse_method(None, groups, p)
         self.assertTrue(
             out2 == 'asdp', 
             "parse method fails to return asdp for large p"
@@ -716,12 +716,13 @@ class TestKnockoffGen(CheckValidKnockoffs):
         S_bad = np.eye(p)
 
         def fdr_vio_knockoffs():
-            knockoffs.gaussian_knockoffs(
+            ksampler = knockoffs.GaussianSampler(
                 X=X, 
                 Sigma=corr_matrix,
                 S=S_bad,
                 verbose=False
             )
+            ksampler.sample_knockoffs()
 
         self.assertRaisesRegex(
             np.linalg.LinAlgError,
@@ -731,11 +732,10 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
         # Test FX knockoff violations
         def fx_knockoffs_low_n():
-            knockoffs.gaussian_knockoffs(
+            knockoffs.FXSampler(
                 X=X,
                 Sigma=corr_matrix,
                 S=None,
-                fixedX=True,
             )
 
         self.assertRaisesRegex(
@@ -761,15 +761,15 @@ class TestKnockoffGen(CheckValidKnockoffs):
         # Method 1: infer cov first
         V, _ = utilities.estimate_covariance(X, tol=1e-2)
         np.random.seed(110)
-        Xk1 = knockoffs.gaussian_knockoffs(
+        Xk1 = knockoffs.GaussianSampler(
             X=X, Sigma=V, method='sdp', max_epochs=1
-        )
+        ).sample_knockoffs()
 
         # Method 2: Infer during
         np.random.seed(110)
-        Xk2 = knockoffs.gaussian_knockoffs(
+        Xk2 = knockoffs.GaussianSampler(
             X=X, method='sdp', max_epochs=1
-        )
+        ).sample_knockoffs()
         np.testing.assert_array_almost_equal(
             Xk1, Xk2, 5, err_msg='Knockoff gen is inconsistent'
         )
@@ -800,15 +800,14 @@ class TestKnockoffGen(CheckValidKnockoffs):
             X,
             mu=mu,
             Sigma=V,
-            copies=1,
-            msg=f'ORACLE 3*AR1(rho=0.5)'
+            msg=f'ORACLE 4*AR1(rho=0.5)'
         )
 
         # Check validity for estimated cov matrix
+        print("Here now")
         self.check_valid_mxknockoffs(
             X,
-            copies=3,
-            msg=f'ESTIMATED 3*AR1(rho=0.5)'
+            msg=f'ESTIMATED 4*AR1(rho=0.5)'
         )
 
 
@@ -831,14 +830,12 @@ class TestKnockoffGen(CheckValidKnockoffs):
                         X,
                         mu=mu,
                         Sigma=corr_matrix,
-                        copies=copies,
                         msg=f'daibarber graph, rho = {rho}, gamma = {gamma}'
                     )
 
                     # Check validity for estimation
                     self.check_valid_mxknockoffs(
                         X,
-                        copies=copies,
                         msg=f'ESTIMATED daibarber graph, rho = {rho}, gamma = {gamma}'
                     )
 
@@ -857,19 +854,18 @@ class TestKnockoffGen(CheckValidKnockoffs):
                     )
                     # S matrix
                     trivial_groups = np.arange(0, p, 1) + 1
-                    all_knockoffs, S = knockoffs.gaussian_knockoffs(
+                    ksampler = knockoffs.FXSampler(
                         X=X, 
-                        fixedX=True,
-                        copies=int(gamma)+1,
                         method=method, 
-                        return_S=True,
                         verbose=False
                     )
+                    Xk = ksampler.sample_knockoffs()
+                    S = ksampler.fetch_S()
 
                     # Scale properly so we can calculate
                     scale = np.sqrt(np.diag(np.dot(X.T, X)).reshape(1, -1))
                     X = X / scale
-                    knockoff_copy = all_knockoffs[:, :, -1] / scale
+                    knockoff_copy = Xk / scale
                     S = S / np.outer(scale, scale)
 
                     # # Compute empirical (scaled) cov matrix
@@ -901,17 +897,15 @@ class TestKnockoffGen(CheckValidKnockoffs):
         X, y, beta, Q, V = knockpy.graphs.sample_data(
             method='qer', p=p, n=n, coeff_size=0.5, sparsity=0.5, 
         )
-        _, S1 = knockpy.knockoffs.gaussian_knockoffs(
+        ksampler1 = knockpy.knockoffs.FXSampler(
             X=X,
-            fixedX=True,
-            return_S=True,
         )
-        _, S2 = knockpy.knockoffs.gaussian_knockoffs(
+        S1 = ksampler1.fetch_S()
+        ksampler2 = knockpy.knockoffs.FXSampler(
             X=X,
-            fixedX=True,
-            return_S=True,
             S=S1,
         )
+        S2 = ksampler2.fetch_S()
         np.testing.assert_array_almost_equal(
             S1, S2, decimal=6,
             err_msg = f"Repeatedly passing S into/out of knockoff gen yields inconsistencies"
