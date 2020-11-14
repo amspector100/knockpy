@@ -1,0 +1,16 @@
+group_lasso==1.1.1
+setuptools==39.0.1
+numpy==1.17.4
+cvxpy==1.0.25
+matplotlib==3.1.0
+scipy==1.5.2
+scikit_learn==0.22
+statsmodels==0.10.1
+pyglmnet==1.1
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.4.0+cpu
+scikit-dsdp==0.0.1
+networkx==1.11
+tqdm==4.36.1
+cython==0.29.14
+git+git://github.com/jcrudy/choldate.git

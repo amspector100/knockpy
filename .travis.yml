@@ -1,0 +1,21 @@
+language: python
+python:
+  - 3.6
+before_install:
+  - python --version
+  - pip install -U pip
+  - pip install -U pytest-cov pytest
+  - pip install codecov
+  - sudo apt-get -y install libopenblas-dev
+  - sudo apt-get -y install libatlas-base-dev 
+addons:
+  apt:
+    update: true
+install:
+  - pip install cython
+  - pip install -r requirements.txt # Requirements.txt
+  - pip install ".[test]" . # install package + test dependencies
+script: 
+  - coverage run -m pytest # run tests
+after_success:
+  - codecov # submit coverage
