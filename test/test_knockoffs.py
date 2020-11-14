@@ -425,6 +425,11 @@ class TestMRCSolvers(CheckSMatrix):
                         err_msg=f'For equicorrelated cov rho={rho}, maxent_solver yields unexpected solution'
                     )
 
+    def test_blockdiag_approx(self):
+
+        # Check that blockdiag approx yields same solution
+        # for block-diagonal matrix.
+
 
     def test_equicorrelated_soln_recycled(self):
 
@@ -862,14 +867,8 @@ class TestKnockoffGen(CheckValidKnockoffs):
                     Xk = ksampler.sample_knockoffs()
                     S = ksampler.fetch_S()
 
-                    # Scale properly so we can calculate
-                    scale = np.sqrt(np.diag(np.dot(X.T, X)).reshape(1, -1))
-                    X = X / scale
-                    knockoff_copy = Xk / scale
-                    S = S / np.outer(scale, scale)
-
-                    # # Compute empirical (scaled) cov matrix
-                    features = np.concatenate([X, knockoff_copy], axis = 1)
+                    # Compute empirical (scaled) cov matrix
+                    features = np.concatenate([X, Xk], axis = 1)
                     G_hat = np.dot(features.T, features)
                     
                     # Calculate what this should be
@@ -897,11 +896,11 @@ class TestKnockoffGen(CheckValidKnockoffs):
         X, y, beta, Q, V = knockpy.graphs.sample_data(
             method='qer', p=p, n=n, coeff_size=0.5, sparsity=0.5, 
         )
-        ksampler1 = knockpy.knockoffs.FXSampler(
+        ksampler1 = knockoffs.FXSampler(
             X=X,
         )
         S1 = ksampler1.fetch_S()
-        ksampler2 = knockpy.knockoffs.FXSampler(
+        ksampler2 = knockoffs.FXSampler(
             X=X,
             S=S1,
         )

@@ -1,5 +1,7 @@
 import numpy as np
 import unittest
+import sklearn.naive_bayes
+import sklearn.neural_network
 from .context import knockpy
 
 from knockpy import knockoff_stats as kstats
@@ -63,16 +65,15 @@ class KStatVal(unittest.TestCase):
 			groups = np.arange(1, p+1, 1)
 
 		# Create knockoffs
-		knockoffs, S = knockpy.knockoffs.gaussian_knockoffs(
+		ksampler = knockpy.knockoffs.GaussianSampler(
 			X=X, 
 			groups=groups,
 			Sigma=corr_matrix,
-			return_S=True,
 			verbose=False,
-			sdp_verbose=False,
 			S = (1-rho)*np.eye(p)
 		)
-		knockoffs = knockoffs[:, :, 0]
+		knockoffs = ksampler.sample_knockoffs()
+		S = ksampler.fetch_S()
 
 		# Fit and extract coeffs/T
 		fstat.fit(
@@ -794,6 +795,56 @@ class TestFeatureStatistics(KStatVal):
 		self.assertRaisesRegex(
 			ValueError, "feature_importance undefined must be one of",
 			bad_feature_importance_type
+		)
+
+class TestBaseFeatureStatistic(KStatVal):
+	""" Tests performance of Vanilla feature statistic """
+
+	def test_errors(self):
+
+		fstat = kstats.FeatureStatistic()
+
+	def test_nbayes(self):
+		""" Checks that a random sklearn class works with feature stat"""
+
+		gnb = sklearn.naive_bayes.GaussianNB()
+		for feature_imp in ['swap', 'swapint']:
+			self.check_kstat_fit(
+				fstat=kstats.FeatureStatistic(model=gnb),
+				fstat_name='Gaussian Naive Bayes',
+				fstat_kwargs={'feature_importance':feature_imp},
+				n=500,
+				p=20,
+				sparsity=0.5,
+				min_power=0.5,
+				max_l2norm=np.inf,
+				y_dist='binomial',
+				method='daibarber2016',
+				rho=0.2,
+				gamma=0,
+			)
+
+	def test_mlp(self):
+		""" Checks that MLP regressor works """
+
+		mlp = sklearn.neural_network.MLPRegressor(
+			solver='lbfgs', 
+			alpha=1e-5, 
+			hidden_layer_sizes=(10,2),
+		) 
+		self.check_kstat_fit(
+			fstat=kstats.FeatureStatistic(model=mlp),
+			fstat_name='Sklearn multilayer perceptron',
+			fstat_kwargs={'feature_importance':'swap'},
+			n=300,
+			p=20,
+			sparsity=0.5,
+			min_power=0.5,
+			max_l2norm=np.inf,
+			y_dist='gaussian',
+			method='daibarber2016',
+			rho=0.2,
+			gamma=0,
 		)
 
 

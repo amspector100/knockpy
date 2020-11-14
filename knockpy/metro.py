@@ -58,7 +58,7 @@ class MetropolizedKnockoffSampler(KnockoffGenerator):
 			lf,
 			X,
 			mu=None,
-			V=None,
+			Sigma=None,
 			undir_graph=None,
 			order=None,
 			active_frontier=None,
@@ -119,6 +119,7 @@ class MetropolizedKnockoffSampler(KnockoffGenerator):
 		# Possibly estimate mean, cov matrix
 		if mu is None:
 			mu = X.mean(axis=0)
+		V = Sigma # Improves readability slightly
 		if V is None:
 			V, Q = utilities.estimate_covariance(
 				X, tol=1e-3, shrinkage=None
@@ -208,6 +209,7 @@ class MetropolizedKnockoffSampler(KnockoffGenerator):
 
 		# Re-order sigma
 		self.V = V[self.order][:, self.order]
+		self.Sigma = V
 		self.Q = Q[self.order][:, self.order]
 
 		# Possibly reorder S if it's in kwargs
@@ -522,8 +524,6 @@ class MetropolizedKnockoffSampler(KnockoffGenerator):
 			)
 			flags = Xjstar.reshape(-1,1) == self.buckets.reshape(1,-1)
 			out = bucket_log_probs[flags]
-			#print(out.shape)
-			#print(np.unique(Xjstar), self.buckets)
 			return out
 
 	def sample_proposals(
@@ -997,7 +997,7 @@ class ARTKSampler(MetropolizedKnockoffSampler):
 		"""
 		Samples knockoffs for AR1 t designs. (Hence, ARTK).
 		:param X: n x p design matrix, presumably following
-		t_{df_t}(mu, Sigma) distribution.
+		t_{df_t}(0, Sigma) distribution.
 
 		Currently does not support a mean parameter (mu).
 

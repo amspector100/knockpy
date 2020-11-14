@@ -41,9 +41,8 @@ def parse_y_dist(y):
 	elif np.unique(y).shape[0] == n:
 		return "gaussian"
 	else:
-		raise ValueError(
-			"Please supply 'y_dist' arg (type of GLM to fit), e.g. gaussian, binomial"
-		)
+		warnings.warn("Treating y data as continuous even though it may be discrete.")
+		return "gaussian"
 
 
 def parse_logistic_flag(kwargs):
@@ -390,10 +389,16 @@ def fit_group_lasso(
 
 
 class FeatureStatistic:
-	def __init__(self):
-		""" Initialize attributes of class """
+	"""
+	The base knockoff feature statistic class --- this uses the swap 
+	importances defined in https://arxiv.org/abs/1807.06214 to wrap
+	any predictive algorithm to create knockoff feature statistics.
+	:param model: An instance of a class with a "train" or "fit" method
+	and a "predict" method. (Any sklearn class will do.)
+	"""
+	def __init__(self, model=None):
 
-		self.model = None  # sklearn/statsmodels/pyglmnet model
+		self.model = model  # sklearn/statsmodels/pyglmnet model
 		self.inds = None  # permutation of features
 		self.rev_inds = None  # reverse permutation of features
 		self.score = None  # E.g. MSE/CV MSE model
@@ -401,6 +406,76 @@ class FeatureStatistic:
 		self.Z = None  # Z statistic
 		self.groups = None  # Grouping of features for group knockoffs
 		self.W = None  # W statistic
+
+	def fit(
+			self, 
+			X, 
+			Xk, 
+			y, 
+			groups=None,
+			feature_importance='swap',
+			pair_agg='cd',
+			group_agg='avg',
+			**kwargs
+		):
+		"""
+		Trains the model and creates feature importances.
+		:param X: a n x p design matrix
+		:param Xk: the n x p knockoff matrix
+		:param y: a n-length vector of the response
+		:param groups: Optionally, the groups for group knockoffs
+		:param feature_importance: Specifies how to create feature 
+		importances. Two options:
+			- "swap": The default swap-statistic from 
+			http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.
+			These are good measures of feature importance but
+			slightly slower.
+			- "swapint": The swap-integral defined from
+			http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
+		Defaults to 'swap'
+		:param pair_agg: Specifies how to create pairwise W 
+		statistics. Two options: 
+			- "CD" (Difference of absolute vals of coefficients),
+			- "SM" (signed maximum).
+			- "SCD" (Simple difference of coefficients - NOT recommended)
+		:param group_agg: For group knockoffs, feature-level W
+		statistics into grouped W statistics. Two options: "sum" (default)
+		and "avg".
+		:param kwargs: kwargs to pass to the 'train' or 'fit' method of the model.
+		"""
+
+		if self.model is None:
+			raise ValueError(
+				"For base feature statistic class, must provide a trainable model class instance."
+			)
+
+		# Permute features to prevent FDR control violations
+		n = X.shape[0]
+		p = X.shape[1]
+		features = np.concatenate([X, Xk], axis=1)
+		self.inds, self.rev_inds = random_permutation_inds(2 * p)
+		features = features[:, self.inds]
+
+		# Train model
+		if hasattr(self.model, "train"):
+			self.model.train(features, y, **kwargs)
+		elif hasattr(self.model, "fit"):
+			self.model.fit(features, y, **kwargs)
+		else:
+			raise ValueError(f"model {self.model} must have either a 'fit' or 'train' method")
+
+		# Score using swap importances
+		if feature_importance == 'swap':
+			self.Z = self.swap_feature_importances(features, y)
+		elif feature_importance == 'swapint':
+			self.Z = self.swap_path_feature_importances(features, y)
+		else:
+			raise ValueError(f"Unrecognized feature_importance {feature_importance}")
+
+		# Combine Z statistics
+		self.groups = groups
+		self.W = combine_Z_stats(self.Z, self.groups, pair_agg=pair_agg, group_agg=group_agg)
+		return self.W
 
 	def swap_feature_importances(self, features, y):
 		"""
@@ -507,7 +582,7 @@ class FeatureStatistic:
 		if y_dist == 'gaussian':
 			preds = self.model.predict(features)
 			loss = np.power(preds - y, 2).mean()
-		# Negative log-likelihood for binomial data
+		# 1- accuracy for binomial data
 		elif y_dist == 'binomial':
 			preds = self.model.predict(features)
 			accuracy = (preds == y).mean()
@@ -595,12 +670,12 @@ class RidgeStatistic(FeatureStatistic):
 		:param y: p length response numpy array
 		:param groups: p length numpy array of groups. If None,
 		defaults to giving each feature its own group.
-		:param str pair_agg: Specifies how to create pairwise W 
+		:param pair_agg: Specifies how to create pairwise W 
 		statistics. Two options: 
 			- "CD" (Difference of absolute vals of coefficients),
 			- "SM" (signed maximum).
 			- "SCD" (Simple difference of coefficients - NOT recommended)
-		:param str group_agg: Specifies how to combine pairwise W
+		:param group_agg: Specifies how to combine pairwise W
 		statistics into grouped W statistics. Two options: "sum" (default)
 		and "avg".
 		:param cv_score: If true, score the feature statistic
@@ -615,8 +690,8 @@ class RidgeStatistic(FeatureStatistic):
 		if groups is None:
 			groups = np.arange(1, p + 1, 1)
 
-		# Check if y_dist is gaussian, binomial, poisson
-		kwargs["y_dist"] = parse_y_dist(y)
+		# Check if y_dist is gaussian, binomial
+		y_dist = parse_y_dist(y)
 
 		# Step 1: Calculate Z stats by fitting ridge
 		self.model, self.inds, self.rev_inds = fit_ridge(
@@ -627,11 +702,11 @@ class RidgeStatistic(FeatureStatistic):
 		)
 
 		# Retrieve Z statistics and save cv scores
-		if kwargs["y_dist"] == 'gaussian':
+		if y_dist == 'gaussian':
 			Z = self.model.coef_[self.rev_inds]
 			self.score = -1*self.model.cv_values_.mean(axis=1).min()
 			self.score_type = "mse_cv"
-		elif kwargs["y_dist"] == 'binomial':
+		elif y_dist == 'binomial':
 			Z = self.model.coef_[0, self.rev_inds]
 			self.score = self.model.scores_[1].mean(axis=0).max()
 			self.score_type = "accuracy_cv"
@@ -919,7 +994,9 @@ class RandomForestStatistic(FeatureStatistic):
 			are very poor measures of feature importance, but
 			very fast.
 			- "swap": The default swap-statistic from 
-			http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
+			http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.
+			These are good measures of feature importance but
+			slightly slower.
 			- "swapint": The swap-integral defined from
 			http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
 		"""

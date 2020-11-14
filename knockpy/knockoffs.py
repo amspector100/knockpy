@@ -101,11 +101,6 @@ def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies, verbos
    # Calculate MX knockoff moments...
     n, p = X.shape
     invSigma_S = np.dot(invSigma, S)
-    print(X.shape)
-    print(mu.shape)
-    hm = X - mu.reshape(1, -1)
-    np.dot(hm, invSigma_S)
-
     mu_k = X - np.dot(X - mu.reshape(1, -1), invSigma_S)  # This is a bottleneck??
     Vk = 2 * S - np.dot(S, invSigma_S)
 
@@ -240,7 +235,7 @@ class GaussianSampler(KnockoffGenerator):
     def sample_knockoffs(self):
         """ Samples knockoffs. returns n x p knockoff matrix."""
         self.check_PSD_condition(self.Sigma, self.S)
-        self.knockoffs = produce_MX_gaussian_knockoffs(
+        self.Xk = produce_MX_gaussian_knockoffs(
             X=self.X, 
             mu=self.mu,
             invSigma=self.invSigma,
@@ -249,9 +244,9 @@ class GaussianSampler(KnockoffGenerator):
             copies=1,
             verbose=self.verbose
         )[:, :, 0]
-        return self.knockoffs
+        return self.Xk
 
-def produce_FX_gaussian_knockoffs(X, invSigma, S, scale, copies=1):
+def produce_FX_knockoffs(X, invSigma, S, copies=1):
     """
     See equation (1.4) of https://arxiv.org/pdf/1404.5609.pdf
     """
@@ -280,10 +275,10 @@ def produce_FX_gaussian_knockoffs(X, invSigma, S, scale, copies=1):
 
             # Calculate knockoffs
             knockoff_j = knockoff_base + np.dot(Uj, C)
-            knockoffs.append(knockoff_j * scale)
+            knockoffs.append(knockoff_j)
     else:
         # Calculate knockoffs and return
-        knockoffs = [(knockoff_base + np.dot(U, C)) * scale]
+        knockoffs = [(knockoff_base + np.dot(U, C))]
 
     knockoffs = np.stack(knockoffs, axis=-1)
     return knockoffs
@@ -313,10 +308,6 @@ class FXSampler(KnockoffGenerator):
             raise np.linalg.LinAlgError(
                 f"FX knockoffs can't be generated with n ({self.n}) < 2p ({2*self.p})"
             )
-
-        # Rescale 
-        self.scale = np.sqrt(np.diag(np.dot(self.X.T, self.X)))
-        self.X = self.X / self.scale.reshape(1, -1)
         self.Sigma = np.dot(self.X.T, self.X)
         self.invSigma = utilities.chol2inv(self.Sigma)
 
@@ -328,8 +319,6 @@ class FXSampler(KnockoffGenerator):
         self.verbose = verbose
 
         # Save S information and possibly compute S matrix
-        if S is not None:
-            S = S / np.outer(self.scale, self.scale)
         self.S = S
         self.method = method
         self.kwargs = kwargs
@@ -342,16 +331,15 @@ class FXSampler(KnockoffGenerator):
 
     def fetch_S(self):
         """ Rescales S to the same scale as the initial X input """
-        return self.S * np.outer(self.scale, self.scale)
+        return self.S
 
     def sample_knockoffs(self):
         """ Samples knockoffs. returns n x p knockoff matrix."""
         self.check_PSD_condition(self.Sigma, self.S)
-        self.knockoffs = produce_FX_gaussian_knockoffs(
+        self.Xk = produce_FX_knockoffs(
             X=self.X,
             invSigma=self.invSigma,
             S=self.S,
             copies=1,
-            scale=self.scale
         )[:, :, 0]
-        return self.knockoffs
+        return self.Xk
