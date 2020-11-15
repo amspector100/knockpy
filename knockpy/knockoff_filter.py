@@ -62,7 +62,6 @@ class KnockoffFilter:
 			self.fstat_kwargs['pair_agg'] = 'sm'
 		elif fstat == 'dlasso':
 			fstat = kstats.LassoStatistic()
-			print("I am debiasing because I am COOL COOL COOL COOL")
 			self.fstat_kwargs['debias'] = True
 		elif fstat == 'ridge':
 			fstat = kstats.RidgeStatistic()
@@ -344,7 +343,6 @@ class KnockoffFilter:
 				self.fstat_kwargs['Ginv'] = self.Ginv
 
 		# Feature statistics
-		print(f"Just prior to fit, fstat_kwargs are {self.fstat_kwargs}")
 		self.fstat.fit(
 			X=self.X, Xk=self.Xk, y=y, groups=groups, **self.fstat_kwargs
 		)
