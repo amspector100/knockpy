@@ -2,7 +2,7 @@ import numpy as np
 import unittest
 from .context import knockpy
 
-from knockpy import graphs, utilities
+from knockpy import dgp, utilities
 
 def myfunc(a, b, c, d):
 	""" A random function. Important to define this globally
@@ -138,7 +138,8 @@ class TestUtils(unittest.TestCase):
 
 		# Create data generating process
 		np.random.seed(seed)
-		X, y, beta, _, V = graphs.sample_data(**sample_kwargs)  
+		dgprocess = dgp.DGP()
+		X, y, beta, _, V = dgprocess.sample_data(**sample_kwargs)  
 
 		# Make sure this does not raise an error
 		# (even though it is ill-conditioned and the graph lasso doesn't fail)
@@ -152,7 +153,8 @@ class TestUtils(unittest.TestCase):
 		p = 100
 		rho = 0.3
 		V = (1-rho)*np.eye(p) + (rho)*np.ones((p,p))
-		X,_,_,_,_ = graphs.sample_data(n=n, corr_matrix=V)
+		dgprocess = dgp.DGP(Sigma=V)
+		X,_,_,_,_ = dgprocess.sample_data(n=n)
 
 		# Estimate covariance matrix
 		Vest,_ = utilities.estimate_covariance(X, tol=1e-2)
