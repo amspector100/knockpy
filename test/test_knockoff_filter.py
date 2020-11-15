@@ -53,7 +53,6 @@ class TestFdrControl(unittest.TestCase):
 		name2 = basename + ' (grouped)'
 
 		# Split filter_kwargs
-		print(f"Initially, filter_kwargs are {filter_kwargs}")
 		init_filter_kwargs = {}
 		init_filter_kwargs['ksampler'] = filter_kwargs.pop('ksampler', 'gaussian')
 		init_filter_kwargs['fstat'] = filter_kwargs.pop('fstat', 'lasso')
@@ -118,8 +117,6 @@ class TestFdrControl(unittest.TestCase):
 						gibbs_graph = Q
 						knockoff_kwargs['gibbs_graph'] = gibbs_graph
 
-				print(f"Filter kwargs keys are {list(filter_kwargs.keys())}")
-				print(f"Kwargs are {kwargs}")
 				selections = knockoff_filter.forward(
 					X=X, 
 					y=y, 
