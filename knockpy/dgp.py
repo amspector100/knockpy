@@ -1,3 +1,4 @@
+""" A collection of functions for generating synthetic datasets."""
 import numpy as np
 from scipy import stats
 
@@ -633,159 +634,179 @@ def sample_gibbs(
 
     return X, gibbs_graph
 
-def sample_data(
-    p=100,
-    n=50,
-    method="AR1",
-    mu=None,
-    corr_matrix=None,
-    Q=None,
-    beta=None,
-    coeff_size=1,
-    coeff_dist=None,
-    sparsity=0.5,
-    groups=None,
-    x_dist="gaussian",
-    y_dist="gaussian",
-    df_t=DEFAULT_DF_T,
-    cond_mean='linear',
-    sign_prob=0.5,
-    iid_signs=True,
-    corr_signals=False,
-    gibbs_graph=None,
-    **kwargs,
-):
-    """ Creates a random covariance matrix using method
-    and then samples Gaussian data from it. It also creates
-    a linear response y with sparse coefficients.
-    :param p: Dimensionality
-    :param n: Sample size
-    :param coeff_size: The standard deviation of the
-    sparse linear coefficients. (The noise of the 
-    response itself is standard normal).
-    :param method: How to generate the covariance matrix.
-    :param mu: If supplied, a p-dimensional vector of means for
-    the covariates. Defaults to zero.
-    :param Q: p x p precision matrix. If supplied, will not generate
-    a new covariance matrix.
-    :param corr_matrix: p x p correlation matrix. If supplied, will 
-    not generate a new correlation matrix.
-    :param str x_dist: one of 'gaussian' or 'ar1t', used to generate
-    the input data. If 'ar1t', method must be 'ar1'.
-    :param str y_dist: one of 'gaussian' or 'binomial', used to 
-    generate the response. (If 'binomial', uses logistic link fn). 
-    :param kwargs: kwargs to the graph generator (e.g. AR1 kwargs).
-    returns: X, y, beta, Q, corr_matrix
-    Note that Q will be a precision matrix unless x_dist=='ising' 
-    or 'gibbs': in this case, Q will be the UGM structure of the graph
-    (corresponding to the gibbs_graph parameter).
-    """
+class DGP():
 
-    # Defaults
-    if mu is None:
-        mu = np.zeros(p)
+    def __init__(
+            self, mu=None, Sigma=None, invSigma=None, beta=None 
+    ):
+        """
+        :param mu: mean vector for X data
+        :param Sigma: covariance matrix for X data
+        :param invSigma: precision matrix for X data
+        :param beta: coefficients used to generate y from X either
+        in a linear model or in a single-index model.
+        If these parameters are not passed in, they will be randomly
+        generated in the sample_data method.
+        """
 
-    # Ising / Gibbs Sampling
-    if x_dist == 'gibbs':
-        # Sample X, Q
-        X, gibbs_graph = sample_gibbs(
-            n=n, p=p, gibbs_graph=gibbs_graph, method=method, **kwargs
-        )
+        self.mu = mu
+        self.Sigma = Sigma
+        self.invSigma = invSigma
+        self.beta = beta
 
-        # This is admittedly not a correlation matrix
-        if corr_matrix is None:
-            corr_matrix, _ = utilities.estimate_covariance(
-                X, tol=1e-6, shrinkage=None
+    def sample_data(
+        self,
+        p=100,
+        n=50,
+        method="AR1",
+        coeff_size=1,
+        coeff_dist=None,
+        sparsity=0.5,
+        groups=None,
+        x_dist="gaussian",
+        y_dist="gaussian",
+        df_t=DEFAULT_DF_T,
+        cond_mean='linear',
+        sign_prob=0.5,
+        iid_signs=True,
+        corr_signals=False,
+        gibbs_graph=None,
+        **kwargs,
+    ):
+        """ Creates a random covariance matrix using method
+        and then samples Gaussian data from it. It also creates
+        a linear response y with sparse coefficients.
+        :param p: Dimensionality
+        :param n: Sample size
+        :param coeff_size: The standard deviation of the
+        sparse linear coefficients. (The noise of the 
+        response itself is standard normal).
+        :param method: How to generate the covariance matrix.
+        :param mu: If supplied, a p-dimensional vector of means for
+        the covariates. Defaults to zero.
+        :param Q: p x p precision matrix. If supplied, will not generate
+        a new covariance matrix.
+        :param corr_matrix: p x p correlation matrix. If supplied, will 
+        not generate a new correlation matrix.
+        :param str x_dist: one of 'gaussian' or 'ar1t', used to generate
+        the input data. If 'ar1t', method must be 'ar1'.
+        :param str y_dist: one of 'gaussian' or 'binomial', used to 
+        generate the response. (If 'binomial', uses logistic link fn). 
+        :param kwargs: kwargs to the graph generator (e.g. AR1 kwargs).
+        returns: X, y, beta, Q, corr_matrix
+        Note that Q will be a precision matrix unless x_dist=='ising' 
+        or 'gibbs': in this case, Q will be the UGM structure of the graph
+        (corresponding to the gibbs_graph parameter).
+        """
+
+        # Defaults
+        if self.mu is None:
+            self.mu = np.zeros(p)
+
+        # Ising / Gibbs Sampling
+        if x_dist == 'gibbs':
+            # Sample X, Q
+            X, gibbs_graph = sample_gibbs(
+                n=n, p=p, gibbs_graph=gibbs_graph, method=method, **kwargs
             )
-        Q = gibbs_graph
 
-    # Create Graph
-    if Q is None and corr_matrix is None:
+            # Estimate cov matrix
+            if self.Sigma is None:
+                self.Sigma, _ = utilities.estimate_covariance(
+                    X, tol=1e-6, shrinkage=None
+                )
+            self.invSigma = gibbs_graph
 
-        method = str(method).lower()
-        if method == "ar1":
-            corr_matrix = AR1(p=p, **kwargs)
-            Q = chol2inv(corr_matrix)
-        elif method == "nestedar1":
-            corr_matrix = NestedAR1(p=p, **kwargs)
-            Q = chol2inv(corr_matrix)
-        elif method == 'partialcorr':
-            corr_matrix, Q = PartialCorr(p=p, **kwargs)
-        elif method == 'factor':
-            corr_matrix, Q = FactorModel(p=p, **kwargs)
-        elif method == "daibarber2016":
-            _, _, beta, Q, corr_matrix, _ = daibarber2016_graph(
+        # Create covariance matrix
+        if self.invSigma is None and self.Sigma is None:
+
+            method = str(method).lower()
+            if method == "ar1":
+                self.Sigma = AR1(p=p, **kwargs)
+                self.invSigma = chol2inv(self.Sigma)
+            elif method == "nestedar1":
+                self.Sigma = NestedAR1(p=p, **kwargs)
+                self.invSigma = chol2inv(self.Sigma)
+            elif method == 'partialcorr':
+                self.Sigma, self.invSigma = PartialCorr(p=p, **kwargs)
+            elif method == 'factor':
+                self.Sigma, self.invSigma = FactorModel(p=p, **kwargs)
+            elif method == "daibarber2016":
+                _, _, self.beta, self.invSigma, self.Sigma, _ = daibarber2016_graph(
+                    p=p,
+                    n=n,
+                    coeff_size=coeff_size,
+                    coeff_dist=coeff_dist,
+                    sparsity=sparsity,
+                    sign_prob=sign_prob,
+                    iid_signs=iid_signs,
+                    corr_signals=corr_signals,
+                    beta=self.beta,
+                    **kwargs,
+                )
+            elif method == 'ver':
+                self.Sigma = cov2corr(ErdosRenyi(p=p, **kwargs))
+                self.invSigma = chol2inv(self.Sigma)
+            elif method == 'qer':
+                self.invSigma = ErdosRenyi(p=p, **kwargs)
+                self.Sigma = cov2corr(chol2inv(self.invSigma))
+                self.invSigma = chol2inv(self.Sigma)
+            elif method == 'dirichlet':
+                self.Sigma = DirichletCorr(p=p, **kwargs)
+                self.invSigma = chol2inv(self.Sigma)
+            elif method == 'wishart':
+                self.Sigma = Wishart(p=p, **kwargs)
+                self.invSigma = chol2inv(self.Sigma)
+            elif method == 'uniformdot':
+                self.Sigma = UniformDot(p=p, **kwargs)
+                self.invSigma = chol2inv(self.Sigma)
+            else:
+                raise ValueError(f"Other method {method} not implemented yet")
+
+        elif self.invSigma is None:
+            self.invSigma = chol2inv(self.Sigma)
+        elif self.Sigma is None:
+            self.Sigma = cov2corr(chol2inv(self.invSigma))
+            self.invSigma = chol2inv(self.Sigma)
+        else:
+            pass
+
+        # Create sparse coefficients
+        if self.beta is None:
+            self.beta = create_sparse_coefficients(
                 p=p,
-                n=n,
-                coeff_size=coeff_size,
-                coeff_dist=coeff_dist,
                 sparsity=sparsity,
+                coeff_size=coeff_size,
+                groups=groups,
                 sign_prob=sign_prob,
                 iid_signs=iid_signs,
+                coeff_dist=coeff_dist,
                 corr_signals=corr_signals,
-                beta=beta,
-                **kwargs,
+                n=n,
             )
-        elif method == 'ver':
-            corr_matrix = cov2corr(ErdosRenyi(p=p, **kwargs))
-            Q = chol2inv(corr_matrix)
-        elif method == 'qer':
-            Q = ErdosRenyi(p=p, **kwargs)
-            corr_matrix = cov2corr(chol2inv(Q))
-            Q = chol2inv(corr_matrix)
-        elif method == 'dirichlet':
-            corr_matrix = DirichletCorr(p=p, **kwargs)
-            Q = chol2inv(corr_matrix)
-        elif method == 'wishart':
-            corr_matrix = Wishart(p=p, **kwargs)
-            Q = chol2inv(corr_matrix)
-        elif method == 'uniformdot':
-            corr_matrix = UniformDot(p=p, **kwargs)
-            Q = chol2inv(corr_matrix)
+
+        # Sample design matrix
+        if x_dist == 'gibbs':
+            pass
+        elif x_dist == 'gaussian':
+            X = stats.multivariate_normal.rvs(mean=self.mu, cov=self.Sigma, size=n)
+        elif x_dist == 'ar1t':
+            if str(method).lower() != 'ar1':
+                raise ValueError(f"For x_dist={x_dist}, method ({method}) should equal 'ar1'")
+            X = sample_ar1t(n=n, rhos=np.diag(self.Sigma, 1), df_t=df_t)
+        elif x_dist == 'blockt':
+            blocks, _ = cov2blocks(self.Sigma)
+            X = sample_block_tmvn(blocks, n=n, df_t=df_t)
         else:
-            raise ValueError(f"Other method {method} not implemented yet")
+            raise ValueError(f"x_dist must be one of 'gaussian', 'gibbs', 'ar1t', 'blockt'")
 
-    elif Q is None:
-        Q = chol2inv(corr_matrix)
-    elif corr_matrix is None:
-        corr_matrix = cov2corr(chol2inv(Q))
-    else:
-        pass
+        # Sample y
+        y = sample_response(X=X, beta=self.beta, y_dist=y_dist, cond_mean=cond_mean)
 
-    # Create sparse coefficients
-    if beta is None:
-        beta = create_sparse_coefficients(
-            p=p,
-            sparsity=sparsity,
-            coeff_size=coeff_size,
-            groups=groups,
-            sign_prob=sign_prob,
-            iid_signs=iid_signs,
-            coeff_dist=coeff_dist,
-            corr_signals=corr_signals,
-            n=n,
-        )
-
-    # Sample design matrix
-    if x_dist == 'gibbs':
-        pass
-    elif x_dist == 'gaussian':
-        X = stats.multivariate_normal.rvs(mean=mu, cov=corr_matrix, size=n)
-    elif x_dist == 'ar1t':
-        if str(method).lower() != 'ar1':
-            raise ValueError(f"For x_dist={x_dist}, method ({method}) should equal 'ar1'")
-        X = sample_ar1t(n=n, rhos=np.diag(corr_matrix, 1), df_t=df_t)
-    elif x_dist == 'blockt':
-        blocks, _ = cov2blocks(corr_matrix)
-        X = sample_block_tmvn(blocks, n=n, df_t=df_t)
-    else:
-        raise ValueError(f"x_dist must be one of 'gaussian', 'gibbs', 'ar1t', 'blockt'")
-
-    # Sample y
-    y = sample_response(X=X, beta=beta, y_dist=y_dist, cond_mean=cond_mean)
-
-    return X, y, beta, Q, corr_matrix
-
+        # Save and return output
+        self.X = X
+        self.y = y
+        return self.X, self.y, self.beta, self.invSigma, self.Sigma
 
 
 def create_correlation_tree(corr_matrix, method="average"):

@@ -18,7 +18,7 @@ import scipy.special
 import itertools
 from functools import reduce
 from scipy import stats
-from . import utilities, knockoffs, graphs
+from . import utilities, knockoffs, dgp
 
 # Network and UGM tools
 import networkx as nx
@@ -1110,7 +1110,7 @@ class BlockTSampler(KnockoffSampler):
 		# Discover "block structure" of T
 		V = Sigma
 		self.p = V.shape[0]
-		self.blocks, self.block_inds = graphs.cov2blocks(V)
+		self.blocks, self.block_inds = dgp.cov2blocks(V)
 		self.df_t = df_t
 		self.X = X
 
@@ -1349,10 +1349,10 @@ class IsingKnockoffSampler(KnockoffSampler):
 
 	def num2coords(self, i):
 		""" Wraps num2coords from knockpy.graphs """
-		return graphs.num2coords(i=i, gridwidth=self.gridwidth)
+		return dgp.num2coords(i=i, gridwidth=self.gridwidth)
 
 	def coords2num(self, lc, wc):
-		return graphs.coords2num(l=lc, w=wc, gridwidth=self.gridwidth)
+		return dgp.coords2num(l=lc, w=wc, gridwidth=self.gridwidth)
 
 	def get_ac(self, i, div_type):
 		"""
@@ -1438,7 +1438,7 @@ class IsingKnockoffSampler(KnockoffSampler):
 				else:
 					separator_vars.append(self.coords2num(j,s))
 		
-		# 1. Use graphs.num2coords to determine the blocks
+		# 1. Use dgp.num2coords to determine the blocks
 		# that each set of variables appear in (e.g.,
 		# one block is columns 6-10, etc)
 		div_groups = [[] for _ in range(len(separator_inds) + 1)]

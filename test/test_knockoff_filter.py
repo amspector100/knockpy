@@ -6,10 +6,10 @@ from .context import knockpy
 from .context import file_directory
 
 from knockpy import utilities
-from knockpy import graphs
+from knockpy import dgp
 from knockpy.knockoff_filter import KnockoffFilter
 
-NUM_REPS = 15
+NUM_REPS = 2
 
 class TestFdrControl(unittest.TestCase):
 
@@ -33,12 +33,16 @@ class TestFdrControl(unittest.TestCase):
 				fixedX = True
 
 		# Create and name DGP
-		X0, _, beta, _, Sigma = graphs.sample_data(
+		mu = kwargs.pop('mu', None)
+		Sigma = kwargs.pop('Sigma', None)
+		invSigma = kwargs.pop('invSigma', None)
+		beta = kwargs.pop('beta', None)
+		dgprocess = dgp.DGP(
+			mu=mu, Sigma=Sigma, invSigma=invSigma, beta=beta
+		)
+		X0, _, beta, _, Sigma = dgprocess.sample_data(
 			**kwargs
 		)
-		# Now pop corr_matrix
-		if 'corr_matrix' in kwargs:
-			kwargs.pop('corr_matrix')
 
 		basename = ''
 		for key in kwargs:
@@ -77,11 +81,8 @@ class TestFdrControl(unittest.TestCase):
 			# Sample data reps times
 			for j in range(reps):
 				np.random.seed(j)
-				X, y, _, Q, _ = graphs.sample_data(
-					corr_matrix=Sigma,
-					beta=beta,
-					**kwargs
-				)
+				dgprocess = dgp.DGP(Sigma=Sigma, beta=beta)
+				X, y, _, Q, _ = dgprocess.sample_data(**kwargs)
 
 				# Infer y_dist
 				if 'y_dist' in kwargs:
@@ -318,7 +319,7 @@ class TestKnockoffFilter(TestFdrControl):
 		p = 49
 		V = np.loadtxt(f'{file_directory}/test_covs/vout{p}.txt')
 		self.check_fdr_control(
-			n=500, p=49, method='ising', corr_matrix=V,
+			n=500, p=49, method='ising', Sigma=V,
 			sparsity=0.5, x_dist='gibbs', reps=NUM_REPS,
 			filter_kwargs={
 				'ksampler':'ising', 
@@ -333,7 +334,7 @@ class TestKnockoffFilter(TestFdrControl):
 		p = 49
 		V = np.loadtxt(f'{file_directory}/test_covs/vout{p}.txt')
 		self.check_fdr_control(
-			n=500, p=49, method='ising', corr_matrix=V,
+			n=500, p=49, method='ising', Sigma=V,
 			sparsity=0.5, x_dist='gibbs', reps=2, q=1,
 			filter_kwargs={
 				'ksampler':'ising', 'fstat':'dlasso',
@@ -395,7 +396,8 @@ class TestKnockoffFilter(TestFdrControl):
 	# 	n=100
 	# 	rho=0.8
 	# 	S = min(1, 2-2*rho)*np.eye(p)
-	# 	X, y, _, _, Sigma = graphs.sample_data(
+	#	dgprocess = dgp.DGP()
+	# 	X, y, _, _, Sigma = dgprocess.sample_data(
 	# 		rho=rho,
 	# 		gamma=1,
 	# 		method='daibarber2016',

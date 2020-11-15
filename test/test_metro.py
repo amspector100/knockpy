@@ -6,10 +6,7 @@ import networkx as nx
 from scipy import stats
 import unittest
 from .context import knockpy
-
-from knockpy import utilities
-from knockpy import graphs
-from knockpy import metro, tree_processing
+from knockpy import utilities, dgp, metro, tree_processing
 from knockpy.mrc import mvr_loss
 
 class TestMetroProposal(unittest.TestCase):
@@ -38,7 +35,8 @@ class TestMetroProposal(unittest.TestCase):
 		np.random.seed(110)
 		n = 5
 		p = 200
-		X,_,_,Q,V = graphs.sample_data(method='AR1', rho=0.1, n=n, p=p)
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(method='AR1', rho=0.1, n=n, p=p)
 		
 		# Metro sampler, proposal params
 		metro_sampler = metro.MetropolizedKnockoffSampler(
@@ -100,7 +98,8 @@ class TestMetroProposal(unittest.TestCase):
 		np.random.seed(110)
 		n = 5
 		p = 200
-		X,_,_,Q,V = graphs.sample_data(method='AR1', rho=0.3, n=n, p=p)
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(method='AR1', rho=0.3, n=n, p=p)
 
 		# Metro sampler, proposal params
 		def incorrect_undir_graph():
@@ -127,7 +126,8 @@ class TestMetroSample(unittest.TestCase):
 		np.random.seed(110)
 		n = 30000
 		p = 8
-		X,_,_,Q,V = graphs.sample_data(method='AR1', n=n, p=p)
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(method='AR1', n=n, p=p)
 		ksampler = knockpy.knockoffs.GaussianSampler(
 			X=X, Sigma=V, method='mvr'
 		)
@@ -183,8 +183,8 @@ class TestMetroSample(unittest.TestCase):
 		np.random.seed(110)
 		n = 10000
 		p = 4
-
-		X,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(
 			method='daibarber2016',
 			rho=0.6, n=n, p=p,
 			gamma=1, group_size=p
@@ -299,7 +299,8 @@ class TestARTK(unittest.TestCase):
 		)
 
 		# Test again with df_t --> infinity, so it should be approx gaussian
-		X1,_,_,Q,V = knockpy.graphs.sample_data(
+        dgprocess = dgp.DGP()
+		X1,_,_,Q,V = dgprocess.sample_data(
 			n=n, p=p, method='AR1', a=3, b=1
 		)
 		X2 = np.random.randn(n, p)
@@ -342,7 +343,8 @@ class TestARTK(unittest.TestCase):
 		n = 1000000
 		p = 5
 		df_t = 3
-		X,_,_,Q,V = knockpy.graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(
 			n=n, p=p, method='AR1', rho=0.3, x_dist='ar1t', df_t=df_t
 		)
 		S = np.eye(p)
@@ -405,7 +407,8 @@ class TestBlockT(unittest.TestCase):
 		df_t = 100000
 
 		# Test that the likelihood --> gaussian as df_t --> infinity
-		X1,_,_,Q,V = knockpy.graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X1,_,_,Q,V = dgprocess.sample_data(
 			n=n, p=p, method='daibarber2016', gamma=0.3, rho=0.8, x_dist='blockt'
 		)
 		X2 = np.random.randn(n, p)
@@ -435,7 +438,8 @@ class TestBlockT(unittest.TestCase):
 		n = 2000000
 		p = 6
 		df_t = 5
-		X,_,_,Q,V = knockpy.graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(
 			n=n, 
 			p=p,
 			method='daibarber2016',
@@ -498,7 +502,8 @@ class TestIsing(unittest.TestCase):
 		n = 10
 		p = 625
 		mu = np.zeros(p)
-		X,_,_,gibbs_graph,_ = knockpy.graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,gibbs_graph,_ = dgprocess.sample_data(
 			n=n, 
 			p=p,
 			method='ising',
@@ -560,7 +565,8 @@ class TestIsing(unittest.TestCase):
 		n = 100
 		p = 625
 		mu = np.zeros(p)
-		X,_,_,gibbs_graph,_ = knockpy.graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,gibbs_graph,_ = dgprocess.sample_data(
 			n=n, 
 			p=p,
 			method='ising',
@@ -600,7 +606,8 @@ class TestIsing(unittest.TestCase):
 		n = 100000
 		p = 9
 		mu = np.zeros(p)
-		X,_,_,gibbs_graph,_ = knockpy.graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,gibbs_graph,_ = dgprocess.sample_data(
 			n=n, 
 			p=p,
 			method='ising',

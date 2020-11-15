@@ -2,7 +2,7 @@ import numpy as np
 import scipy.cluster.hierarchy as hierarchy
 from . import mrc
 from . import mac
-from . import graphs
+from . import dgp
 from . import utilities
 
 def parse_method(method, groups, p):
@@ -38,7 +38,7 @@ def divide_computation(Sigma, max_block):
 	noise = np.random.randn(p,p)*1e-6
 	noise += noise.T
 	Sigma = Sigma + noise
-	link = graphs.create_correlation_tree(Sigma)
+	link = dgp.create_correlation_tree(Sigma)
 	
 	# Set up binary search
 	max_clusters = p

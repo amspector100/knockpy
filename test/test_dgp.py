@@ -4,7 +4,7 @@ import unittest
 from .context import knockpy
 
 
-from knockpy import graphs
+from knockpy import dgp
 
 class TestSampleData(unittest.TestCase):
 	""" Tests sample_data function """
@@ -14,9 +14,8 @@ class TestSampleData(unittest.TestCase):
 		np.random.seed(110)
 
 		p = 50
-		X, y, beta, Q, corr_matrix = graphs.sample_data(
-			p = p, y_dist = 'binomial'
-		)
+		dgprocess = dgp.DGP()
+		X, y, beta, Q, corr_matrix = dgprocess.sample_data(p=p, y_dist='binomial')
 
 		# Test outputs are binary
 		y_vals = np.unique(y)
@@ -29,7 +28,7 @@ class TestSampleData(unittest.TestCase):
 		# sampling ys
 		N = 5000
 		X_repeated = np.repeat(X[0], N).reshape(p, N).T
-		ys = graphs.sample_response(
+		ys = dgp.sample_response(
 			X_repeated, beta, y_dist = 'binomial'
 		)
 
@@ -45,8 +44,9 @@ class TestSampleData(unittest.TestCase):
 
 		# Test sparsity
 		p = 100
-		_, _, beta, _, _ = graphs.sample_data(
-			p = p, sparsity = 0.3, coeff_size = 0.3,
+		dgprocess = dgp.DGP()
+		_, _, beta, _, _ = dgprocess.sample_data(
+			p=p, sparsity=0.3, coeff_size=0.3,
 		)
 		self.assertTrue((beta != 0).sum() == 30,
 						msg = 'sparsity parameter yields incorrect sparsity')
@@ -61,8 +61,9 @@ class TestSampleData(unittest.TestCase):
 		groups = np.concatenate(
 			[np.arange(0, 50, 1), np.arange(0, 50, 1)]
 		)
-		_, _, beta, _, _ = graphs.sample_data(
-			p = p, sparsity=sparsity, groups = groups,
+		dgprocess = dgp.DGP()
+		_, _, beta, _, _ = dgprocess.sample_data(
+			p=p, sparsity=sparsity, groups=groups,
 		)
 
 		# First, test that the correct number of features is chosen
@@ -84,7 +85,7 @@ class TestSampleData(unittest.TestCase):
 		n = 100000
 		p = 10
 		X = np.random.randn(n,p)
-		beta = graphs.create_sparse_coefficients(
+		beta = dgp.create_sparse_coefficients(
 			p=p,
 			sparsity=0.5,
 			coeff_size=1,
@@ -106,16 +107,16 @@ class TestSampleData(unittest.TestCase):
 			)
 
 		# Cond mean 1: linear. 
-		y = graphs.sample_response(X, beta, cond_mean='linear')
+		y = dgp.sample_response(X, beta, cond_mean='linear')
 		test_cov(X[:, 0], y, name='linear')
 
 		# Cond mean 2: cubic
-		y = graphs.sample_response(X, beta, cond_mean='cubic')
+		y = dgp.sample_response(X, beta, cond_mean='cubic')
 		feature = np.power(X[:, 0], 3) - X[:, 0]
 		test_cov(feature, y, name='cubic')
 
 		# Cond mean 3: trunclinear
-		y = graphs.sample_response(X, beta, cond_mean='trunclinear')
+		y = dgp.sample_response(X, beta, cond_mean='trunclinear')
 		feature = (X[:, 0] >= 1)
 		mean1 = y[feature].mean()
 		mean2 = y[~feature].mean()
@@ -125,19 +126,19 @@ class TestSampleData(unittest.TestCase):
 		)
 
 		# Cond mean 4: pairwise interactions
-		y = graphs.sample_response(X, beta, cond_mean='pairint')
+		y = dgp.sample_response(X, beta, cond_mean='pairint')
 		feature = X[:, 0]*X[:, 1]
 		test_cov(feature, y, name='pairint', expected=-1)
 
 		# Cond mean 5: sin
-		y = graphs.sample_response(X, beta, cond_mean='cos')
+		y = dgp.sample_response(X, beta, cond_mean='cos')
 		feature = X[:, 0]
 		test_cov(feature, y, name='cos', expected=0)
 		feature = X[:, 2]
 		test_cov(feature, y, name='cos', expected=0)
 
 		# Cond mean 6: quadratic
-		y = graphs.sample_response(X, beta, cond_mean='quadratic')
+		y = dgp.sample_response(X, beta, cond_mean='quadratic')
 		feature = X[:, 0]
 		test_cov(feature, y, name='quadratic', expected=0)
 
@@ -146,9 +147,13 @@ class TestSampleData(unittest.TestCase):
 		# Test normal
 		np.random.seed(110)
 		p = 1000
-		_, _, beta, _, _ = graphs.sample_data(
-			p = p, sparsity = 1, coeff_size=1,
-			coeff_dist = 'normal', sign_prob = 0
+		dgprocess = dgp.DGP()
+		_, _, beta, _, _ = dgprocess.sample_data(
+			p=p,
+			sparsity=1,
+			coeff_size=1,
+			coeff_dist='normal',
+			sign_prob=0
 		)
 		expected = 1
 		mean_est = beta.mean()
@@ -161,9 +166,13 @@ class TestSampleData(unittest.TestCase):
 		# Test uniform
 		np.random.seed(110)
 		p = 1000
-		_, _, beta, _, _ = graphs.sample_data(
-			p = p, sparsity = 1, coeff_size=1,
-			coeff_dist = 'uniform', sign_prob = 0
+		dgprocess = dgp.DGP()
+		_, _, beta, _, _ = dgprocess.sample_data(
+			p=p, 
+			sparsity=1,
+			coeff_size=1,
+			coeff_dist='uniform',
+			sign_prob=0
 		)
 		expected = 0.75
 		mean_est = beta.mean()
@@ -184,7 +193,8 @@ class TestSampleData(unittest.TestCase):
 
 		# Test Value-Error
 		def sample_bad_dist():
-			graphs.sample_data(p = 100, coeff_dist = 'baddist')
+			dgprocess = dgp.DGP()
+			dgprocess.sample_data(p=100, coeff_dist='bad_dist_arg')
 		self.assertRaisesRegex(
 			ValueError, "must be 'none', 'normal', or 'uniform'",
 			sample_bad_dist
@@ -196,7 +206,8 @@ class TestSampleData(unittest.TestCase):
 		# Test signs of beta
 		p = 100
 		for sign_prob in [0, 1]:
-			_, _, beta, _, _ = graphs.sample_data(
+			dgprocess = dgp.DGP()
+			_, _, beta, _, _ = dgprocess.sample_data(
 				p=p, sparsity=1, sign_prob=sign_prob, coeff_dist='uniform'
 			)
 			num_pos = (beta > 0).sum()
@@ -210,7 +221,8 @@ class TestSampleData(unittest.TestCase):
 		sparsity = 0.1
 		for method in ['daibarber2016', 'ar1']:
 			for sign_prob in [0.1, 0.3, 0.5, 0.7, 0.9]:
-				_,_,beta,_,_ = graphs.sample_data(
+				dgprocess = dgp.DGP()
+				_,_,beta,_,_ = dgprocess.sample_data(
 					p=p,
 					sparsity=sparsity,
 					sign_prob=sign_prob,
@@ -232,7 +244,8 @@ class TestSampleData(unittest.TestCase):
 		sparsity = 0.5
 		expected_nn = int(sparsity * p)
 		for j in range(10):
-			_,_,beta,_,_ = graphs.sample_data(
+			dgprocess = dgp.DGP()
+			_,_,beta,_,_ = dgprocess.sample_data(
 				p=p,
 				sparsity=0.5,
 				corr_signals=True
@@ -252,7 +265,8 @@ class TestSampleData(unittest.TestCase):
 
 		p = 50
 		rho = 0.99
-		_,_,_,_,V = graphs.sample_data(p=p, method='partialcorr', rho=rho)
+		dgprocess = dgp.DGP()
+		_,_,_,_,V = dgprocess.sample_data(p=p, method='partialcorr', rho=rho)
 		diag_diff = np.mean(np.abs(np.diag(V) - 1))
 		self.assertTrue(
 			diag_diff < 1e-4, 
@@ -270,7 +284,8 @@ class TestSampleData(unittest.TestCase):
 		p = 50
 		rank = 3
 		np.random.seed(100)
-		_,_,_,_,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,_,V = dgprocess.sample_data(
 			p=p, method='factor', rank=rank
 		)
 		diag_diff = np.mean(np.abs(np.diag(V) - 1))
@@ -283,7 +298,7 @@ class TestSampleData(unittest.TestCase):
 	def test_daibarber2016_sample(self):
 
 		# Check that defaults are correct - start w cov matrix
-		_, _, beta, _, V, _ = graphs.daibarber2016_graph()
+		_, _, beta, _, V, _ = dgp.daibarber2016_graph()
 
 		# Construct expected cov matrix -  this is a different
 		# construction than the actual function
@@ -327,7 +342,8 @@ class TestSampleData(unittest.TestCase):
 		rho = 0.8
 		n = 500
 		p = 500
-		_,_,beta,_,_ = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,beta,_,_ = dgprocess.sample_data(
 			rho=rho, gamma=1, p=p, n=n, sparsity=0.1,
 			method='daibarber2016',
 			coeff_dist='dsliu2020',
@@ -338,7 +354,8 @@ class TestSampleData(unittest.TestCase):
 		)
 
 		p = 2000
-		_,_,beta,_,_ = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,beta,_,_ = dgprocess.sample_data(
 			rho=rho, gamma=1, p=p, n=n, sparsity=0.025,
 			method='daibarber2016',
 			coeff_dist='dsliu2020',
@@ -354,7 +371,8 @@ class TestSampleData(unittest.TestCase):
 		p = 1000
 		rho = 0.8
 		np.random.seed(110)
-		_,_,beta,_,_ = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,beta,_,_ = dgprocess.sample_data(
 			rho=rho, gamma=1, p=p, n=n, sparsity=0.06,
 			method='daibarber2016',
 			coeff_dist='gmliu2019',
@@ -369,7 +387,8 @@ class TestSampleData(unittest.TestCase):
 		# Check that rho parameter works
 		rho = 0.3
 		p = 500
-		_,_,_,_,Sigma = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,_,Sigma = dgprocess.sample_data(
 			p=p, method='AR1', rho=rho
 		)
 		np.testing.assert_almost_equal(
@@ -381,7 +400,8 @@ class TestSampleData(unittest.TestCase):
 
 		# Error testing
 		def ARsample():
-			graphs.sample_data(method='AR1', rho=1.5)
+			dgprocess = dgp.DGP()
+			dgprocess.sample_data(method='AR1', rho=1.5)
 		self.assertRaisesRegex(
 			ValueError, "must be a correlation between -1 and 1",
 			ARsample
@@ -392,7 +412,8 @@ class TestSampleData(unittest.TestCase):
 		np.random.seed(110)
 		a = 100
 		b = 100
-		_,_,_,_,Sigma = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,_,Sigma = dgprocess.sample_data(
 			p=500, method='AR1', a=a, b=b
 		)
 		mean_rho = np.diag(Sigma, k=1).mean()
@@ -409,7 +430,8 @@ class TestSampleData(unittest.TestCase):
 		np.random.seed(110)
 		a = 100
 		b = 40
-		_,_,_,_,Sigma = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,_,Sigma = dgprocess.sample_data(
 			p=500, method='nestedar1', a=a, b=b, nest_size=2, num_nests=1
 		)
 		mean_rho = np.diag(Sigma, k=1).mean()
@@ -425,7 +447,8 @@ class TestSampleData(unittest.TestCase):
 
 		d = 1000
 		p = 4
-		_,_,_,_,Sigma = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,_,Sigma = dgprocess.sample_data(
 			p=p, d=d, method='wishart'
 		)
 		np.testing.assert_almost_equal(
@@ -435,7 +458,8 @@ class TestSampleData(unittest.TestCase):
 		)
 
 		# Repeat for the uniform case
-		_,_,_,_,Sigma = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,_,Sigma = dgprocess.sample_data(
 			p=p, d=d, method='uniformdot'
 		)
 		expected = 0.25 * np.eye(p) + 0.75 * np.ones((p, p))
@@ -453,7 +477,8 @@ class TestSampleData(unittest.TestCase):
 		p = 2000
 		temp = 0.1
 		np.random.seed(110)
-		_,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,Q,V = dgprocess.sample_data(
 			p=p, temp=temp, method='dirichlet'
 		)
 		np.testing.assert_almost_equal(
@@ -467,7 +492,8 @@ class TestSampleData(unittest.TestCase):
 		# Try 2 with high temp
 		temp = 10
 		np.random.seed(110)
-		_,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,Q,V = dgprocess.sample_data(
 			p=p, temp=temp, method='dirichlet'
 		)
 		np.testing.assert_almost_equal(
@@ -485,7 +511,8 @@ class TestSampleData(unittest.TestCase):
 		p = 500
 		delta = 0.5
 		np.random.seed(110)
-		_,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,Q,V = dgprocess.sample_data(
 			p=p, delta=delta, method='qer'
 		)
 
@@ -504,7 +531,8 @@ class TestSampleData(unittest.TestCase):
 		# Try er = V
 		delta = 0.1
 		np.random.seed(110)
-		_,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_,_,_,Q,V = dgprocess.sample_data(
 			p=p, delta=delta, method='ver'
 		)
 
@@ -527,7 +555,8 @@ class TestSampleData(unittest.TestCase):
 		n = 1000000
 		p = 4
 		df_t = 6
-		X,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(
 			n=n,
 			p=p,
 			method='daibarber2016',
@@ -550,7 +579,8 @@ class TestSampleData(unittest.TestCase):
 		np.random.seed(110)
 		n = 100000
 		p = 5
-		X,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(
 			n=n, p=p, method='AR1', x_dist='ar1t', df_t=5
 		)
 
@@ -562,7 +592,8 @@ class TestSampleData(unittest.TestCase):
 
 		# Check that this fails correctly for non-ar1-method
 		def non_ar1_t():
-			graphs.sample_data(
+			dgprocess = dgp.DGP()
+			dgprocess.sample_data(
 				n=n, p=p, method='ver', x_dist='ar1t' 
 			)
 		self.assertRaisesRegex(
@@ -577,7 +608,8 @@ class TestSampleData(unittest.TestCase):
 		np.random.seed(110)
 		n = 50000
 		p = 9
-		X,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(
 			n=n, p=p, method='ising', x_dist='gibbs', 
 		)
 		# Mean test
@@ -593,7 +625,8 @@ class TestSampleData(unittest.TestCase):
 			f"Ising gibbs dist has unexpected number of edges ({num_edges}, expected {expected_edges})"
 		)
 		# Check the non-grid-based method
-		X,_,_,Q,V = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X,_,_,Q,V = dgprocess.sample_data(
 			n=n, p=p, method=3, x_dist='gibbs', y_dist='binomial',
 		)
 		# Mean test
@@ -602,7 +635,8 @@ class TestSampleData(unittest.TestCase):
 			err_msg=f"Gibbs (non-ising) sampler has unexpected mean (expected 0, got {X.mean()})"
 		)
 		# Test consistency of Q
-		X2,_,_,Q2,V2 = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X2,_,_,Q2,V2 = dgprocess.sample_data(
 			n=n, p=p, gibbs_graph=Q, method=3, x_dist='gibbs', y_dist='binomial'
 		)
 		np.testing.assert_array_almost_equal(
@@ -615,7 +649,8 @@ class TestSampleData(unittest.TestCase):
 		)
 
 		# Test this works without errors for n < p
-		_ = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		_ = dgprocess.sample_data(
 			n=5, p=p, method=3, x_dist='gibbs', y_dist='binomial'
 		)
 
@@ -624,7 +659,8 @@ class TestSampleData(unittest.TestCase):
 
 		# Check that we get an error for wrong dist
 		def bad_xdist():
-			graphs.sample_data(
+			dgprocess = dgp.DGP()
+			dgprocess.sample_data(
 				method='ver', x_dist='t_dist' 
 			)
 

@@ -4,7 +4,7 @@ import scipy as sp
 import unittest
 from .context import knockpy
 from statsmodels.stats.moment_helpers import cov2corr
-from knockpy import graphs, utilities, mac, mrc, smatrix, knockoffs
+from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
 
 
 class CheckSMatrix(unittest.TestCase):
@@ -138,7 +138,7 @@ class TestSDP(CheckSMatrix):
         # Test non-group SDP first
         n = 200
         p = 50
-        X,_,_,_, corr_matrix, groups = graphs.daibarber2016_graph(
+        X,_,_,_, corr_matrix, groups = dgp.daibarber2016_graph(
             n = n, p = p, gamma = 0.3
         )
 
@@ -173,7 +173,7 @@ class TestSDP(CheckSMatrix):
         self.check_S_properties(corr_matrix, S_triv2, trivial_groups)
 
         # Test slightly harder case
-        _,_,_,_, expected_out, _ = graphs.daibarber2016_graph(
+        _,_,_,_, expected_out, _ = dgp.daibarber2016_graph(
             n = n, p = p, gamma = 0
         )
         ksampler = knockoffs.GaussianSampler(
@@ -234,7 +234,7 @@ class TestSDP(CheckSMatrix):
 
         # Get graph
         np.random.seed(110)
-        Q = graphs.ErdosRenyi(p=50, tol=1e-1)
+        Q = dgp.ErdosRenyi(p=50, tol=1e-1)
         V = cov2corr(utilities.chol2inv(Q))
         groups = np.concatenate([np.zeros(10) + j for j in range(5)]) + 1
         groups = groups.astype('int32')
@@ -263,7 +263,7 @@ class TestSDP(CheckSMatrix):
 
         # Get graph
         np.random.seed(110)
-        Q = graphs.ErdosRenyi(p=50, tol=1e-1)
+        Q = dgp.ErdosRenyi(p=50, tol=1e-1)
         V = utilities.chol2inv(Q)
         groups = np.concatenate([np.zeros(10) + j for j in range(5)]) + 1
         groups = groups.astype('int32')
@@ -353,7 +353,8 @@ class TestMRCSolvers(CheckSMatrix):
         """
         p = 50
         smoothing = 0.1
-        _,_,_,_,V = knockpy.graphs.sample_data(
+        dgprocess = dgp.DGP()
+        _,_,_,_,V = dgprocess.sample_data(
             method='partialcorr', rho=0.1,
         )
         S_MVR = mrc.solve_mvr(Sigma=V, smoothing=smoothing)
@@ -488,7 +489,8 @@ class TestMRCSolvers(CheckSMatrix):
         methods = ['ar1', 'ver']
         groups = np.arange(1, p+1, 1)
         for method in methods:
-            _,_,_,_,Sigma = knockpy.graphs.sample_data(
+            dgp = dgp.DGP()
+            _,_,_,_,Sigma = dgprocess.sample_data(
                 method=method, p=p
             )
 
@@ -547,7 +549,8 @@ class TestMRCSolvers(CheckSMatrix):
             np.random.randint(1, p+1, p)
         )
         for method in ['ar1', 'ver']:
-            _,_,_,_,Sigma = knockpy.graphs.sample_data(
+            dgprocess = dgp.DGP()
+            _,_,_,_,Sigma = dgprocess.sample_data(
                 method=method, p=p,
             )
 
@@ -581,7 +584,8 @@ class TestMRCSolvers(CheckSMatrix):
         p = 500
         rho = 0.6
         # 1. Block equicorrelated
-        _,_,_,_,Vblock = knockpy.graphs.sample_data(
+        dgprocess = dgp.DGP()
+        _,_,_,_,Vblock = dgprocess.sample_data(
             p=p, method='daibarber2016', gamma=0, rho=rho, group_size=2
         )
         S_CI = mrc.solve_ciknock(Vblock)
@@ -589,7 +593,8 @@ class TestMRCSolvers(CheckSMatrix):
             S_CI, (1-rho**2)*np.eye(p), 2, "S_CI is incorrect for block-equicorrelated with blocksize 2"
         )
         # 2. Equicorelated
-        _,_,_,_,V = knockpy.graphs.sample_data(
+        dgprocess = dgp.DGP()
+        _,_,_,_,V = dgprocess.sample_data(
             p=p, method='daibarber2016', gamma=1, rho=rho
         )
         S_CI = mrc.solve_ciknock(V)
@@ -605,7 +610,8 @@ class TestBlockdiagApprx(CheckSMatrix):
 
         p = 120
         for method in ['daibarber2016', 'ar1', 'ver', 'qer']:
-            _,_,_,_,V = graphs.sample_data(p=p, method=method)
+            dgprocess = dgp.DGP()
+            _,_,_,_,V = dgprocess.sample_data(p=p, method=method)
             for max_block in [3, 12, 15, 54, 76]:
                 blocks = smatrix.divide_computation(V, max_block)
                 block_sizes = utilities.calc_group_sizes(blocks)
@@ -622,7 +628,8 @@ class TestBlockdiagApprx(CheckSMatrix):
         rho = 0.3
         gamma = 0
         groups = np.arange(1, p+1, 1)
-        _,_,_,_,V = graphs.sample_data(
+        dgprocess = dgp.DGP()
+        _,_,_,_,V = dgprocess.sample_data(
             p=p, method='daibarber2016', gamma=gamma, rho=rho
         )
 
@@ -652,7 +659,8 @@ class TestBlockdiagApprx(CheckSMatrix):
         nontriv_groups = utilities.preprocess_groups(nontriv_groups)
         # Sample data
         np.random.seed(110)
-        _,_,_,_,V = graphs.sample_data(
+        dgprocess = dgp.DGP()
+        _,_,_,_,V = dgprocess.sample_data(
             p=p, method='ar1', a=a, b=b
         )
         for groups in [triv_groups, nontriv_groups]:
@@ -791,7 +799,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
         # Generate data
         n = 100
         p = 100
-        X,_,_,_, corr_matrix, groups = graphs.daibarber2016_graph(
+        X,_,_,_, corr_matrix, groups = dgp.daibarber2016_graph(
             n = n, p = p, gamma = 1, rho = 0.8
         )
         S_bad = np.eye(p)
@@ -835,7 +843,8 @@ class TestKnockoffGen(CheckValidKnockoffs):
         n = 25
         p = 300
         rho = 0.5
-        X,_,_,_,_ = graphs.sample_data(
+        dgprocess = dgp.DGP()
+        X,_,_,_,_ = dgprocess.sample_data(
             n=n, p=p, rho=rho, method='AR1'
         )
 
@@ -867,11 +876,12 @@ class TestKnockoffGen(CheckValidKnockoffs):
         p = 5
 
         # Check with a non-correlation matrix
-        V = 4*graphs.AR1(p=p, rho=0.5)
+        V = 4*dgp.AR1(p=p, rho=0.5)
         mu = np.random.randn(p)
         print(f"true mu: {mu}")
-        X,_,_,_,_ = graphs.sample_data(
-            corr_matrix=V, n=n, mu=mu, p=p,
+        dgprocess = dgp.DGP(mu=mu, Sigma=V)
+        X,_,_,_,_ = dgprocess.sample_data(
+            n=n, p=p,
         )
         print(f"X mean: {X.mean(axis=0)}")
 
@@ -898,7 +908,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
                 for method in ['mvr', 'sdp']:
 
                     mu = 10*np.random.randn(p)
-                    X,_,_,_, corr_matrix,_ = graphs.daibarber2016_graph(
+                    X,_,_,_, corr_matrix,_ = dgp.daibarber2016_graph(
                         n=n,
                         p=p,
                         gamma=gamma,
@@ -930,7 +940,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
             for gamma in [0.5, 1]:
                 for method in ['mvr', 'sdp']:
                     # X values
-                    X,_,_,_,corr_matrix,_ = graphs.daibarber2016_graph(
+                    X,_,_,_,corr_matrix,_ = dgp.daibarber2016_graph(
                         n = n, p = p, gamma = gamma, rho = rho
                     )
                     # S matrix
@@ -969,7 +979,8 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
         p = 100
         n = 300
-        X, y, beta, Q, V = knockpy.graphs.sample_data(
+        dgprocess = dgp.DGP()
+        X, y, beta, Q, V = dgprocess.sample_data(
             method='qer', p=p, n=n, coeff_size=0.5, sparsity=0.5, 
         )
         ksampler1 = knockoffs.FXSampler(

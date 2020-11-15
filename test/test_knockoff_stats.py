@@ -5,7 +5,7 @@ import sklearn.neural_network
 from .context import knockpy
 
 from knockpy import knockoff_stats as kstats
-from knockpy import utilities, graphs
+from knockpy import utilities, dgp
 from knockpy.knockoff_stats import data_dependent_threshhold
 
 DEFAULT_SAMPLE_KWARGS = {
@@ -51,11 +51,8 @@ class KStatVal(unittest.TestCase):
 
 		# Create data generating process
 		np.random.seed(seed)
-		X, y, beta, _, corr_matrix = graphs.sample_data(**sample_kwargs)
-
-		# XtXinv = np.linalg.inv(np.dot(X.T, X))
-		# Xty = np.dot(X.T, y)
-		# print(np.dot(XtXinv, Xty))
+		dgprocess = dgp.DGP()
+		X, y, beta, _, corr_matrix = dgprocess.sample_data(**sample_kwargs)
 
 		# Create groups
 		if group_features:
@@ -338,7 +335,8 @@ class TestFeatureStatistics(KStatVal):
 		n = 100
 		p = 20
 		np.random.seed(110)
-		X, y, beta, _, corr_matrix = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X, y, beta, _, corr_matrix = dgprocess.sample_data(
 			n = n, p = p, y_dist = 'gaussian', 
 			coeff_size = 100, sign_prob = 1
 		)       
@@ -412,7 +410,8 @@ class TestFeatureStatistics(KStatVal):
 		n = 100
 		p = 20
 		np.random.seed(110)
-		X, y, beta, _, corr_matrix = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X, y, beta, _, corr_matrix = dgprocess.sample_data(
 			n = n, p = p, y_dist = 'gaussian', 
 			coeff_size = 100, sign_prob = 1
 		)       
@@ -454,7 +453,8 @@ class TestFeatureStatistics(KStatVal):
 		
 		# 3. Test that throws correct error for non-sklearn backend
 		def non_sklearn_backend_cvscore():
-			X, y, beta, _, corr_matrix = graphs.sample_data(
+			dgprocess = dgp.DGP()
+			X, y, beta, _, corr_matrix = dgprocess.sample_data(
 				n = n, p = p, y_dist = 'binomial', 
 				coeff_size = 100, sign_prob = 1
 			)
@@ -483,7 +483,8 @@ class TestFeatureStatistics(KStatVal):
 		p = 20
 		rho = 0.3
 		np.random.seed(110)
-		X, y, beta, _, corr_matrix = graphs.sample_data(
+		dgprocess = dgp.DGP()
+		X, y, beta, _, corr_matrix = dgprocess.sample_data(
 			n = n, p = p, y_dist = 'gaussian', 
 			coeff_size = 100, sign_prob = 0.5,
 			method = 'daibarber2016',
