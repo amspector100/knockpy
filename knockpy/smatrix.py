@@ -51,7 +51,7 @@ def divide_computation(Sigma, max_block):
 		# Create new groups and check maximum size
 		n_clusters = int((max_clusters + min_clusters) / 2)
 		groups = hierarchy.cut_tree(link, n_clusters).reshape(-1) + 1
-		current_max_block = knockadapt.utilities.calc_group_sizes(groups).max()
+		current_max_block = utilities.calc_group_sizes(groups).max()
 	   
 		# Cache search info and check maximum size
 		prev_max_clusters = max_clusters
@@ -98,7 +98,7 @@ def merge_groups(groups, max_block):
 
 	return new_groups
 
-def compute_S_matrix(
+def compute_smatrix(
 	Sigma,
 	groups=None,
 	method=None,
@@ -109,13 +109,14 @@ def compute_S_matrix(
 ):
 	"""
 	Wraps a variety of S-matrix generation functions. 
-	This uses a block-diagonal approximation of Sigma if
-	the dimension of Sigma exceeds max_block.
+	For mvr, mmi, and sdp losses, this uses a block-diagonal
+	approximation of Sigma if the dimension of Sigma exceeds
+	max_block.
 	:param Sigma: covariance matrix
 	:param groups: groups for group knockoffs
 	:param method: Method for constructing
-	S-matrix. One of mvr, maxent, sdp, asdp,
-	equicorrelated, ci/ciknock.
+	S-matrix. One of mvr, mmi, sdp, equicorrelated, ci 
+	(conditional independence).
 	:param solver: Method for solving mrc knockoffs.
 	One of 'cd' (coordinate descent) or 'psgd'
 	(projected gradient descent).
@@ -151,29 +152,35 @@ def compute_S_matrix(
 	# Possibly use block-diagonal approximation, either using
 	# hierarchical clustering for non-grouped knockoffs or
 	# randomly merging groups for group knockoffs.
-	if p > max_block:
+	if p > max_block and method not in ['equicorrelated', 'eq', 'ci', 'ciknock']:
 		if np.all(groups == np.arange(1, p + 1, 1)):
 			blocks = divide_computation(Sigma, max_block)
 		else:
 			blocks = merge_groups(groups, max_block)
+		block_sizes = utilities.calc_group_sizes(blocks)
+		nblocks = block_sizes.shape[0]
+		print(f"Using blockdiag approx. with nblocks={nblocks} and max_size={block_sizes.max()}...")
 		Sigma_blocks = mrc.blockdiag_to_blocks(Sigma, blocks)
 		group_blocks = []
 		for j in range(int(blocks.min()), int(blocks.max())+1):
 			group_blocks.append(utilities.preprocess_groups(groups[blocks == j]))
-		print(len(Sigma_blocks))
-		print(len(group_blocks))
 		# Recursive subcall for each block. Possibly use multiprocessing.
-		S_blocks = utilities.apply_pool(
-			func=compute_S_matrix,
-			constant_inputs={
+		constant_inputs = {
 				'method':method,
 				'solver':solver,
 				'max_block':p,
-			},
+		}
+		for key in kwargs:
+			constant_inputs[key] = kwargs[key]
+		S_blocks = utilities.apply_pool(
+			func=compute_smatrix,
+			constant_inputs=constant_inputs,
             Sigma=Sigma_blocks,
             groups=group_blocks,
             num_processes=num_processes
 		)
+		print("Finished comp of blocks, putting together")
+		# Put blocks together
 		S = np.zeros((p,p))
 		block_id = 1
 		for Sigma_block, S_block in zip(Sigma_blocks, S_blocks):
@@ -181,13 +188,39 @@ def compute_S_matrix(
 			block_inds = np.ix_(block_inds, block_inds)
 			S[block_inds] = S_block
 			block_id += 1
-		return S * scale_matrix
+		# Make S feasible
+		S, _ = utilities.scale_until_PSD(
+			Sigma=Sigma,
+			S=S, 
+			tol=kwargs.get('tol', mrc.DEFAULT_TOL),
+			num_iter=kwargs.get('num_iter', 10)
+		)
+		# Line search for MRC methods
+		smoothing = 1
+		if 'smoothing' in kwargs:
+			smoothing = kwargs['smoothing']
+		if method == 'mvr':
+			obj = mrc.mvr_loss
+		elif method == 'mmi' or method == 'maxent':
+			obj = mrc.mmi_loss
+		if method in ['mvr', 'mmi', 'maxent']:
+			best_gamma = 1
+			best_loss = obj(Sigma=Sigma, S=S, smoothing=smoothing)
+			for gamma in mrc.GAMMA_VALS:
+				loss = obj(Sigma=Sigma, S=gamma*S, smoothing=smoothing)
+				if loss < best_loss:
+					best_gamma = gamma
+					best_loss = loss
+		else:
+			gamma = 1
+
+		return S * gamma * scale_matrix
 
 	# Currently cd solvers cannot handle group knockoffs
 	# (this is todo)
 	if not np.all(groups == np.arange(1, p + 1, 1)):
 		solver = 'psgd'
-	if (method == 'mvr' or method == 'maxent') and solver == 'psgd':
+	if (method == 'mvr' or method == 'mmi') and solver == 'psgd':
 		S = mrc.solve_mrc_psgd(
 			Sigma=Sigma, groups=groups, **kwargs
 		)
@@ -195,8 +228,8 @@ def compute_S_matrix(
 		S = mrc.solve_mvr(
 			Sigma=Sigma, **kwargs
 		)
-	elif method == 'maxent':
-		S = mrc.solve_maxent(
+	elif method == 'mmi':
+		S = mrc.solve_mmi(
 			Sigma=Sigma, **kwargs
 		)
 	elif method == "sdp" or method == "asdp":

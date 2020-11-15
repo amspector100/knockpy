@@ -72,13 +72,13 @@ class KStatVal(unittest.TestCase):
 			verbose=False,
 			S = (1-rho)*np.eye(p)
 		)
-		knockoffs = ksampler.sample_knockoffs()
+		Xk = ksampler.sample_knockoffs()
 		S = ksampler.fetch_S()
 
 		# Fit and extract coeffs/T
 		fstat.fit(
 			X,
-			knockoffs,
+			Xk,
 			y,
 			groups=groups,
 			**fstat_kwargs,
@@ -352,10 +352,10 @@ class TestFeatureStatistics(KStatVal):
 		np.random.seed(110)
 		lasso_stat = kstats.LassoStatistic()
 		lasso_stat.fit(
-			X = X, 
-			knockoffs = fake_knockoffs,
-			y = y, 
-			y_dist = None,
+			X=X, 
+			Xk=fake_knockoffs,
+			y=y, 
+			y_dist=None,
 			pair_agg='cd'
 		)
 		W_cd = lasso_stat.W
@@ -373,10 +373,10 @@ class TestFeatureStatistics(KStatVal):
 		np.random.seed(110)
 		lasso_stat = kstats.LassoStatistic()
 		lasso_stat.fit(
-			X = X, 
-			knockoffs = fake_knockoffs,
-			y = y, 
-			y_dist = None,
+			X=X, 
+			Xk=fake_knockoffs,
+			y=y, 
+			y_dist=None,
 			pair_agg='sm'
 		)
 		Z_sm = lasso_stat.Z
@@ -391,10 +391,10 @@ class TestFeatureStatistics(KStatVal):
 		np.random.seed(110)
 		lasso_stat = kstats.LassoStatistic()
 		lasso_stat.fit(
-			X = X, 
-			knockoffs = fake_knockoffs,
-			y = y, 
-			y_dist = None,
+			X=X, 
+			Xk=fake_knockoffs,
+			y=y, 
+			y_dist=None,
 			pair_agg='scd'
 		)
 		W_scd = lasso_stat.W
@@ -492,16 +492,15 @@ class TestFeatureStatistics(KStatVal):
 		groups = np.arange(1, p+1, 1)
 
 		# Create knockoffs
-		knockoffs, S = knockpy.knockoffs.gaussian_knockoffs(
+		S = (1-rho)*np.eye(p)
+		ksampler = knockpy.knockoffs.GaussianSampler(
 			X=X, 
 			groups=groups,
 			Sigma=corr_matrix,
-			return_S=True,
 			verbose=False,
-			sdp_verbose=False,
-			S = (1-rho)*np.eye(p)
+			S=S
 		)
-		knockoffs = knockoffs[:, :, 0]
+		knockoffs = ksampler.sample_knockoffs()
 		G = np.concatenate([
 				np.concatenate([corr_matrix, corr_matrix-S]),
 				np.concatenate([corr_matrix-S, corr_matrix])],

@@ -116,11 +116,11 @@ def combine_Z_stats(Z, groups=None, pair_agg="cd", group_agg="sum"):
 
 
 # ------------------------------ Lasso Stuff ---------------------------------------#
-def calc_lars_path(X, knockoffs, y, groups=None, **kwargs):
+def calc_lars_path(X, Xk, y, groups=None, **kwargs):
 	""" Calculates locations at which X/knockoffs enter lasso 
 	model when regressed on y.
 	:param X: n x p design matrix
-	:param knockoffs: n x p knockoff matrix
+	:param Xk: n x p knockoff matrix
 	:param groups: p length numpy array of groups
 	:param kwargs: kwargs for sklearn Lasso class 
 	 """
@@ -131,7 +131,7 @@ def calc_lars_path(X, knockoffs, y, groups=None, **kwargs):
 
 	# Bind data
 	p = X.shape[1]
-	features = np.concatenate([X, knockoffs], axis=1)
+	features = np.concatenate([X, Xk], axis=1)
 
 	# Randomize coordinates to make sure everything is symmetric
 	inds, rev_inds = random_permutation_inds(2 * p)
@@ -155,7 +155,7 @@ def calc_lars_path(X, knockoffs, y, groups=None, **kwargs):
 	return Z[rev_inds]
 
 
-def fit_lasso(X, knockoffs, y, y_dist=None, use_lars=False, **kwargs):
+def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
 
 	# Parse some kwargs/defaults
 	if "max_iter" in kwargs:
@@ -175,7 +175,7 @@ def fit_lasso(X, knockoffs, y, y_dist=None, use_lars=False, **kwargs):
 
 	# Bind data
 	p = X.shape[1]
-	features = np.concatenate([X, knockoffs], axis=1)
+	features = np.concatenate([X, Xk], axis=1)
 
 	# Randomize coordinates to make sure everything is symmetric
 	inds, rev_inds = random_permutation_inds(2 * p)
@@ -214,11 +214,11 @@ def fit_lasso(X, knockoffs, y, y_dist=None, use_lars=False, **kwargs):
 
 	return gl, inds, rev_inds
 
-def fit_ridge(X, knockoffs, y, y_dist=None, **kwargs):
+def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
 
 	# Bind data
 	p = X.shape[1]
-	features = np.concatenate([X, knockoffs], axis=1)
+	features = np.concatenate([X, Xk], axis=1)
 
 	# Randomize coordinates to ensure antisymmetry
 	inds, rev_inds = random_permutation_inds(2 * p)
@@ -248,11 +248,11 @@ def fit_ridge(X, knockoffs, y, y_dist=None, **kwargs):
 
 
 def fit_group_lasso(
-	X, knockoffs, y, groups, use_pyglm=True, y_dist=None, group_lasso=True, **kwargs,
+	X, Xk, y, groups, use_pyglm=True, y_dist=None, group_lasso=True, **kwargs,
 ):
 	""" Fits a group lasso model.
 	:param X: n x p design matrix
-	:param knockoffs: n x p knockoff matrix
+	:param Xk: n x p knockoff matrix
 	:param groups: p length numpy array of groups
 	:param use_pyglm: If true, use the pyglmnet grouplasso
 	Else use the regular one
@@ -290,7 +290,6 @@ def fit_group_lasso(
 	# Bind data
 	n = X.shape[0]
 	p = X.shape[1]
-	features = np.concatenate([X, knockoffs], axis=1)
 
 	# By default, all variables are their own group
 	if groups is None:
@@ -300,7 +299,7 @@ def fit_group_lasso(
 	# If m == p, meaning each variable is their own group,
 	# just fit a regular lasso
 	if m == p or not group_lasso:
-		return fit_lasso(X, knockoffs, y, y_dist, **kwargs)
+		return fit_lasso(X, Xk, y, y_dist, **kwargs)
 
 	# Make sure variables and their knockoffs are in the same group
 	# This is necessary for antisymmetry
@@ -308,6 +307,7 @@ def fit_group_lasso(
 
 	# Randomize coordinates to make sure everything is symmetric
 	inds, rev_inds = random_permutation_inds(2 * p)
+	features = np.concatenate([X, Xk], axis=1)
 	features = features[:, inds]
 	doubled_groups = doubled_groups[inds]
 
@@ -648,7 +648,7 @@ class RidgeStatistic(FeatureStatistic):
 	def fit(
 		self,
 		X,
-		knockoffs,
+		Xk,
 		y,
 		groups=None,
 		pair_agg='cd',
@@ -666,7 +666,7 @@ class RidgeStatistic(FeatureStatistic):
 			- Third, sums or averages the "W" statistics for each
 			group to obtain group W statistics.
 		:param X: n x p design matrix
-		:param knockoffs: n x p knockoff matrix
+		:param Xk: n x p knockoff matrix
 		:param y: p length response numpy array
 		:param groups: p length numpy array of groups. If None,
 		defaults to giving each feature its own group.
@@ -692,12 +692,13 @@ class RidgeStatistic(FeatureStatistic):
 
 		# Check if y_dist is gaussian, binomial
 		y_dist = parse_y_dist(y)
+		kwargs['y_dist'] = y_dist
 
 		# Step 1: Calculate Z stats by fitting ridge
 		self.model, self.inds, self.rev_inds = fit_ridge(
-			X,
-			knockoffs,
-			y,
+			X=X,
+			Xk=Xk,
+			y=y,
 			**kwargs,
 		)
 
@@ -733,7 +734,7 @@ class LassoStatistic(FeatureStatistic):
 	def fit(
 		self,
 		X,
-		knockoffs,
+		Xk,
 		y,
 		groups=None,
 		zstat="coef",
@@ -756,7 +757,7 @@ class LassoStatistic(FeatureStatistic):
 			- Third, sums or averages the "W" statistics for each
 			group to obtain group W statistics.
 		:param X: n x p design matrix
-		:param knockoffs: n x p knockoff matrix
+		:param Xk: n x p knockoff matrix
 		:param y: p length response numpy array
 		:param groups: p length numpy array of groups. If None,
 		defaults to giving each feature its own group.
@@ -803,9 +804,9 @@ class LassoStatistic(FeatureStatistic):
 
 			# Fit (possibly group) lasso
 			gl, inds, rev_inds = fit_group_lasso(
-				X,
-				knockoffs,
-				y,
+				X=X,
+				Xk=Xk,
+				y=y,
 				groups=groups,
 				use_pyglm=use_pyglm,
 				group_lasso=group_lasso,
@@ -838,7 +839,7 @@ class LassoStatistic(FeatureStatistic):
 						f"Debiased lasso is not implemented for binomial data"
 					)
 				else:
-					features = np.concatenate([X, knockoffs], axis=1)
+					features = np.concatenate([X, Xk], axis=1)
 					debias_term = np.dot(Ginv, features.T)
 					debias_term = np.dot(debias_term, y - np.dot(features, Z))
 					Z = Z + debias_term / n
@@ -858,7 +859,7 @@ class LassoStatistic(FeatureStatistic):
 				self.score_type = "mse_cv"
 			# Else compute the score
 			else:
-				features = np.concatenate([X, knockoffs], axis=1)[:, inds]
+				features = np.concatenate([X, Xk], axis=1)[:, inds]
 				self.cv_score_model(
 					features=features,
 					y=y,
@@ -867,7 +868,7 @@ class LassoStatistic(FeatureStatistic):
 				)
 
 		elif zstat == "lars_path":
-			Z = calc_lars_path(X, knockoffs, y, groups, **kwargs)
+			Z = calc_lars_path(X, Xk, y, groups, **kwargs)
 
 		else:
 			raise ValueError(f'zstat ({zstat}) must be one of "coef", "lars_path"')
@@ -890,12 +891,12 @@ class MargCorrStatistic(FeatureStatistic):
 		super().__init__()
 
 	def fit(
-		self, X, knockoffs, y, groups=None, **kwargs,
+		self, X, Xk, y, groups=None, **kwargs,
 	):
 		"""
 		Marginal correlations used as Z statistics. 
 		:param X: n x p design matrix
-		:param knockoffs: n x p knockoff matrix
+		:param Xk: n x p knockoff matrix
 		:param y: p length response numpy array
 		:param groups: p length numpy array of groups. If None,
 		defaults to giving each feature its own group.
@@ -903,7 +904,7 @@ class MargCorrStatistic(FeatureStatistic):
 		"""
 
 		# Calc correlations
-		features = np.concatenate([X, knockoffs], axis=1)
+		features = np.concatenate([X, Xk], axis=1)
 		correlations = np.corrcoef(features, y.reshape(-1, 1), rowvar=False)[-1][0:-1]
 
 		# Combine
@@ -924,11 +925,11 @@ class OLSStatistic(FeatureStatistic):
 
 		super().__init__()
 
-	def fit(self, X, knockoffs, y, groups=None, cv_score=False, **kwargs):
+	def fit(self, X, Xk, y, groups=None, cv_score=False, **kwargs):
 		"""
 		Linear regression coefficients used as Z statistics.
 		:param X: n x p design matrix
-		:param knockoffs: n x p knockoff matrix
+		:param Xk: n x p knockoff matrix
 		:param y: p length response numpy array
 		:param groups: p length numpy array of groups. If None,
 		defaults to giving each feature its own group.
@@ -937,7 +938,7 @@ class OLSStatistic(FeatureStatistic):
 
 		# Run linear regression, permute indexes to prevent FDR violations
 		p = X.shape[1]
-		features = np.concatenate([X, knockoffs], axis=1)
+		features = np.concatenate([X, Xk], axis=1)
 		inds, rev_inds = random_permutation_inds(2 * p)
 		features = features[:, inds]
 
@@ -978,7 +979,7 @@ class RandomForestStatistic(FeatureStatistic):
 	def fit(
 		self,
 		X,
-		knockoffs,
+		Xk,
 		y,
 		groups=None,
 		cv_score=False,
@@ -1004,7 +1005,7 @@ class RandomForestStatistic(FeatureStatistic):
 
 		# Bind data
 		p = X.shape[1]
-		features = np.concatenate([X, knockoffs], axis=1)
+		features = np.concatenate([X, Xk], axis=1)
 
 		# Randomize coordinates to make sure everything is symmetric
 		self.inds, self.rev_inds = random_permutation_inds(2 * p)
@@ -1056,7 +1057,7 @@ class DeepPinkStatistic(FeatureStatistic):
 	def fit(
 		self,
 		X,
-		knockoffs,
+		Xk,
 		y,
 		feature_importance='deeppink',
 		groups=None,
@@ -1085,7 +1086,7 @@ class DeepPinkStatistic(FeatureStatistic):
 		# Bind data 
 		n = X.shape[0]
 		p = X.shape[1]
-		features = np.concatenate([X, knockoffs], axis=1)
+		features = np.concatenate([X, Xk], axis=1)
 
 		# Randomize coordinates to make sure everything is symmetric
 		self.inds = np.arange(0, 2*p, 1)

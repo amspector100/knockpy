@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sp
 from scipy import stats
 import scipy.linalg
+import statsmodels.stats.multitest
 
 from .utilities import calc_group_sizes, preprocess_groups
 from .utilities import shift_until_PSD, scale_until_PSD
@@ -11,7 +12,7 @@ from . import utilities, smatrix
 
 ### Base Knockoff Class and Gaussian Knockoffs
 
-class KnockoffGenerator():
+class KnockoffSampler():
 
     def __init__(self):
 
@@ -140,7 +141,7 @@ def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies, verbos
     knockoffs = knockoffs + mu_k
     return knockoffs
 
-class GaussianSampler(KnockoffGenerator):
+class GaussianSampler(KnockoffSampler):
     """ 
     Samples MX Gaussian (group) knockoffs.
     :param X: design matrix. Numpy array of dimension n (number of datapoints) x p (number of features).
@@ -225,7 +226,7 @@ class GaussianSampler(KnockoffGenerator):
         if self.S is None:
             if self.verbose:
                 print(f"Computing knockoff S matrix...")
-            self.S = smatrix.compute_S_matrix(
+            self.S = smatrix.compute_smatrix(
                 Sigma=self.Sigma, groups=self.groups, method=self.method, **self.kwargs
             )
 
@@ -283,7 +284,7 @@ def produce_FX_knockoffs(X, invSigma, S, copies=1):
     knockoffs = np.stack(knockoffs, axis=-1)
     return knockoffs
 
-class FXSampler(KnockoffGenerator):
+class FXSampler(KnockoffSampler):
     """ 
     Samples FX knockoffs. See the GaussianSampler documentation 
     for description of the arguments.
@@ -310,6 +311,8 @@ class FXSampler(KnockoffGenerator):
             )
         self.Sigma = np.dot(self.X.T, self.X)
         self.invSigma = utilities.chol2inv(self.Sigma)
+        kwargs.pop('Sigma', None)
+        kwargs.pop('invSigma', None)
 
         # Other parameters
         if groups is None:
@@ -325,7 +328,7 @@ class FXSampler(KnockoffGenerator):
         if self.S is None:
             if self.verbose:
                 print(f"Computing knockoff S matrix...")
-            self.S = smatrix.compute_S_matrix(
+            self.S = smatrix.compute_smatrix(
                 Sigma=self.Sigma, groups=self.groups, method=self.method, **self.kwargs
             )
 

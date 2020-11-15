@@ -101,7 +101,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 		lf. See page 34 of the paper.
 		:param gamma: A tuning parameter to increase / decrease the acceptance
 		ratio. See appendix F.2.
-		:param kwargs: kwargs to pass to the compute_S_matrix method.
+		:param kwargs: kwargs to pass to the compute_smatrix method.
 		This is used to create the covariance-guided proposals.
 		:param buckets: If not None, a list of discrete values that X 
 		can take. Covariance-guided proposals will be rounded to these
@@ -297,12 +297,12 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 	def create_proposal_params(self, **kwargs):
 		"""
 		Constructs the covariance-guided proposal. 
-		:param kwargs: kwargs for compute_S_matrix
+		:param kwargs: kwargs for compute_smatrix
 		method, which finds the optimal S matrix.
 		"""
 
 		# Find the optimal S matrix
-		self.S = smatrix.compute_S_matrix(
+		self.S = smatrix.compute_smatrix(
 			Sigma=self.V,
 			**kwargs
 		)
@@ -416,6 +416,9 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 				a=self.L.T, b=c, lower=False, overwrite_b=False
 			).reshape(1, -1)
 			self.mean_transforms.append(mean_transform)
+
+	def fetch_S(self):
+		return self.S[self.inv_order][:, self.inv_order]
 
 	def fetch_proposal_params(self, X, prev_proposals):
 		"""
@@ -885,7 +888,6 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 		for j, j2 in itertools.product(range(self.p), range(self.p)):
 			if j in self.active_frontier[j2]:
 				self.affected_vars[j] += [j2]
-		#print(f"affected vars is {self.affected_vars}")
 
 		# Store pattern of TRUE acceptances / rejections
 		self.acceptances = np.zeros((self.n, self.p)).astype(np.bool)
@@ -957,7 +959,6 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 
 		# Return re-sorted 
 		return self.Xk[:, self.inv_order]
-
 
 ### Knockoff Samplers for T-distributions
 def t_markov_loglike(X, rhos, df_t=3):

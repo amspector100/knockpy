@@ -17,6 +17,7 @@ import time
 from functools import partial
 from multiprocessing import Pool
 
+DEFAULT_TOL = 1e-5
 GAMMA_VALS = [
 	0.5,
 	0.6,
@@ -39,7 +40,7 @@ def mvr_loss(Sigma, S, smoothing=0):
 	trace_invG = trace_invG + (1 / (np.diag(S) + smoothing)).sum()
 	return trace_invG
 
-def maxent_loss(Sigma, S, smoothing=0):
+def mmi_loss(Sigma, S, smoothing=0):
 	"""
 	Computes (smoothed) determinant of feature-knockoff covariance.
 	Does not support group knockoffs as of yet.
@@ -182,7 +183,7 @@ def solve_ciknock(
 	)
 	return S
 
-def solve_maxent(
+def solve_mmi(
 	Sigma,
 	tol=1e-5,
 	verbose=False, 
@@ -191,13 +192,13 @@ def solve_maxent(
 	converge_tol=1e-4
 ):
 	"""
-	Uses a coordinate-descent algorithm to find the solution to the smoothed
-	maximum entropy problem. 
+	Uses a coordinate-descent algorithm to find the solution to the
+	minimum mutual information. 
 	:param Sigma: p x p covariance matrix
 	:param tol: Minimum eigenvalue of 2Sigma - S and S
 	:param num_iter: Number of coordinate descent iterations
 	:param verbose: if true, will give progress reports
-	:param smoothing: computes smoothed maxent loss
+	:param smoothing: computes smoothed mmi loss
 	"""
 
 	if smoothing > 0:
@@ -247,7 +248,7 @@ def solve_maxent(
 
 		# Check for convergence
 		prev_loss = loss
-		loss = maxent_loss(V, S, smoothing=smoothing)
+		loss = mmi_loss(V, S, smoothing=smoothing)
 		if i != 0:
 			decayed_improvement = decayed_improvement / 10 + 9*(prev_loss - loss) / 10
 		if verbose:
@@ -342,7 +343,7 @@ class MVRLoss(nn.Module):
 	as opposed to sum 1/eigs. This is helpful if fitting lasso 
 	statistics on extremely degenerate covariance matrices. Over the 
 	course of optimization, this smoothing parameter will go to 0.
-	:param method: One of mvr or maxent.
+	:param method: One of mvr or mmi.
 	"""
 
 	def __init__(self, 
@@ -455,7 +456,7 @@ class MVRLoss(nn.Module):
 		eigvals = eigvals[0]
 		if self.method == 'mvr':
 			inv_eigs = 1 / (smoothing + eigvals)
-		elif self.method == 'maxent':
+		elif self.method == 'mmi':
 			inv_eigs = torch.log(
 				1 / torch.max((smoothing + eigvals), torch.tensor(smoothing).float()),
 			)
@@ -661,7 +662,7 @@ def solve_mrc_psgd(
 	Wraps the PSGDSolver class.
 	:param Sigma: Covariance matrix
 	:param groups: groups for group knockoffs
-	:param method: MRC loss (mvr or maxent)
+	:param method: MRC loss (mvr or mmi)
 	:param init_kwargs: kwargs to pass to 
 	PSGDSolver.
 	:param optimize_kwargs: kwargs to pass 

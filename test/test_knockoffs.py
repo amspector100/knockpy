@@ -1,9 +1,9 @@
+""" Tests knockpy.knockoffs and knockpy.smatrix modules"""
 import numpy as np
 import scipy as sp
 import unittest
 from .context import knockpy
 from statsmodels.stats.moment_helpers import cov2corr
-
 from knockpy import graphs, utilities, mac, mrc, smatrix, knockoffs
 
 
@@ -144,7 +144,7 @@ class TestSDP(CheckSMatrix):
 
         # S matrix
         trivial_groups = np.arange(0, p, 1) + 1
-        S_triv = smatrix.compute_S_matrix(
+        S_triv = smatrix.compute_smatrix(
             Sigma=corr_matrix,
             groups=trivial_groups,
             method='sdp',
@@ -221,13 +221,13 @@ class TestSDP(CheckSMatrix):
         # Repeat for scaled cov matrix
         scale = 5
         V = scale*V
-        S = smatrix.compute_S_matrix(
+        S = smatrix.compute_smatrix(
             Sigma=V, method='sdp', verbose=True
         )
         expected = (2 - 2*rho) * np.eye(p)
         np.testing.assert_almost_equal(
             S/scale, expected, decimal = 2,
-            err_msg = 'compute_S_matrix does not produce optimal S matrix for scaled equicorr graph'
+            err_msg = 'compute_smatrix does not produce optimal S matrix for scaled equicorr graph'
         )
 
     def test_sdp_tolerance(self):
@@ -241,7 +241,7 @@ class TestSDP(CheckSMatrix):
 
         # Solve SDP
         for tol in [1e-3, 0.01, 0.02]:
-            S = smatrix.compute_S_matrix(
+            S = smatrix.compute_smatrix(
                 Sigma=V, 
                 groups=groups,
                 method='sdp', 
@@ -425,12 +425,6 @@ class TestMRCSolvers(CheckSMatrix):
                         err_msg=f'For equicorrelated cov rho={rho}, maxent_solver yields unexpected solution'
                     )
 
-    def test_blockdiag_approx(self):
-
-        # Check that blockdiag approx yields same solution
-        # for block-diagonal matrix.
-
-
     def test_equicorrelated_soln_recycled(self):
 
         # Main constants 
@@ -603,7 +597,61 @@ class TestMRCSolvers(CheckSMatrix):
             S_CI, (1-rho)*np.eye(p), 2, "S_CI is incorrect for equicorrelated"
         )
 
+class TestBlockdiagApprx(CheckSMatrix):
 
+    def test_blockdiag_approx_on_blockdiag(self):
+
+        # Check that blockdiag approx yields same solution
+        # for block-diagonal matrix.
+        p = 250
+        rho = 0.3
+        gamma = 0
+        groups = np.arange(1, p+1, 1)
+        _,_,_,_,V = graphs.sample_data(
+            p=p, method='daibarber2016', gamma=gamma, rho=rho
+        )
+
+        for method in ['mvr', 'mmi', 'sdp']:
+            # Check that S_approx is valid
+            S_approx = smatrix.compute_smatrix(
+                V, method=method, max_block=10
+            )
+            self.check_S_properties(V, S_approx, groups)
+            
+            # In this case, should be the same as S_exact
+            S_exact = smatrix.compute_smatrix(V, method=method)
+            np.testing.assert_array_almost_equal(
+                S_approx, S_exact, 3, 
+                err_msg="Blockdiag approximation yields incorrect answer for blockdiag Sigma"
+            )
+
+    def test_blockdiag_approx_on_ar1(self):
+
+        # Check that blockdiag approx yields a good soln on AR1
+        p = 250
+        a = 3
+        b = 1
+        groups = np.arange(1, p+1, 1)
+        np.random.seed(110)
+        _,_,_,_,V = graphs.sample_data(
+            p=p, method='ar1', a=a, b=b
+        )
+
+        for method in ['mvr', 'mmi', 'sdp']:
+            # Check that S_approx is valid
+            S_approx = smatrix.compute_smatrix(
+                V, method=method, max_block=50
+            )
+            self.check_S_properties(V, S_approx, groups)
+            
+            # For exponentially decaying offdiags, should be quite similar
+            S_exact = smatrix.compute_smatrix(V, method=method)
+            mean_diff = np.diag(np.abs(S_approx - S_exact)).mean()
+            expected = 1e-2
+            self.assertTrue(
+                mean_diff < expected, 
+                msg=f"Blockdiag apprx is {mean_diff} > {expected} on avg. away from exact solution"
+            )
 
 
 class CheckValidKnockoffs(unittest.TestCase):
