@@ -9,8 +9,10 @@ from functools import partial
 
 ### Group helpers
 def preprocess_groups(groups):
-    """ Turns a p-dimensional numpy array with m unique elements
-    into a list of integers from 1 to m"""
+    """
+    Maps the m unique elements of a "groups" array to the integers from 1 to m.
+    :param groups: A p-dimensional numpy array with m unique elements
+    """
     unique_vals = np.unique(groups)
     conversion = {unique_vals[i]: i for i in range(unique_vals.shape[0])}
     return np.array([conversion[x] + 1 for x in groups])
@@ -18,6 +20,7 @@ def preprocess_groups(groups):
 
 def fetch_group_nonnulls(non_nulls, groups):
     """ 
+    Combines feature-level null hypotheses into group-level hypothesis.
     :param non_nulls: a p-length array of coefficients where 
     a 0 indicates that a variable is null
     :param groups: a p-length array indicating group membership,
@@ -71,8 +74,8 @@ def calc_group_sizes(groups):
 
 
 ### Matrix helpers for S-matrix computation
-
 def cov2corr(M):
+    """ Rescales a p x p cov. matrix M to be a correlation matrix """
     scale = np.sqrt(np.diag(M))
     return M / np.outer(scale, scale)
 
@@ -93,8 +96,18 @@ def shift_until_PSD(M, tol):
 
 
 def scale_until_PSD(Sigma, S, tol, num_iter):
-    """ Takes a PSD matrix S and performs a binary search to 
-    find the largest gamma such that 2*V - gamma*S is PSD as well."""
+    """ 
+    Perform a binary search to find the largest gamma such that 2*Sigma - gamma*S is PSD as well.
+
+    :param Sigma: A p x p numpy array, likely a covariance matrix.
+    :param S: a p x p numpy array. 
+    :param tol: The minimum eigenvalue for 2*Sigma - S
+    :param num_iter: The number of iterations in the binary search.
+
+    We let gamma in [0,1] denote the optimal value from the binary search.
+
+    returns: gamma * S, gamma
+    """
 
     # Raise value error if S is not PSD
     try:
@@ -117,15 +130,16 @@ def scale_until_PSD(Sigma, S, tol, num_iter):
     # Scale S properly, be a bit conservative
     S = lower_bound * S
 
-    return S, gamma
+    return S, lower_bound
 
 
 def permute_matrix_by_groups(groups):
     """
-    Permute a (correlation) matrix according to a list of feature groups.
+    Create indices which permute a (covariance) matrix according to a list of groups.
     :param groups: a p-length array of integers.
     returns: inds and inv_inds
     Given a p x p matrix M, Mp = M[inds][:, inds] permutes the matrix according to the group.
+    This means that if group j contains k elements, then those k elements appear sequentially in M.
     Then, Mp[inv_inds][:, inv_inds] unpermutes the matrix back to its original form. 
     """
     # Create sorting indices
@@ -144,8 +158,6 @@ def permute_matrix_by_groups(groups):
 
 
 ### Feature-statistic helpers
-
-
 def random_permutation_inds(length):
     """ Returns indexes which correspond to a random permutation,
     as well as indexes which undo the permutation. Is truly random
@@ -222,6 +234,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage = 'ledoitwolf'):
 
 def one_arg_function(list_of_inputs, args, func, kwargs):
     """
+    Globally-defined helper function for pickling in multiprocessing.
     :param list of inputs: List of inputs to a function
     :param args: Names/args for those inputs
     :param func: A function
@@ -239,7 +252,8 @@ def apply_pool(
         **kwargs
     ):
     """
-    Wraps the multiprocessing.pool object plus the functools partial function. 
+    Spawns num_processes processes to apply func to many different arguments.
+    This wraps the multiprocessing.pool object plus the functools partial function. 
     :param func: a function
     :param constant_inputs: A dictionary of arguments to func which do not
     change in each of the processes spawned, defaults to {}.
@@ -248,7 +262,7 @@ def apply_pool(
     :param **kwargs: Each kwarg 
     returns: List of outputs for each input, in sorted order.
 
-    For example, if we are varying inputs called 'a' and 'b', we might have
+    For example, if we are varying inputs 'a' and 'b', we might have
     apply_pool(
         func=my_func, a=[1,3,5], b=[2,4,6]
     )

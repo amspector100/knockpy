@@ -359,7 +359,7 @@ class TestMRCSolvers(CheckSMatrix):
 		)
 		S_MVR = mrc.solve_mvr(Sigma=V, smoothing=smoothing)
 		# Not implemented yet
-		#S_ENT = mrc.solve_maxent(Sigma=V, smoothing=smoothing)
+		#S_ENT = mrc.solve_mmi(Sigma=V, smoothing=smoothing)
 		S_SDP = mac.solve_SDP(Sigma=V, tol=1e-5)
 		mvr_mean = np.diag(S_MVR).mean()
 		sdp_mean = np.diag(S_SDP).mean()
@@ -381,7 +381,7 @@ class TestMRCSolvers(CheckSMatrix):
 		rhos = [0.1, 0.3, 0.5, 0.7, 0.9]
 		for rho in rhos:
 			for smoothing in smoothings:
-				for method in ['mvr', 'maxent']:
+				for method in ['mvr', 'mmi']:
 					# Construct Sigma
 					Sigma = np.zeros((p, p)) + rho
 					Sigma += (1-rho)*np.eye(p)
@@ -419,11 +419,11 @@ class TestMRCSolvers(CheckSMatrix):
 
 				# Test maximum entropy coordinate descent optimizer
 				if smoothing == 0:
-					opt_S = mrc.solve_maxent(Sigma=Sigma, smoothing=smoothing, verbose=True)
+					opt_S = mrc.solve_mmi(Sigma=Sigma, smoothing=smoothing, verbose=True)
 					self.check_S_properties(Sigma, opt_S, groups)
 					np.testing.assert_almost_equal(
 						opt_S, expected, decimal=2,
-						err_msg=f'For equicorrelated cov rho={rho}, maxent_solver yields unexpected solution'
+						err_msg=f'For equicorrelated cov rho={rho}, mmi_solver yields unexpected solution'
 					)
 
 	def test_equicorrelated_soln_recycled(self):
@@ -489,7 +489,7 @@ class TestMRCSolvers(CheckSMatrix):
 		methods = ['ar1', 'ver']
 		groups = np.arange(1, p+1, 1)
 		for method in methods:
-			dgp = dgp.DGP()
+			dgprocess = dgp.DGP()
 			_,_,_,_,Sigma = dgprocess.sample_data(
 				method=method, p=p
 			)
@@ -526,14 +526,14 @@ class TestMRCSolvers(CheckSMatrix):
 				msg=f"For {method}, coord descent MVR solver has higher loss {cd_mvr_loss} v. PSGD {psgd_mvr_loss}"
 			)
 
-			# Maxent solver outperforms PSGD
-			opt_S_maxent = mrc.solve_maxent(Sigma=Sigma)
-			self.check_S_properties(Sigma, opt_S_maxent, groups)
-			cd_maxent_loss = mrc.maxent_loss(Sigma, opt_S_maxent)
-			psgd_maxent_loss = mrc.maxent_loss(Sigma, opt_S)
+			# mmi solver outperforms PSGD
+			opt_S_mmi = mrc.solve_mmi(Sigma=Sigma)
+			self.check_S_properties(Sigma, opt_S_mmi, groups)
+			cd_mmi_loss = mrc.mmi_loss(Sigma, opt_S_mmi)
+			psgd_mmi_loss = mrc.mmi_loss(Sigma, opt_S)
 			self.assertTrue(
-				cd_maxent_loss <= psgd_maxent_loss,
-				msg=f"For {method}, coord descent maxent solver has higher loss {cd_maxent_loss} v. PSGD {psgd_maxent_loss}"
+				cd_mmi_loss <= psgd_mmi_loss,
+				msg=f"For {method}, coord descent mmi solver has higher loss {cd_mmi_loss} v. PSGD {psgd_mmi_loss}"
 			)           
 
 	def test_complex_group_solns(self):

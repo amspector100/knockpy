@@ -172,7 +172,7 @@ def PartialCorr(
     rho=0.3,
 ):
     """
-    Creates graph with partial correlation rho
+    Creates covariance matrix with partial correlation rho
     """
     Q_init = rho*np.ones((p, p)) + (1-rho)*np.eye(p)
     V = utilities.chol2inv(Q_init)
@@ -263,32 +263,28 @@ def create_sparse_coefficients(
     corr_signals=False,
     n=None,
 ):
-    """ Randomly selects floor(p * sparsity) coefficients to be nonzero,
-    which are then plus/minus coeff_size with equal probability.
+    """
+    Generate a set of sparse coefficients for single index or sparse additive models.
     :param p: Dimensionality of coefficients
     :type p: int
-    :param sparsity: Sparsity of selection
+    :param sparsity: Sparsity of selection; generates np.floor(p * sparsity) non-nulls. 
     :type sparsity: float
-    :param coeff_size: Non-zero coefficients are set to +/i coeff_size
+    :param coeff_size: Signal size of non-zero coefficients.
     :type coeff_size: float
     :param groups: Allows the possibility of grouped signals. 
-    If not None supplied, will choose 
-    floor(sparsity * num_groups) groups, 
-    where each feature in the selected groups will 
-    have a nonzero coefficient.
+    If not None supplied, will choose floor(sparsity * num_groups) groups, 
+    where each feature in the selected groups will have a nonzero coefficient.
     :type groups: np.ndarray
-    :param sign_prob: The probability that each nonzero coefficient
-    will be positive. 
+    :param sign_prob: The probability that each nonzero coefficient will be positive. 
     :param iid_signs: If True, the signs of the coeffs are assigned independently.
     Else, exactly sign_prob*sparsity*p coefficients will be positive.
     :param coeff_dist: Three options:
         - If None, all coefficients have absolute value 
-    coeff_size.
+        coeff_size.
         - If "normal", all nonzero coefficients are drawn
-    from N(coeff_size, 1). 
+        from Normal(coeff_size, 1). 
         - If "uniform", drawn from Unif(coeff_size/2, coeff_size).
-    :param corr_signals: If true, all of the nonzero coefficients
-    will be clustered together.
+    :param corr_signals: If true, all of the nonzero coefficients be clustered together.
     :return: p-length numpy array of sparse coefficients"""
 
     # First, decide which coefficients are nonzero, one of two methods
@@ -358,9 +354,9 @@ def create_sparse_coefficients(
 
 
 def sample_response(X, beta, cond_mean='linear', y_dist="gaussian"):
-    """ Given a design matrix and coefficients (beta), samples
-    a response y.
-    :param cond_mean: How to calculate the conditional mean. Four options:
+    """ Given a design matrix X and coefficients beta, samples a response y.
+    :param cond_mean: How to calculate the conditional mean of y given X,
+    denoted mu(X). Six options:
         1. Linear (np.dot(X, beta))
         2. Cubic (np.dot(X**3, beta) - np.dot(X, beta))
         3. trunclinear ((X * beta >= 1).sum(axis = 1))
@@ -368,6 +364,8 @@ def sample_response(X, beta, cond_mean='linear', y_dist="gaussian"):
         4. pairint: pairs up non-null coefficients according to the
         order of beta, multiplies them and their beta values, then
         sums. "pairint" stands for pairwise-interactions.
+        5. cos: mu(X) = sign(beta) * (beta != 0) * np.cos(X)
+        6. quadratic: mu(X) = np.dot(np.power(X, 2), beta)
     :param y_dist: If gaussian, y is the conditional mean plus
     gaussian noise. If binomial, Pr(y=1) = softmax(cond_mean). """
 
@@ -422,7 +420,7 @@ def sample_ar1t(
     df_t=DEFAULT_DF_T, 
 ):
     """
-    Samples t variables according to a Markov chain.
+    Samples t-distributed variables according to a Markov chain.
     """
     # Initial t samples
     p = rhos.shape[0] + 1
@@ -442,8 +440,7 @@ def sample_ar1t(
 
 def cov2blocks(V, tol=1e-5):
     """
-    Decomposes a PREORDERED block-diagonal matrix V
-    into its blocks.
+    Decomposes a PREORDERED block-diagonal matrix V into its blocks.
     """
     p = V.shape[0]
     blocks = []
@@ -505,8 +502,10 @@ def sample_block_tmvn(
     X = scale * np.concatenate(X, axis=1)
     return X
 
+### Helper functions for Gibbs Sampling 
 def num2coords(i, gridwidth = 10):
-    """ Coordinates of variable i in the grid
+    """
+    Coordinates of variable i in a Gibbs grid
     :param i: Position of variable in ordering
     :param width: Width of the grid
     :returns: length_coord, width_coord (coordiantes)"""
@@ -515,7 +514,7 @@ def num2coords(i, gridwidth = 10):
     return int(length_coord), int(width_coord)
     
 def coords2num(l, w, gridwidth = 10):
-    """ Takes coordinates of variable in the grid, returns position"""
+    """ Takes coordinates of variable in a Gibbs grid, returns position"""
     if l < 0 or w < 0:
         return -1
     if l >= gridwidth or w >= gridwidth:
@@ -524,7 +523,7 @@ def coords2num(l, w, gridwidth = 10):
 
 def Q2cliques(Q):
     """
-    Turns graph Q of connections into binary cliques
+    Turns graph Q of connections into binary cliques for Gibbs grid
     """
     p = Q.shape[0]
     clique_dict = {i:[] for i in range(p)}
@@ -541,8 +540,7 @@ def Q2cliques(Q):
 def sample_gibbs(
         n, p, gibbs_graph=None, method='ising', temp=1, num_iter=15, K=20, max_val=2.5,
     ):
-    """ Samples from a Gibbs measure on a square grid
-    using a Gibbs sampler."""
+    """ Samples from a Gibbs measure on a square grid using a Gibbs sampler."""
 
     # Create buckets from (approximately) -max_val to max_val
     buckets = np.arange(-K+1, K+1, 2) / (K/max_val)
@@ -635,19 +633,21 @@ def sample_gibbs(
     return X, gibbs_graph
 
 class DGP():
-
+    """
+    Creates a (random) data-generating process for a design matrix X
+    and a response y. Usually the X-data is Gaussian, but not always. 
+    :param mu: mean vector for X data
+    :param Sigma: covariance matrix for X data
+    :param invSigma: precision matrix for X data
+    :param beta: coefficients used to generate y from X either
+    in a linear model or in a single-index model.
+    If these parameters are not passed in, they will be randomly
+    generated in the sample_data method.
+    """
     def __init__(
             self, mu=None, Sigma=None, invSigma=None, beta=None 
     ):
-        """
-        :param mu: mean vector for X data
-        :param Sigma: covariance matrix for X data
-        :param invSigma: precision matrix for X data
-        :param beta: coefficients used to generate y from X either
-        in a linear model or in a single-index model.
-        If these parameters are not passed in, they will be randomly
-        generated in the sample_data method.
-        """
+
 
         self.mu = mu
         self.Sigma = Sigma
