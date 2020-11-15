@@ -4,7 +4,6 @@ import pytest
 import numpy as np
 import networkx as nx
 from scipy import stats
-import statsmodels.stats.multitest
 import unittest
 from .context import knockpy
 
@@ -46,7 +45,7 @@ class TestMetroProposal(unittest.TestCase):
 			lf=lambda x: np.log(x).sum(),
 			X=X,
 			mu=np.zeros(p),
-			V=V,
+			Sigma=V,
 			undir_graph = np.abs(Q) > 1e-3,
 			S=np.eye(p),
 		)
@@ -109,7 +108,7 @@ class TestMetroProposal(unittest.TestCase):
 				lf=lambda x: np.log(x).sum(),
 				X=X,
 				mu=np.zeros(p),
-				V=V,
+				Sigma=V,
 				undir_graph=np.eye(p),
 				S=np.eye(p),
 			)
@@ -129,9 +128,10 @@ class TestMetroSample(unittest.TestCase):
 		n = 30000
 		p = 8
 		X,_,_,Q,V = graphs.sample_data(method='AR1', n=n, p=p)
-		_, S = knockpy.knockoffs.gaussian_knockoffs(
-			X=X, Sigma=V, method='mvr', return_S=True
+		ksampler = knockpy.knockoffs.GaussianSampler(
+			X=X, Sigma=V, method='mvr'
 		)
+		S = ksampler.fetch_S()
 
 		# Graph structure + junction tree
 		Q_graph = (np.abs(Q) > 1e-5)
@@ -146,7 +146,7 @@ class TestMetroSample(unittest.TestCase):
 			lf=mvn_likelihood,
 			X=X,
 			mu=np.zeros(p),
-			V=V,
+			Sigma=V,
 			undir_graph=Q_graph,
 			S=S,
 			gamma=gamma,
@@ -189,9 +189,10 @@ class TestMetroSample(unittest.TestCase):
 			rho=0.6, n=n, p=p,
 			gamma=1, group_size=p
 		)
-		_, S = knockpy.knockoffs.gaussian_knockoffs(
-			X=X, Sigma=V, method='mvr', return_S=True
+		ksampler = knockpy.knockoffs.GaussianSampler(
+			X=X, Sigma=V, method='mvr'
 		)
+		S = ksampler.fetch_S()
 
 		# Network graph
 		Q_graph = (np.abs(Q) > 1e-5)
@@ -209,7 +210,7 @@ class TestMetroSample(unittest.TestCase):
 			lf=mvn_likelihood,
 			X=X,
 			mu=np.zeros(p),
-			V=V,
+			Sigma=V,
 			order=order,
 			active_frontier=active_frontier,
 			gamma=gamma,
@@ -324,7 +325,7 @@ class TestARTK(unittest.TestCase):
 		# Check consistency of tsampler class
 		tsampler = metro.ARTKSampler(
 			X=X1,
-			V=V,
+			Sigma=V,
 			df_t=df_t,
 		)
 		new_ar1_like1 = tsampler.lf(tsampler.X)
@@ -349,7 +350,7 @@ class TestARTK(unittest.TestCase):
 		# Sample t 
 		tsampler = metro.ARTKSampler(
 			X=X,
-			V=V,
+			Sigma=V,
 			df_t=df_t,
 			S=S,
 			metro_verbose=True
@@ -449,7 +450,7 @@ class TestBlockT(unittest.TestCase):
 		# Sample t 
 		tsampler = metro.BlockTSampler(
 			X=X,
-			V=V,
+			Sigma=V,
 			df_t=df_t,
 			S=S,
 			metro_verbose=True
@@ -514,7 +515,7 @@ class TestIsing(unittest.TestCase):
 			X=X,
 			gibbs_graph=gibbs_graph,
 			mu=mu,
-			V=V,
+			Sigma=V,
 			max_width=2,
 		)
 
@@ -582,7 +583,7 @@ class TestIsing(unittest.TestCase):
 			X=X,
 			gibbs_graph=gibbs_graph,
 			mu=mu,
-			V=V,
+			Sigma=V,
 			Q=Q,
 			max_width=5,
 			method='equicorrelated',
@@ -622,7 +623,7 @@ class TestIsing(unittest.TestCase):
 			X=X,
 			gibbs_graph=gibbs_graph,
 			mu=mu,
-			V=V,
+			Sigma=V,
 			Q=Q,
 			max_width=2,
 		)

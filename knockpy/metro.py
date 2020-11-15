@@ -19,12 +19,12 @@ import itertools
 from functools import reduce
 from scipy import stats
 from . import utilities, knockoffs, graphs
-import statsmodels.stats.multitest
 
 # Network and UGM tools
 import networkx as nx
 from . import tree_processing
-from .knockoffs import KnockoffGenerator
+from .knockoffs import KnockoffSampler
+from . import knockoffs, smatrix
 
 # Logging
 import warnings
@@ -51,7 +51,7 @@ def t_log_likelihood(
 	result = -1 * result * (df_t + 1) / 2
 	return result
 
-class MetropolizedKnockoffSampler(KnockoffGenerator):
+class MetropolizedKnockoffSampler(KnockoffSampler):
 
 	def __init__(
 			self,
@@ -302,7 +302,7 @@ class MetropolizedKnockoffSampler(KnockoffGenerator):
 		"""
 
 		# Find the optimal S matrix
-		self.S = knockoffs.compute_S_matrix(
+		self.S = smatrix.compute_S_matrix(
 			Sigma=self.V,
 			**kwargs
 		)
@@ -989,7 +989,7 @@ class ARTKSampler(MetropolizedKnockoffSampler):
 	def __init__(
 		self,
 		X,
-		V,
+		Sigma,
 		df_t,
 		Q=None,
 		**kwargs
@@ -1010,6 +1010,7 @@ class ARTKSampler(MetropolizedKnockoffSampler):
 		"""
 
 		# Rhos and graph
+		V = Sigma
 		p = V.shape[0]
 		self.df_t = df_t
 		self.rhos = np.diag(V, 1)
@@ -1057,8 +1058,8 @@ class ARTKSampler(MetropolizedKnockoffSampler):
 			lf=lf,
 			X=X,
 			mu=np.zeros(p),
-			V=V,
-			Q=Q,
+			Sigma=V,
+			#Q=Q,
 			undir_graph=np.abs(Q) > 1e-4,
 			cliques=cliques,
 			log_potentials=log_potentials,
@@ -1084,12 +1085,12 @@ def t_mvn_loglike(X, invScale, mu=None, df_t=3):
 	exponent = -1*(df_t + p) / 2
 	return exponent*log_quad 
 
-class BlockTSampler(KnockoffGenerator):
+class BlockTSampler(KnockoffSampler):
 
 	def __init__(
 		self,
 		X,
-		V,
+		Sigma,
 		df_t,
 		**kwargs
 	):
@@ -1106,6 +1107,7 @@ class BlockTSampler(KnockoffGenerator):
 		"""
 
 		# Discover "block structure" of T
+		V = Sigma
 		self.p = V.shape[0]
 		self.blocks, self.block_inds = graphs.cov2blocks(V)
 		self.df_t = df_t
@@ -1140,7 +1142,7 @@ class BlockTSampler(KnockoffGenerator):
 				lf = lambda X: t_mvn_loglike(X, invScale, df_t=df_t),
 				X=X[:, inds],
 				mu=np.zeros(blocksize),
-				V=block,
+				Sigma=block,
 				undir_graph=undir_graph,
 				**kwargs
 			)
@@ -1150,6 +1152,9 @@ class BlockTSampler(KnockoffGenerator):
 
 		# Concatenate S
 		self.S = sp.linalg.block_diag(*self.S)
+
+	def fetch_S(self):
+		return self.S
 
 	def sample_knockoffs(self, **kwargs):
 		"""
@@ -1179,13 +1184,13 @@ class BlockTSampler(KnockoffGenerator):
 		return self.Xk
 
 
-class IsingKnockoffSampler(KnockoffGenerator):
+class IsingKnockoffSampler(KnockoffSampler):
 
 	def __init__(
 		self,
 		X,
 		gibbs_graph,
-		V,
+		Sigma,
 		Q=None,
 		mu=None,
 		max_width=6,
@@ -1197,6 +1202,7 @@ class IsingKnockoffSampler(KnockoffGenerator):
 		"""
 
 		# Infer bucketization and V
+		V = Sigma
 		self.n = X.shape[0]
 		self.p = X.shape[1]
 		self.X = X
@@ -1325,7 +1331,7 @@ class IsingKnockoffSampler(KnockoffGenerator):
 					lf=None,
 					X=X[n_inds][:, p_inds],
 					mu=mu[p_inds],
-					V=Vcond,
+					Sigma=Vcond,
 					undir_graph=gibbs_graph[p_inds][:,p_inds] != 0,
 					cliques=div_group_dict['cliques'],
 					log_potentials=div_group_dict['lps'],
@@ -1359,6 +1365,11 @@ class IsingKnockoffSampler(KnockoffGenerator):
 			return lc, lc, wc
 		else:
 			return wc, lc, wc
+
+	def fetch_S(self):
+		""" Returns None because the divide-and-conquer approach means
+		there is no one S-matrix."""
+		return None
 
 	def sample_knockoffs(self, **kwargs):
 		"""
