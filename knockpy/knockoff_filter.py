@@ -152,65 +152,6 @@ class KnockoffFilter:
         Xk = self.ksampler.sample_knockoffs()
         self.S = self.ksampler.fetch_S()
 
-
-        # if self.knockoff_type == 'gaussian':
-        #   knockoffs, S = knockoffs.GaussianKnockoffs(
-        #       X=self.X, 
-        #       groups=self.groups,
-        #       mu=self.mu,
-        #       Sigma=Sigma,
-        #       return_S=True,
-        #       **self.knockoff_kwargs,
-        #   )
-        #   knockoffs = knockoffs[:, :, 0]
-        # # Alternatively sample from ARTK
-        # elif self.knockoff_type == 'artk':
-        #   # Sample
-        #   self.knockoff_sampler = metro.ARTKSampler(
-        #       X=self.X,
-        #       V=self.Sigma,
-        #       **self.knockoff_kwargs,
-        #   )
-        #   knockoffs = self.knockoff_sampler.sample_knockoffs()
-
-        #   # Extract S
-        #   inv_order = self.knockoff_sampler.inv_order
-        #   S = self.knockoff_sampler.S[inv_order][:, inv_order]
-        # # Or block T metro
-        # elif self.knockoff_type == 'blockt':
-        #   # Sample
-        #   self.knockoff_sampler = metro.BlockTSampler(
-        #       X=self.X,
-        #       V=self.Sigma,
-        #       **self.knockoff_kwargs,
-        #   )
-        #   knockoffs = self.knockoff_sampler.sample_knockoffs()
-
-        #   # Extract S
-        #   S = self.knockoff_sampler.S
-        # elif self.knockoff_type == 'ising':
-        #   if 'gibbs_graph' not in self.knockoff_kwargs:
-        #       raise IndexError(
-        #           f"For ising knockoffs, must provide gibbs graph as knockoff_kwarg"
-        #       )
-        #   self.knockoff_sampler = metro.IsingKnockoffSampler(
-        #       X=self.X,
-        #       V=self.Sigma,
-        #       mu=self.mu,
-        #       **self.knockoff_kwargs
-        #   )
-        #   knockoffs = self.knockoff_sampler.sample_knockoffs()
-
-        #   # It is difficult to extract S analytically 
-        #   # here because there are different S's for
-        #   # different parts of the data
-        #   S = None
-
-        # else:
-        #   raise ValueError(
-        #       f"knockoff_type must be one of 'gaussian', 'artk', 'ising', 'blockt', not {knockoff_type}"
-        #   )
-
         # Possibly use recycling
         if self.recycle_up_to is not None:
             # Split
@@ -219,13 +160,6 @@ class KnockoffFilter:
             # Combine
             Xk = np.concatenate((rec_Xk, new_Xk), axis=0)
         self.Xk = Xk
-
-        # For high precision simulations of degenerate knockoffs,
-        # ensure degeneracy
-        # if self._sdp_degen:
-        #   sumcols = self.X[:, 0] + knockoffs[:, 0]
-        #   knockoffs = sumcols.reshape(-1, 1) - self.X
-
 
         # Construct the feature-knockoff covariance matrix, or estimate
         # it if construction is not possible

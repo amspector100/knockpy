@@ -139,7 +139,7 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
 
     # By default, all variables are their own group
     if groups is None:
-        groups = np.arange(0, p, 1)
+        groups = np.arange(1, p+1, 1)
 
     # Fit
     alphas, _, coefs = linear_model.lars_path(features, y, method="lasso", **kwargs,)
@@ -158,18 +158,9 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
 def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
 
     # Parse some kwargs/defaults
-    if "max_iter" in kwargs:
-        max_iter = kwargs.pop("max_iter")
-    else:
-        max_iter = 500
-    if "tol" in kwargs:
-        tol = kwargs.pop("tol")
-    else:
-        tol = 1e-3
-    if "cv" in kwargs:
-        cv = kwargs.pop("cv")
-    else:
-        cv = 5
+    max_iter = kwargs.pop("max_iter", 500)
+    tol = kwargs.pop("tol", 1e-3)
+    cv = kwargs.pop("cv", 5)
     if y_dist is None:
         y_dist = parse_y_dist(y)
 
@@ -268,22 +259,10 @@ def fit_group_lasso(
     warnings.filterwarnings("ignore")
 
     # Parse some kwargs/defaults
-    if "max_iter" in kwargs:
-        max_iter = kwargs.pop("max_iter")
-    else:
-        max_iter = 100
-    if "tol" in kwargs:
-        tol = kwargs.pop("tol")
-    else:
-        tol = 1e-2
-    if "cv" in kwargs:
-        cv = kwargs.pop("cv")
-    else:
-        cv = 5
-    if "learning_rate" in kwargs:
-        learning_rate = kwargs.pop("learning_rate")
-    else:
-        learning_rate = 2
+    max_iter = kwargs.pop("max_iter", 100)
+    tol = kwargs.pop("tol", 1e-2)
+    cv = kwargs.pop("cv", 5)
+    learning_rate = kwargs.pop("learning_rate", 2)
     if y_dist is None:
         y_dist = parse_y_dist(y)
 
@@ -319,10 +298,9 @@ def fit_group_lasso(
             y = (y - y.mean()) / y.std()
 
     # Get regularization values for cross validation
-    if "reg_vals" in kwargs:
-        reg_vals = kwargs.pop("reg_vals")
-    else:
-        reg_vals = [(x, x) for x in DEFAULT_REG_VALS]
+    reg_vals = kwargs.pop(
+        "reg_vals", [(x, x) for x in DEFAULT_REG_VALS]
+    )
 
     # Fit pyglm model using warm starts
     if use_pyglm:
