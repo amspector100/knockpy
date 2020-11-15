@@ -299,7 +299,7 @@ class TestARTK(unittest.TestCase):
 		)
 
 		# Test again with df_t --> infinity, so it should be approx gaussian
-        dgprocess = dgp.DGP()
+		dgprocess = dgp.DGP()
 		X1,_,_,Q,V = dgprocess.sample_data(
 			n=n, p=p, method='AR1', a=3, b=1
 		)
