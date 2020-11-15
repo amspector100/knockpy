@@ -9,7 +9,7 @@ from knockpy import utilities
 from knockpy import graphs
 from knockpy.knockoff_filter import KnockoffFilter
 
-NUM_REPS = 2
+NUM_REPS = 15
 
 class TestFdrControl(unittest.TestCase):
 
