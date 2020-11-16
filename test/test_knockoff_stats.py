@@ -15,6 +15,12 @@ DEFAULT_SAMPLE_KWARGS = {
 	'sparsity':0.5,
 }
 
+try:
+	import torch
+	TORCH_AVAILABLE = True
+except ImportError:
+	TORCH_AVAILABLE = False
+
 class KStatVal(unittest.TestCase):
 
 	def check_kstat_fit(
@@ -706,6 +712,9 @@ class TestFeatureStatistics(KStatVal):
 
 	def test_deeppink_fit(self):
 
+		if not TORCH_AVAILABLE:
+			return None
+
 		# RF power on trunclinear data
 		self.check_kstat_fit(
 			fstat=kstats.DeepPinkStatistic(),
@@ -741,6 +750,9 @@ class TestFeatureStatistics(KStatVal):
 		)
 	
 	def test_deeppink_feature_importances(self):
+
+		if not TORCH_AVAILABLE:
+			return None
 
 		# Check that these feature importance scores throw
 		# no errors

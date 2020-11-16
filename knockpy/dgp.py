@@ -10,9 +10,6 @@ from .utilities import shift_until_PSD, chol2inv, cov2corr
 import scipy.cluster.hierarchy as hierarchy
 import scipy.spatial.distance as ssd
 
-# Graphing
-import matplotlib.pyplot as plt
-
 DEFAULT_DF_T = 3
 
 def Wishart(d=100, p=100, tol=1e-2):
@@ -38,13 +35,10 @@ def UniformDot(d=100, p=100, tol=1e-2):
 
 def DirichletCorr(p=100, temp=1, tol=1e-6):
     """
-    Generates a correlation matrix following
-    Davies, Philip I; Higham, Nicholas J;
-     “Numerically stable generation of correlation matrices and their factors”, 
-     BIT 2000, Vol. 40, No. 4, pp. 640 651
-     using the scipy implementation.
-     We set the eigenvalues using a dirichlet.
-     The p dirichlet parameters are i.i.d. uniform [tol, temp].
+    Generates a correlation matrix by sampling p eigenvalues
+    from a dirichlet distribution whose p parameters are i.i.d.
+    uniform [tol, temp] and generating a random covariance matrix
+    with those eigenvalues.
     """
     alpha = np.random.uniform(temp, size=p)
     d = stats.dirichlet(alpha=alpha).rvs().reshape(-1)
@@ -66,7 +60,8 @@ def AR1(p=30, a=1, b=1, tol=1e-3, rho=None):
     where $Corr(X_t, X_{t-1})$ are drawn from Beta(a,b),
     independently for each t. 
     If rho is specified, then $Corr(X_t, X_{t-1}) = rho
-    for all t."""
+    for all t.
+    """
 
     # Generate rhos, take log to make multiplication easier
     if rho is None:
@@ -150,14 +145,13 @@ def ErdosRenyi(p=300, delta=0.2, lower=0.1, upper=1, tol=1e-1):
     return V
 
 def FactorModel(
-    p=500,
-    rank=2,
+        p=500,
+        rank=2,
     ):
     """
-    Generates Sigma from a factor model.
+    Generates random correlation matrix from a factor model.
     :param p: Dimensionality
-    :param rank: rank of factor model
-    Similar to Askari et al. 2020 (FANOK: Knockoffs in Linear Time).
+    :param rank: rank of factor model.
     """
     diag_entries = np.random.uniform(0, 1, size=p)
     noise = np.random.randn(p, rank)/np.sqrt(rank)
@@ -172,7 +166,7 @@ def PartialCorr(
     rho=0.3,
 ):
     """
-    Creates covariance matrix with partial correlation rho
+    Creates the correlation matrix corresponding to partial correlation rho.
     """
     Q_init = rho*np.ones((p, p)) + (1-rho)*np.eye(p)
     V = utilities.chol2inv(Q_init)
@@ -196,8 +190,8 @@ def daibarber2016_graph(
     mu=None,
     **kwargs,
 ):
-    """ Same data-generating process as Dai and Barber 2016
-    (see https://arxiv.org/abs/1602.03589). 
+    """ 
+    Same data-generating process as Dai and Barber 2016 (see https://arxiv.org/abs/1602.03589). 
     :param int group_size: The size of groups. Defaults to 5.
     :param int sparsity: The proportion of groups with nonzero effects.
      Defaults to 0.1 (the daibarber2016 default).
@@ -265,7 +259,7 @@ def create_sparse_coefficients(
 ):
     """
     Generate a set of sparse coefficients for single index or sparse additive models.
-    :param p: Dimensionality of coefficients
+    :param p: dimensionality of coefficients
     :type p: int
     :param sparsity: Sparsity of selection; generates np.floor(p * sparsity) non-nulls. 
     :type sparsity: float
@@ -838,22 +832,3 @@ def create_correlation_tree(corr_matrix, method="average"):
         )
 
     return link
-
-
-def plot_dendrogram(link, title=None):
-
-    # Get title
-    if title is None:
-        title = "Hierarchical Clustering Dendrogram"
-
-    # Plot
-    plt.figure(figsize=(15, 10))
-    plt.title(str(title))
-    plt.xlabel("Index")
-    plt.ylabel("Correlation Distance")
-    hierarchy.dendrogram(
-        link,
-        leaf_rotation=90.0,  # rotates the x axis labels
-        leaf_font_size=8.0,  # font size for the x axis labels
-    )
-    plt.show()

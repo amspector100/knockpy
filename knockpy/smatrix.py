@@ -4,6 +4,7 @@ from . import mrc
 from . import mac
 from . import dgp
 from . import utilities
+from . import constants
 
 def parse_method(method, groups, p):
     """ Decides which method to use to create the 
@@ -160,7 +161,7 @@ def compute_smatrix(
         block_sizes = utilities.calc_group_sizes(blocks)
         nblocks = block_sizes.shape[0]
         print(f"Using blockdiag approx. with nblocks={nblocks} and max_size={block_sizes.max()}...")
-        Sigma_blocks = mrc.blockdiag_to_blocks(Sigma, blocks)
+        Sigma_blocks = utilities.blockdiag_to_blocks(Sigma, blocks)
         group_blocks = []
         for j in range(int(blocks.min()), int(blocks.max())+1):
             group_blocks.append(utilities.preprocess_groups(groups[blocks == j]))
@@ -192,7 +193,7 @@ def compute_smatrix(
         S, _ = utilities.scale_until_PSD(
             Sigma=Sigma,
             S=S, 
-            tol=kwargs.get('tol', mrc.DEFAULT_TOL),
+            tol=kwargs.get('tol', constants.DEFAULT_TOL),
             num_iter=kwargs.get('num_iter', 10)
         )
         # Line search for MRC methods
@@ -206,7 +207,7 @@ def compute_smatrix(
         if method in ['mvr', 'mmi', 'maxent']:
             best_gamma = 1
             best_loss = obj(Sigma=Sigma, S=S, smoothing=smoothing)
-            for gamma in mrc.GAMMA_VALS:
+            for gamma in constants.GAMMA_VALS:
                 loss = obj(Sigma=Sigma, S=gamma*S, smoothing=smoothing)
                 if loss < best_loss:
                     best_gamma = gamma
@@ -221,8 +222,13 @@ def compute_smatrix(
     if not np.all(groups == np.arange(1, p + 1, 1)):
         solver = 'psgd'
     if (method == 'mvr' or method == 'mmi') and solver == 'psgd':
-        S = mrc.solve_mrc_psgd(
-            Sigma=Sigma, groups=groups, **kwargs
+        # Check for imports
+        utilities.check_kpytorch_available(
+            purpose='group MRC knockoffs OR PSGD solver'
+        )
+        from .kpytorch import mrcgrad
+        S = mrcgrad.solve_mrc_psgd(
+            Sigma=Sigma, groups=groups, method=method, **kwargs
         )
     elif method == 'mvr':
         S = mrc.solve_mvr(

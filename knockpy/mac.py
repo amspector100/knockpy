@@ -4,6 +4,7 @@ import scipy as sp
 from scipy import stats
 import scipy.linalg
 
+from .constants import DEFAULT_TOL
 from .utilities import calc_group_sizes, preprocess_groups
 from .utilities import shift_until_PSD, scale_until_PSD
 from . import utilities
@@ -30,7 +31,7 @@ def TestIfCorrMatrix(Sigma):
         raise ValueError("Sigma is not a correlation matrix. Scale it properly first.")
 
 
-def calc_min_group_eigenvalue(Sigma, groups, tol=1e-5, verbose=False):
+def calc_min_group_eigenvalue(Sigma, groups, tol=DEFAULT_TOL, verbose=False):
     """
     Calculates the minimum "group" eigenvalue of a covariance 
     matrix Sigma: see Dai and Barber 2016. This is useful for
@@ -80,7 +81,7 @@ def calc_min_group_eigenvalue(Sigma, groups, tol=1e-5, verbose=False):
     return gamma
 
 
-def solve_equicorrelated(Sigma, groups, tol=1e-5, verbose=False, num_iter=10):
+def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter=10):
     """ Calculates the block diagonal matrix S using
     the equicorrelated method described by Dai and Barber 2016.
     :param Sigma: true precision matrix of X, of dimension p x p
@@ -119,7 +120,7 @@ def solve_SDP(
     Sigma,
     verbose=False,
     num_iter=10,
-    tol=1e-2,
+    tol=DEFAULT_TOL,
     **kwargs
 ):
     """ 
@@ -217,7 +218,7 @@ def solve_group_SDP(
     objective="abs",
     norm_type=2,
     num_iter=10,
-    tol=1e-2,
+    tol=DEFAULT_TOL,
     **kwargs,
 ):
     """ Solves the group SDP problem: extends the

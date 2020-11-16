@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 import unittest
 from .context import knockpy
 
@@ -202,6 +203,24 @@ class TestUtils(unittest.TestCase):
 			out2,
 			f"Apply_pool yields different answers for different processes"
 		)
+
+	def test_blockdiag_to_blocks(self):
+
+		# Create block sizes and blocks
+		block_nos = utilities.preprocess_groups(
+			np.random.randint(1, 50, 100)
+		)        
+		block_nos = np.sort(block_nos)
+		block_sizes = utilities.calc_group_sizes(block_nos)
+		blocks = [np.random.randn(b, b) for b in block_sizes]
+
+		# Create block diagonal matrix in scipy
+		block_diag = sp.linalg.block_diag(*blocks)
+		blocks2 = utilities.blockdiag_to_blocks(block_diag, block_nos)
+		for expected, out in zip(blocks, blocks2):
+			np.testing.assert_almost_equal(
+				out, expected, err_msg='blockdiag_to_blocks incorrectly separates blocks'
+			)
 
 
 if __name__ == '__main__':

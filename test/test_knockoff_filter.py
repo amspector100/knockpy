@@ -10,6 +10,11 @@ from knockpy import dgp
 from knockpy.knockoff_filter import KnockoffFilter
 
 NUM_REPS = 15
+try:
+	import torch
+	TORCH_AVAILABLE = True
+except ImportError:
+	TORCH_AVAILABLE = False
 
 class TestFdrControl(unittest.TestCase):
 
@@ -286,6 +291,8 @@ class TestKnockoffFilter(TestFdrControl):
 
 	@pytest.mark.slow
 	def test_deeppink_control(self):
+		if not TORCH_AVAILABLE:
+			return None
 		self.check_fdr_control(
 			reps=NUM_REPS, n=5000, p=150, method='AR1', sparsity=0.5, y_dist='gaussian', 
 			filter_kwargs={'fstat':'deeppink'},

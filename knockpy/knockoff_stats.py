@@ -6,12 +6,8 @@ import sklearn
 from sklearn import linear_model, model_selection, ensemble
 from group_lasso import GroupLasso, LogisticGroupLasso
 from pyglmnet import GLMCV
-
-from . import deeppink
-from .utilities import calc_group_sizes, random_permutation_inds
-
-DEFAULT_REG_VALS = np.logspace(-4, 4, base=10, num=20)
-
+from . import utilities
+from .constants import DEFAULT_REG_VALS
 
 def calc_mse(model, X, y):
     """ Gets MSE of a model """
@@ -106,7 +102,7 @@ def combine_Z_stats(Z, groups=None, pair_agg="cd", group_agg="sum"):
     if group_agg == "sum":
         pass
     elif group_agg == "avg":
-        group_sizes = calc_group_sizes(groups)
+        group_sizes = utilities.calc_group_sizes(groups)
         W_group = W_group / group_sizes
     else:
         raise ValueError(f'group_agg ({group_agg}) must be one of "sum", "avg"')
@@ -134,7 +130,7 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
     features = np.concatenate([X, Xk], axis=1)
 
     # Randomize coordinates to make sure everything is symmetric
-    inds, rev_inds = random_permutation_inds(2 * p)
+    inds, rev_inds = utilities.random_permutation_inds(2 * p)
     features = features[:, inds]
 
     # By default, all variables are their own group
@@ -169,7 +165,7 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
     features = np.concatenate([X, Xk], axis=1)
 
     # Randomize coordinates to make sure everything is symmetric
-    inds, rev_inds = random_permutation_inds(2 * p)
+    inds, rev_inds = utilities.random_permutation_inds(2 * p)
     features = features[:, inds]
 
     # Fit lasso
@@ -212,7 +208,7 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
     features = np.concatenate([X, Xk], axis=1)
 
     # Randomize coordinates to ensure antisymmetry
-    inds, rev_inds = random_permutation_inds(2 * p)
+    inds, rev_inds = utilities.random_permutation_inds(2 * p)
     features = features[:, inds]
 
     # Fit lasso
@@ -285,7 +281,7 @@ def fit_group_lasso(
     doubled_groups = np.concatenate([groups, groups], axis=0)
 
     # Randomize coordinates to make sure everything is symmetric
-    inds, rev_inds = random_permutation_inds(2 * p)
+    inds, rev_inds = utilities.random_permutation_inds(2 * p)
     features = np.concatenate([X, Xk], axis=1)
     features = features[:, inds]
     doubled_groups = doubled_groups[inds]
@@ -431,7 +427,7 @@ class FeatureStatistic:
         n = X.shape[0]
         p = X.shape[1]
         features = np.concatenate([X, Xk], axis=1)
-        self.inds, self.rev_inds = random_permutation_inds(2 * p)
+        self.inds, self.rev_inds = utilities.random_permutation_inds(2 * p)
         features = features[:, self.inds]
 
         # Train model
@@ -917,7 +913,7 @@ class OLSStatistic(FeatureStatistic):
         # Run linear regression, permute indexes to prevent FDR violations
         p = X.shape[1]
         features = np.concatenate([X, Xk], axis=1)
-        inds, rev_inds = random_permutation_inds(2 * p)
+        inds, rev_inds = utilities.random_permutation_inds(2 * p)
         features = features[:, inds]
 
         lm = linear_model.LinearRegression(fit_intercept=False).fit(features, y)
@@ -986,7 +982,7 @@ class RandomForestStatistic(FeatureStatistic):
         features = np.concatenate([X, Xk], axis=1)
 
         # Randomize coordinates to make sure everything is symmetric
-        self.inds, self.rev_inds = random_permutation_inds(2 * p)
+        self.inds, self.rev_inds = utilities.random_permutation_inds(2 * p)
         features = features[:, self.inds]
 
         # By default, all variables are their own group
@@ -1058,9 +1054,14 @@ class DeepPinkStatistic(FeatureStatistic):
             http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
             - "swapint": The swap-integral defined from
             http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
-        Defaults to deeppink, which is both the most powerful and the 
-        most computationally efficient.
+        Defaults to deeppink, which is often both the most powerful and 
+        the most computationally efficient.
         """
+
+        # Check if kpytorch (and therefore deeppink) is available.
+        utilities.check_kpytorch_available(purpose='deepPINK statistics')
+        from .kpytorch import deeppink
+
         # Bind data 
         n = X.shape[0]
         p = X.shape[1]
@@ -1069,7 +1070,6 @@ class DeepPinkStatistic(FeatureStatistic):
         # Randomize coordinates to make sure everything is symmetric
         self.inds = np.arange(0, 2*p, 1)
         self.rev_inds = np.arange(0, 2*p, 1)
-
 
         # By default, all variables are their own group
         if groups is None:

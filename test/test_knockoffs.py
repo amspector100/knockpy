@@ -6,6 +6,11 @@ from .context import knockpy
 from statsmodels.stats.moment_helpers import cov2corr
 from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
 
+try:
+	import torch
+	TORCH_AVAILABLE = True
+except ImportError:
+	TORCH_AVAILABLE = False
 
 class CheckSMatrix(unittest.TestCase):
 
@@ -278,32 +283,15 @@ class TestSDP(CheckSMatrix):
 			SDP_solver
 		)
 
-class TestUtilFunctions(unittest.TestCase):
-	""" Tests a couple of simple utility functions"""
-
-	def test_blockdiag_to_blocks(self):
-
-		# Create block sizes and blocks
-		block_nos = knockpy.utilities.preprocess_groups(
-			np.random.randint(1, 50, 100)
-		)        
-		block_nos = np.sort(block_nos)
-		block_sizes = knockpy.utilities.calc_group_sizes(block_nos)
-		blocks = [np.random.randn(b, b) for b in block_sizes]
-
-		# Create block diagonal matrix in scipy
-		block_diag = sp.linalg.block_diag(*blocks)
-		blocks2 = mrc.blockdiag_to_blocks(block_diag, block_nos)
-		for expected, out in zip(blocks, blocks2):
-			np.testing.assert_almost_equal(
-				out, expected, err_msg='blockdiag_to_blocks incorrectly separates blocks'
-			)
-
 class TestMRCSolvers(CheckSMatrix):
 	""" Tests the various MRC solvers / classes"""
 
 	def test_scale_sqrt_S(self):
 		""" Tests the function which scales sqrt S for PSGD solver"""
+
+		if not TORCH_AVAILABLE:
+			return None
+		from knockpy import kpytorch
 
 		# Construct covariance matrix
 		p = 50
@@ -315,7 +303,7 @@ class TestMRCSolvers(CheckSMatrix):
 
 		# Create model - this automatically scales the
 		# initial blocks properly
-		fk_precision_calc = mrc.MVRLoss(
+		fk_precision_calc = kpytorch.mrcgrad.MVRLoss(
 			Sigma, groups, init_S=init_blocks
 		)
 		# Check for proper scaling
@@ -330,6 +318,10 @@ class TestMRCSolvers(CheckSMatrix):
 		""" Tests PSGD class raieses error if the cov 
 		matrix/groups are improperly sorted"""
 
+		if not TORCH_AVAILABLE:
+			return None
+		from knockpy import kpytorch
+
 		# Groups and sigma 
 		p = 50
 		Sigma = np.eye(p)
@@ -339,7 +331,7 @@ class TestMRCSolvers(CheckSMatrix):
 
 		# Try to initialize
 		def init_unsorted_model():
-			model = mrc.MVRLoss(Sigma, groups)
+			model = kpytorch.mrcgrad.MVRLoss(Sigma, groups)
 
 		self.assertRaisesRegex(
 			ValueError, "Sigma and groups must be sorted prior to input",
@@ -348,8 +340,9 @@ class TestMRCSolvers(CheckSMatrix):
 
 	def test_smoothing(self):
 		"""
-		Tests that one small eigenvalue of the cov matrix
-		doesn't ruin the performance of the methods
+		Tests that one small eigenvalue of the cov matrix doesn't ruin the performance of the methods.
+		It turns out smoothing is not required for this, but this is a nice check
+		anyway.
 		"""
 		p = 50
 		smoothing = 0.1
@@ -372,6 +365,10 @@ class TestMRCSolvers(CheckSMatrix):
 		""" Tests that solvers yield expected
 		solution for equicorrelated matrices """
 
+		if not TORCH_AVAILABLE:
+			return None
+		from knockpy import kpytorch
+
 		# Main constants 
 		p = 50
 		groups = np.arange(1, p+1, 1)
@@ -392,7 +389,7 @@ class TestMRCSolvers(CheckSMatrix):
 					expected = (1-rho)*np.eye(p)
 
 					# Test optimizer
-					opt_S = mrc.solve_mrc_psgd(
+					opt_S = kpytorch.mrcgrad.solve_mrc_psgd(
 						Sigma=Sigma,
 						groups=groups,
 						init_S=None,
@@ -427,6 +424,11 @@ class TestMRCSolvers(CheckSMatrix):
 					)
 
 	def test_equicorrelated_soln_recycled(self):
+		""" Correct solutions on equicorrelated matrix with recycling """
+
+		# Potentially also test the PSGD solver if torch is available
+		if TORCH_AVAILABLE:
+			from knockpy import kpytorch
 
 		# Main constants 
 		p = 50
@@ -449,20 +451,21 @@ class TestMRCSolvers(CheckSMatrix):
 			expected = new_opt*np.eye(p)
 
 			# Test PSGD optimizer
-			opt_S = mrc.solve_mrc_psgd(
-				Sigma=Sigma,
-				groups=groups,
-				init_S=None,
-				rec_prop=true_rec_prop,
-				tol=1e-5,
-				max_epochs=100,
-				line_search_iter=10,
-			)
-			self.check_S_properties(Sigma, opt_S, groups)
-			np.testing.assert_almost_equal(
-				opt_S, expected, decimal=2,
-				err_msg=f'For equicorrelated cov rho={rho} rec_prop={true_rec_prop}, MVR PSDSolver returns {opt_S}, expected {expected}'
-			)
+			if TORCH_AVAILABLE:
+				opt_S = kpytorch.mrcgrad.solve_mrc_psgd(
+					Sigma=Sigma,
+					groups=groups,
+					init_S=None,
+					rec_prop=true_rec_prop,
+					tol=1e-5,
+					max_epochs=100,
+					line_search_iter=10,
+				)
+				self.check_S_properties(Sigma, opt_S, groups)
+				np.testing.assert_almost_equal(
+					opt_S, expected, decimal=2,
+					err_msg=f'For equicorrelated cov rho={rho} rec_prop={true_rec_prop}, MVR PSDSolver returns {opt_S}, expected {expected}'
+				)
 
 			# Coord descent solver
 			opt_S = mrc.solve_mvr(
@@ -484,6 +487,12 @@ class TestMRCSolvers(CheckSMatrix):
 		Check the solution of the various solvers
 		for non-grouped knockoffs.
 		"""
+
+		# Check availability
+		if not TORCH_AVAILABLE:
+			return None
+		from knockpy import kpytorch
+
 		np.random.seed(110)
 		p = 100
 		methods = ['ar1', 'ver']
@@ -499,7 +508,7 @@ class TestMRCSolvers(CheckSMatrix):
 			sdp_mvr_loss = mrc.mvr_loss(Sigma, init_S)
 
 			# Apply gradient solver
-			opt_S = mrc.solve_mrc_psgd(
+			opt_S = kpytorch.mrcgrad.solve_mrc_psgd(
 				Sigma=Sigma,
 				groups=groups,
 				init_S=init_S,
@@ -542,6 +551,10 @@ class TestMRCSolvers(CheckSMatrix):
 		for group knockoffs.
 		"""
 
+		if not TORCH_AVAILABLE:
+			return None
+		from knockpy import kpytorch
+
 		# Construct graph + groups
 		np.random.seed(110)
 		p = 50
@@ -559,7 +572,7 @@ class TestMRCSolvers(CheckSMatrix):
 			init_loss = mrc.mvr_loss(Sigma, init_S)
 
 			# Apply gradient solver
-			opt_S = mrc.solve_mrc_psgd(
+			opt_S = kpytorch.mrcgrad.solve_mrc_psgd(
 				Sigma=Sigma,
 				groups=groups,
 				init_S=init_S,

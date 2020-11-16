@@ -156,6 +156,18 @@ def permute_matrix_by_groups(groups):
 
     return inds, inv_inds
 
+def blockdiag_to_blocks(M, groups):
+    """
+    Given a matrix M, pulls out the diagonal blocks as specified by groups.
+    :param M: p x p numpy array
+    :param groups: p length numpy array 
+    """
+    blocks = []
+    for j in np.sort(np.unique(groups)):
+        inds = np.where(groups == j)[0]
+        full_inds = np.ix_(inds, inds)
+        blocks.append(M[full_inds].copy())
+    return blocks
 
 ### Feature-statistic helpers
 def random_permutation_inds(length):
@@ -299,3 +311,14 @@ def apply_pool(
             all_outputs = thepool.map(partial_func, inputs)
 
     return all_outputs
+
+### Dependency management
+def check_kpytorch_available(purpose):
+    try:
+        from . import kpytorch
+        return None
+    except ImportError as err:
+        warnings.warn(
+            f"Pytorch is required for {purpose}. See https://pytorch.org/get-started/locally/."
+        )
+        raise err

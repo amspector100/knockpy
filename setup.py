@@ -51,7 +51,6 @@ setuptools.setup(
         "pyglmnet"
     ],
     extras_require={
-        "torch":["torch>=1.4.0"],
+        "kpytorch":["torch>=1.4.0"],
     }
-    ]
 )
