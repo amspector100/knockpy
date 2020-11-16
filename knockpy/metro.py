@@ -73,7 +73,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         A metropolized knockoff sampler for arbitrary random variables
         using covariance-guided proposals.
 
-        Currently not implemented for group knockoffs.
+        Group knockoffs are not yet implemented.
 
         :param lf: Log-probability density. This function should take
         an n x p numpy array (n independent samples of a p-dim vector).

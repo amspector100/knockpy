@@ -368,7 +368,7 @@ class TestFeatureStatistics(KStatVal):
 		Z_cd[np.abs(Z_cd) < 10] = 0
 		np.testing.assert_array_almost_equal(
 			W_cd, -1*Z_cd[0:p], 
-			err_msg = 'pair agg CD returns weird W stats'
+			err_msg = 'antisym CD returns weird W stats'
 		)
 
 
@@ -387,7 +387,7 @@ class TestFeatureStatistics(KStatVal):
 		W_sm = lasso_stat.W
 		np.testing.assert_array_almost_equal(
 			W_sm, np.abs(Z_sm[0:p]), decimal=3,
-			err_msg = 'pair agg SM returns weird W stats'
+			err_msg = 'antisym SM returns weird W stats'
 		)
 
 		# Run to make sure there are no errors for
@@ -407,7 +407,7 @@ class TestFeatureStatistics(KStatVal):
 		Z_scd[np.abs(Z_scd) < 10] = 0
 		np.testing.assert_array_almost_equal(
 			W_scd, Z_scd[0:p], 
-			err_msg = 'pair agg SCD returns weird W stats'
+			err_msg = 'antisym SCD returns weird W stats'
 		)
 
 	def test_cv_scoring(self):

@@ -17,6 +17,14 @@ except ImportError:
 	TORCH_AVAILABLE = False
 
 class TestFdrControl(unittest.TestCase):
+	"""
+	This checkes FDR control for the KnockoffFilter class.
+	It is admittedly difficult to do this with high power
+	in a computationally efficient manner, so often we run only 
+	a few replications to check that the KnockoffFilter class behaves
+	roughly as expected.
+	"""
+
 
 	def check_fdr_control(
 			self, 
@@ -153,6 +161,7 @@ class TestFdrControl(unittest.TestCase):
 class TestKnockoffFilter(TestFdrControl):
 	""" Tests knockoff filter (mostly MX, some FX tests) """
 
+	@pytest.mark.slow
 	def test_gnull_control(self):
 		""" Test FDR control under global null """
 
@@ -178,6 +187,7 @@ class TestKnockoffFilter(TestFdrControl):
 			method='daibarber2016', rho=0.6, sparsity=0, y_dist='binomial', reps=NUM_REPS
 		)
 
+	@pytest.mark.slow
 	def test_sparse_control(self):
 		""" Test FDR control under sparsity """
 
@@ -197,6 +207,7 @@ class TestKnockoffFilter(TestFdrControl):
 			method='daibarber2016', rho=0.8, sparsity=0.2, y_dist='binomial', reps=NUM_REPS,
 		)
 
+	@pytest.mark.slow
 	def test_dense_control(self):
 		""" Test FDR control in dense scenario """
 
@@ -216,6 +227,7 @@ class TestKnockoffFilter(TestFdrControl):
 			filter_kwargs={'fstat':'margcorr'}
 		)
 
+	@pytest.mark.slow
 	def test_nonlinear_control(self):
 		""" Test FDR control for nonlinear responses """
 
@@ -242,6 +254,7 @@ class TestKnockoffFilter(TestFdrControl):
 			reps=NUM_REPS,
 		)
 
+	@pytest.mark.slow
 	def test_recycling_control(self):
 
 		# Scenario 1: AR1, recycle half
@@ -298,6 +311,8 @@ class TestKnockoffFilter(TestFdrControl):
 			filter_kwargs={'fstat':'deeppink'},
 		)
 
+	@pytest.mark.slow
+
 	def test_t_control(self):
 		""" FDR control with t-distributed designs """
 
@@ -342,7 +357,7 @@ class TestKnockoffFilter(TestFdrControl):
 		V = np.loadtxt(f'{file_directory}/test_covs/vout{p}.txt')
 		self.check_fdr_control(
 			n=500, p=49, method='ising', Sigma=V,
-			sparsity=0.5, x_dist='gibbs', reps=2, q=1,
+			sparsity=0.5, x_dist='gibbs', reps=1, q=1,
 			filter_kwargs={
 				'ksampler':'ising', 'fstat':'dlasso',
 			},

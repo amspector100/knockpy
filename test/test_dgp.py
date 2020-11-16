@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import unittest
+import pytest
 from .context import knockpy
 
 
@@ -469,6 +470,7 @@ class TestSampleData(unittest.TestCase):
 			err_msg = f'random unifdot generation {Sigma} unexpectedly deviates from the {expected}'
 		)
 
+	@pytest.mark.slow
 	def test_dirichlet_matrices(self):
 		""" Simple test that ensures there are no errors, we get corr matrix 
 		with expected eigenvalues"""
