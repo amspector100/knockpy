@@ -77,6 +77,7 @@ from networkx.utils import not_implemented_for
 from heapq import heappush, heappop, heapify
 import itertools
 
+
 def get_ordering(T):
     """ 
     Takes a junction tree and returns a variable ordering for the metro
@@ -92,13 +93,13 @@ def get_ordering(T):
     entry j is the set of entries > j that are in V_j. This specifies
     the conditional independence structure of the distribution given by
     lf. See page 34 of the paper.
-    """ 
+    """
     # Initialize
     T = T.copy()
     order = []
     active_frontier = []
-    
-    while(T.number_of_nodes() > 0):
+
+    while T.number_of_nodes() > 0:
         # Loop through leaf nodes
         gen = (x for x in T.nodes() if T.degree(x) <= 1)
         active_node = next(gen)
@@ -107,22 +108,23 @@ def get_ordering(T):
         # active_vars get added to the order in this step
         # activated set are just the variables in the active node
         parents = list(T[active_node].keys())
-        if(len(parents) == 0):
+        if len(parents) == 0:
             active_vars = set(active_node)
             activated_set = active_vars.copy()
         else:
             active_vars = set(active_node.difference(parents[0]))
             activated_set = active_vars.union(parents[0]).difference(set(order))
-        for i in list(active_vars)[::-1]: # This line was changed too
+        for i in list(active_vars)[::-1]:  # This line was changed too
             order += [i]
             frontier = list(activated_set.difference(set(order)))
             active_frontier += [frontier]
         T.remove_node(active_node)
-    
+
     return [np.array(order), active_frontier]
 
-@not_implemented_for('directed')
-@not_implemented_for('multigraph')
+
+@not_implemented_for("directed")
+@not_implemented_for("multigraph")
 def treewidth_min_degree(G):
     """ Returns a treewidth decomposition using the Minimum Degree heuristic.
 
@@ -144,9 +146,8 @@ def treewidth_min_degree(G):
     return treewidth_decomp(G, lambda graph: deg_heuristic.best_node(graph))
 
 
-
-@not_implemented_for('directed')
-@not_implemented_for('multigraph')
+@not_implemented_for("directed")
+@not_implemented_for("multigraph")
 def treewidth_min_fill_in(G):
     """ Returns a treewidth decomposition using the Minimum Fill-in heuristic.
 
@@ -163,8 +164,7 @@ def treewidth_min_fill_in(G):
     Treewidth decomposition : (int, Graph) tuple
         2-tuple with treewidth and the corresponding decomposed tree.
     """
-    return treewidth_decomp(G,  min_fill_in_heuristic)
-
+    return treewidth_decomp(G, min_fill_in_heuristic)
 
 
 class MinDegreeHeuristic:
@@ -175,6 +175,7 @@ class MinDegreeHeuristic:
     chosen, then the graph is updated and the corresponding node is
     removed. Next, a new node with the lowest degree is chosen, and so on.
     """
+
     def __init__(self, graph):
         self._graph = graph
 

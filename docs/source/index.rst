@@ -10,6 +10,12 @@ Welcome to knockpy's documentation!
    :maxdepth: 3
    :caption: Contents:
 
+   kfilter
+   ksamplers
+   kstats
+   smatrix
+   dgp
+
    
 
 

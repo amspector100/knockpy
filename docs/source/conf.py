@@ -21,8 +21,15 @@ project = 'knockpy'
 copyright = '2020, Asher Spector'
 author = 'Asher Spector'
 
+# Import the right package!
+import sys
+import os
+import sphinx_rtd_theme
+sys.path.insert(0, os.path.abspath('../../'))
+
 # The full version, including alpha/beta/rc tags
-release = '0.0.dev1'
+import knockpy
+release = knockpy.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -32,6 +39,7 @@ release = '0.0.dev1'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'numpydoc',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
@@ -54,7 +62,7 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

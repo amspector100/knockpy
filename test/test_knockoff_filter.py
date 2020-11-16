@@ -11,13 +11,15 @@ from knockpy.knockoff_filter import KnockoffFilter
 
 NUM_REPS = 15
 try:
-	import torch
-	TORCH_AVAILABLE = True
+    import torch
+
+    TORCH_AVAILABLE = True
 except ImportError:
-	TORCH_AVAILABLE = False
+    TORCH_AVAILABLE = False
+
 
 class TestFdrControl(unittest.TestCase):
-	"""
+    """
 	This checkes FDR control for the KnockoffFilter class.
 	It is admittedly difficult to do this with high power
 	in a computationally efficient manner, so often we run only 
@@ -25,438 +27,487 @@ class TestFdrControl(unittest.TestCase):
 	roughly as expected.
 	"""
 
+    def check_fdr_control(
+        self,
+        reps=50,
+        q=0.2,
+        alpha=0.05,
+        filter_kwargs={},
+        S=None,
+        infer_sigma=False,
+        **kwargs,
+    ):
 
-	def check_fdr_control(
-			self, 
-			reps=50,
-			q=0.2,
-			alpha=0.05,
-			filter_kwargs={},
-			S=None,
-			infer_sigma=False,
-			**kwargs
-		):
+        np.random.seed(110)
+        filter_kwargs = filter_kwargs.copy()
+        kwargs = kwargs.copy()
+        fixedX = False
+        if "ksampler" in filter_kwargs:
+            if filter_kwargs["ksampler"] == "fx":
+                fixedX = True
 
-		np.random.seed(110)
-		filter_kwargs = filter_kwargs.copy()
-		kwargs = kwargs.copy()
-		fixedX = False
-		if 'ksampler' in filter_kwargs:
-			if filter_kwargs['ksampler'] == 'fx':
-				fixedX = True
+        # Create and name DGP
+        mu = kwargs.pop("mu", None)
+        Sigma = kwargs.pop("Sigma", None)
+        invSigma = kwargs.pop("invSigma", None)
+        beta = kwargs.pop("beta", None)
+        dgprocess = dgp.DGP(mu=mu, Sigma=Sigma, invSigma=invSigma, beta=beta)
+        X0, _, beta, _, Sigma = dgprocess.sample_data(**kwargs)
 
-		# Create and name DGP
-		mu = kwargs.pop('mu', None)
-		Sigma = kwargs.pop('Sigma', None)
-		invSigma = kwargs.pop('invSigma', None)
-		beta = kwargs.pop('beta', None)
-		dgprocess = dgp.DGP(
-			mu=mu, Sigma=Sigma, invSigma=invSigma, beta=beta
-		)
-		X0, _, beta, _, Sigma = dgprocess.sample_data(
-			**kwargs
-		)
+        basename = ""
+        for key in kwargs:
+            basename += f"{key}={kwargs[key]} "
 
-		basename = ''
-		for key in kwargs:
-			basename += f'{key}={kwargs[key]} '
+        # Two settings: one grouped, one not
+        p = Sigma.shape[0]
+        groups1 = np.arange(1, p + 1, 1)
+        name1 = basename + " (ungrouped)"
+        groups2 = np.random.randint(1, p + 1, size=(p,))
+        groups2 = utilities.preprocess_groups(groups2)
+        name2 = basename + " (grouped)"
 
-		# Two settings: one grouped, one not
-		p = Sigma.shape[0]
-		groups1 = np.arange(1, p+1, 1)
-		name1 = basename + ' (ungrouped)'
-		groups2 = np.random.randint(1, p+1, size=(p,))
-		groups2 = utilities.preprocess_groups(groups2)
-		name2 = basename + ' (grouped)'
+        # Split filter_kwargs
+        init_filter_kwargs = {}
+        init_filter_kwargs["ksampler"] = filter_kwargs.pop("ksampler", "gaussian")
+        init_filter_kwargs["fstat"] = filter_kwargs.pop("fstat", "lasso")
 
-		# Split filter_kwargs
-		init_filter_kwargs = {}
-		init_filter_kwargs['ksampler'] = filter_kwargs.pop('ksampler', 'gaussian')
-		init_filter_kwargs['fstat'] = filter_kwargs.pop('fstat', 'lasso')
+        for name, groups in zip([name1, name2], [groups1, groups2]):
 
-		for name, groups in zip([name1, name2], [groups1, groups2]):
-				
-			# Solve SDP
-			if S is None and not fixedX and not infer_sigma:
-				ksampler = knockpy.knockoffs.GaussianSampler(
-					X=X0,
-					Sigma=Sigma,
-					groups=groups,
-					method='sdp',
-				)
-			if not fixedX:
-				invSigma = utilities.chol2inv(Sigma)
-			group_nonnulls = utilities.fetch_group_nonnulls(beta, groups)
+            # Solve SDP
+            if S is None and not fixedX and not infer_sigma:
+                ksampler = knockpy.knockoffs.GaussianSampler(
+                    X=X0, Sigma=Sigma, groups=groups, method="sdp",
+                )
+            if not fixedX:
+                invSigma = utilities.chol2inv(Sigma)
+            group_nonnulls = utilities.fetch_group_nonnulls(beta, groups)
 
-			# Container for fdps
-			fdps = []
+            # Container for fdps
+            fdps = []
 
-			# Sample data reps times
-			for j in range(reps):
-				np.random.seed(j)
-				dgprocess = dgp.DGP(Sigma=Sigma, beta=beta)
-				X, y, _, Q, _ = dgprocess.sample_data(**kwargs)
+            # Sample data reps times
+            for j in range(reps):
+                np.random.seed(j)
+                dgprocess = dgp.DGP(Sigma=Sigma, beta=beta)
+                X, y, _, Q, _ = dgprocess.sample_data(**kwargs)
 
-				# Infer y_dist
-				if 'y_dist' in kwargs:
-					y_dist = kwargs['y_dist']
-				else:
-					y_dist = 'gaussian'
+                # Infer y_dist
+                if "y_dist" in kwargs:
+                    y_dist = kwargs["y_dist"]
+                else:
+                    y_dist = "gaussian"
 
-				# Run (MX) knockoff filter 
-				if fixedX or infer_sigma:
-					mu_arg = None
-					Sigma_arg = None
-					invSigma_arg = None
-				else:
-					mu_arg = np.zeros(p)
-					Sigma_arg = Sigma
-					invSigma_arg = invSigma
+                # Run (MX) knockoff filter
+                if fixedX or infer_sigma:
+                    mu_arg = None
+                    Sigma_arg = None
+                    invSigma_arg = None
+                else:
+                    mu_arg = np.zeros(p)
+                    Sigma_arg = Sigma
+                    invSigma_arg = invSigma
 
-				# Initialize filter
-				knockoff_filter = KnockoffFilter(
-					**init_filter_kwargs
-				)
+                # Initialize filter
+                knockoff_filter = KnockoffFilter(**init_filter_kwargs)
 
-				# Knockoff kwargs
-				knockoff_kwargs={
-					'S':S, 
-					'invSigma':invSigma_arg,
-					'verbose':False,
-				}
-				if 'df_t' in kwargs:
-					knockoff_kwargs['df_t'] = kwargs['df_t']
-				if 'x_dist' in kwargs:
-					if kwargs['x_dist'] == 'gibbs':
-						gibbs_graph = Q
-						knockoff_kwargs['gibbs_graph'] = gibbs_graph
-					knockoff_kwargs.pop('S', None)
+                # Knockoff kwargs
+                knockoff_kwargs = {
+                    "S": S,
+                    "invSigma": invSigma_arg,
+                    "verbose": False,
+                }
+                if "df_t" in kwargs:
+                    knockoff_kwargs["df_t"] = kwargs["df_t"]
+                if "x_dist" in kwargs:
+                    if kwargs["x_dist"] == "gibbs":
+                        gibbs_graph = Q
+                        knockoff_kwargs["gibbs_graph"] = gibbs_graph
+                    knockoff_kwargs.pop("S", None)
 
-				selections = knockoff_filter.forward(
-					X=X, 
-					y=y, 
-					mu=mu_arg,
-					Sigma=Sigma_arg, 
-					groups=groups,
-					knockoff_kwargs=knockoff_kwargs,
-					fdr=q,
-					**filter_kwargs,
-				)
-				del knockoff_filter
+                selections = knockoff_filter.forward(
+                    X=X,
+                    y=y,
+                    mu=mu_arg,
+                    Sigma=Sigma_arg,
+                    groups=groups,
+                    knockoff_kwargs=knockoff_kwargs,
+                    fdr=q,
+                    **filter_kwargs,
+                )
+                del knockoff_filter
 
-				# Calculate fdp
-				fdp = np.sum(selections*(1-group_nonnulls))/max(1, np.sum(selections))
-				fdps.append(fdp)
+                # Calculate fdp
+                fdp = np.sum(selections * (1 - group_nonnulls)) / max(
+                    1, np.sum(selections)
+                )
+                fdps.append(fdp)
 
-			fdps = np.array(fdps)
-			fdr = fdps.mean()
-			fdr_se = fdps.std()/np.sqrt(reps)
+            fdps = np.array(fdps)
+            fdr = fdps.mean()
+            fdr_se = fdps.std() / np.sqrt(reps)
 
-			norm_quant = stats.norm.ppf(1-alpha)
+            norm_quant = stats.norm.ppf(1 - alpha)
 
-			self.assertTrue(
-				fdr - norm_quant*fdr_se <= q,
-				msg = f'MX filter FDR is {fdr} with SE {fdr_se} with q = {q} for DGP {name}'
-			)
+            self.assertTrue(
+                fdr - norm_quant * fdr_se <= q,
+                msg=f"MX filter FDR is {fdr} with SE {fdr_se} with q = {q} for DGP {name}",
+            )
+
 
 class TestKnockoffFilter(TestFdrControl):
-	""" Tests knockoff filter (mostly MX, some FX tests) """
+    """ Tests knockoff filter (mostly MX, some FX tests) """
 
-	@pytest.mark.slow
-	def test_gnull_control(self):
-		""" Test FDR control under global null """
+    @pytest.mark.slow
+    def test_gnull_control(self):
+        """ Test FDR control under global null """
 
-		# Scenario 1: AR1 a = 1, b = 1, global null
-		self.check_fdr_control(
-			n=100, p=50, method='AR1', sparsity=0, y_dist='gaussian', reps=NUM_REPS
-		)
+        # Scenario 1: AR1 a = 1, b = 1, global null
+        self.check_fdr_control(
+            n=100, p=50, method="AR1", sparsity=0, y_dist="gaussian", reps=NUM_REPS
+        )
 
-		# Scenario 2: Erdos Renyi
-		self.check_fdr_control(
-			n=300, p=50, method='ver', sparsity=0, y_dist='gaussian', reps=NUM_REPS,
-			filter_kwargs = {'fstat':'ols'}
-		)
+        # Scenario 2: Erdos Renyi
+        self.check_fdr_control(
+            n=300,
+            p=50,
+            method="ver",
+            sparsity=0,
+            y_dist="gaussian",
+            reps=NUM_REPS,
+            filter_kwargs={"fstat": "ols"},
+        )
 
-		# Erdos Renyi, but with Ridge Statistic
-		self.check_fdr_control(
-			n=100, p=50, method='ver', sparsity=0, y_dist='gaussian', reps=NUM_REPS,
-			filter_kwargs = {'fstat':'ridge'}
-		)
+        # Erdos Renyi, but with Ridge Statistic
+        self.check_fdr_control(
+            n=100,
+            p=50,
+            method="ver",
+            sparsity=0,
+            y_dist="gaussian",
+            reps=NUM_REPS,
+            filter_kwargs={"fstat": "ridge"},
+        )
 
-		# Scenario 3: Dai Barber
-		self.check_fdr_control(
-			method='daibarber2016', rho=0.6, sparsity=0, y_dist='binomial', reps=NUM_REPS
-		)
+        # Scenario 3: Dai Barber
+        self.check_fdr_control(
+            method="daibarber2016",
+            rho=0.6,
+            sparsity=0,
+            y_dist="binomial",
+            reps=NUM_REPS,
+        )
 
-	@pytest.mark.slow
-	def test_sparse_control(self):
-		""" Test FDR control under sparsity """
+    @pytest.mark.slow
+    def test_sparse_control(self):
+        """ Test FDR control under sparsity """
 
-		# Scenario 1: AR1 a = 1, b = 1, 
-		self.check_fdr_control(
-			n=300, p=100, method='AR1', sparsity=0.2, y_dist ='binomial', reps=NUM_REPS,
-		)
+        # Scenario 1: AR1 a = 1, b = 1,
+        self.check_fdr_control(
+            n=300, p=100, method="AR1", sparsity=0.2, y_dist="binomial", reps=NUM_REPS,
+        )
 
-		# Scenario 2: Erdos Renyi
-		self.check_fdr_control(
-			n=100, p=100, method='ver', sparsity=0.2, y_dist='gaussian', reps=NUM_REPS,
-			filter_kwargs={'fstat_kwargs':{'debias':True}}
-		)
+        # Scenario 2: Erdos Renyi
+        self.check_fdr_control(
+            n=100,
+            p=100,
+            method="ver",
+            sparsity=0.2,
+            y_dist="gaussian",
+            reps=NUM_REPS,
+            filter_kwargs={"fstat_kwargs": {"debias": True}},
+        )
 
-		# Scenario 3: Dai Barber
-		self.check_fdr_control(
-			method='daibarber2016', rho=0.8, sparsity=0.2, y_dist='binomial', reps=NUM_REPS,
-		)
+        # Scenario 3: Dai Barber
+        self.check_fdr_control(
+            method="daibarber2016",
+            rho=0.8,
+            sparsity=0.2,
+            y_dist="binomial",
+            reps=NUM_REPS,
+        )
 
-	@pytest.mark.slow
-	def test_dense_control(self):
-		""" Test FDR control in dense scenario """
+    @pytest.mark.slow
+    def test_dense_control(self):
+        """ Test FDR control in dense scenario """
 
-		# Scenario 1: AR1 a = 1, b = 1, global null
-		self.check_fdr_control(
-			n=300, p=50, method='AR1', sparsity=0.5, y_dist='gaussian', reps=NUM_REPS,
-		)
+        # Scenario 1: AR1 a = 1, b = 1, global null
+        self.check_fdr_control(
+            n=300, p=50, method="AR1", sparsity=0.5, y_dist="gaussian", reps=NUM_REPS,
+        )
 
-		# Scenario 2: Erdos Renyi
-		self.check_fdr_control(
-			n=100, p=50, method='ver', sparsity=0.5, y_dist='binomial', reps=NUM_REPS
-		)
+        # Scenario 2: Erdos Renyi
+        self.check_fdr_control(
+            n=100, p=50, method="ver", sparsity=0.5, y_dist="binomial", reps=NUM_REPS
+        )
 
-		# Scenario 3: Dai Barber
-		self.check_fdr_control(
-			method='daibarber2016', rho=0.4, sparsity=0.5, y_dist='gaussian', reps=NUM_REPS,
-			filter_kwargs={'fstat':'margcorr'}
-		)
+        # Scenario 3: Dai Barber
+        self.check_fdr_control(
+            method="daibarber2016",
+            rho=0.4,
+            sparsity=0.5,
+            y_dist="gaussian",
+            reps=NUM_REPS,
+            filter_kwargs={"fstat": "margcorr"},
+        )
 
-	@pytest.mark.slow
-	def test_nonlinear_control(self):
-		""" Test FDR control for nonlinear responses """
+    @pytest.mark.slow
+    def test_nonlinear_control(self):
+        """ Test FDR control for nonlinear responses """
 
-		# Scenario 1: AR1 a = 1, b = 1, global null
-		self.check_fdr_control(
-			n=300,
-			p=50,
-			method='AR1',
-			sparsity=0.5,
-			y_dist='gaussian', 
-			cond_mean='pairint',
-			reps=NUM_REPS,
-			filter_kwargs = {'fstat':'randomforest'}
-		)
+        # Scenario 1: AR1 a = 1, b = 1, global null
+        self.check_fdr_control(
+            n=300,
+            p=50,
+            method="AR1",
+            sparsity=0.5,
+            y_dist="gaussian",
+            cond_mean="pairint",
+            reps=NUM_REPS,
+            filter_kwargs={"fstat": "randomforest"},
+        )
 
-		# Scenario 2: Erdos Renyi
-		self.check_fdr_control(
-			n=100,
-			p=50,
-			method='ver',
-			sparsity=0.5,
-			y_dist='binomial',
-			cond_mean='pairint',
-			reps=NUM_REPS,
-		)
+        # Scenario 2: Erdos Renyi
+        self.check_fdr_control(
+            n=100,
+            p=50,
+            method="ver",
+            sparsity=0.5,
+            y_dist="binomial",
+            cond_mean="pairint",
+            reps=NUM_REPS,
+        )
 
-	@pytest.mark.slow
-	def test_recycling_control(self):
+    @pytest.mark.slow
+    def test_recycling_control(self):
 
-		# Scenario 1: AR1, recycle half
-		self.check_fdr_control(
-			reps=NUM_REPS, n=300, p=50, method='AR1', sparsity=0.5, y_dist='gaussian', 
-			filter_kwargs={'recycle_up_to':0.5},
-		)
+        # Scenario 1: AR1, recycle half
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=300,
+            p=50,
+            method="AR1",
+            sparsity=0.5,
+            y_dist="gaussian",
+            filter_kwargs={"recycle_up_to": 0.5},
+        )
 
-		# Scenario 2: AR1, recycle exactly 23
-		self.check_fdr_control(
-			reps=NUM_REPS, n=300, p=50, method='AR1', sparsity=0.5, y_dist='gaussian', 
-			filter_kwargs={'recycle_up_to':28},
-		)
+        # Scenario 2: AR1, recycle exactly 23
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=300,
+            p=50,
+            method="AR1",
+            sparsity=0.5,
+            y_dist="gaussian",
+            filter_kwargs={"recycle_up_to": 28},
+        )
 
-	@pytest.mark.slow
-	def test_inferred_mx_control(self):
-		self.check_fdr_control(
-			reps=NUM_REPS,
-			n=200,
-			p=100,
-			method='AR1',
-			sparsity=0,
-			y_dist='gaussian', 
-			infer_sigma=True
-		)
+    @pytest.mark.slow
+    def test_inferred_mx_control(self):
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=200,
+            p=100,
+            method="AR1",
+            sparsity=0,
+            y_dist="gaussian",
+            infer_sigma=True,
+        )
 
-		self.check_fdr_control(
-			reps=NUM_REPS,
-			n=200, 
-			p=150,
-			method='ver',
-			sparsity=0,
-			y_dist='gaussian', 
-			infer_sigma=True, 
-			filter_kwargs = {'shrinkage':'graphicallasso'}
-		)
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=200,
+            p=150,
+            method="ver",
+            sparsity=0,
+            y_dist="gaussian",
+            infer_sigma=True,
+            filter_kwargs={"shrinkage": "graphicallasso"},
+        )
+
+    @pytest.mark.slow
+    def test_fxknockoff_control(self):
+
+        # Scenario 1: AR1, recycle, lasso, p = 50
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=500,
+            p=50,
+            method="AR1",
+            sparsity=0.5,
+            y_dist="gaussian",
+            filter_kwargs={"ksampler": "fx"},
+        )
+
+    @pytest.mark.slow
+    def test_deeppink_control(self):
+        if not TORCH_AVAILABLE:
+            return None
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=5000,
+            p=150,
+            method="AR1",
+            sparsity=0.5,
+            y_dist="gaussian",
+            filter_kwargs={"fstat": "deeppink"},
+        )
+
+    @pytest.mark.slow
+    def test_t_control(self):
+        """ FDR control with t-distributed designs """
+
+        # Scenario 1: AR1 a = 1, b = 1, low sparsity
+        self.check_fdr_control(
+            n=500,
+            p=50,
+            method="AR1",
+            sparsity=0.5,
+            x_dist="ar1t",
+            reps=NUM_REPS,
+            df_t=5,
+            filter_kwargs={"ksampler": "artk",},
+        )
+        # Scenario 2: block-T R1 a = 1, b = 1, high sparsity
+        self.check_fdr_control(
+            n=500,
+            p=50,
+            method="daibarber2016",
+            gamma=0,
+            sparsity=0.5,
+            x_dist="blockt",
+            reps=NUM_REPS,
+            df_t=5,
+            filter_kwargs={"ksampler": "blockt",},
+        )
+
+    @pytest.mark.slow
+    def test_ising_control(self):
+
+        # Need to pull in specially-estimated Sigma
+        p = 49
+        V = np.loadtxt(f"{file_directory}/test_covs/vout{p}.txt")
+        self.check_fdr_control(
+            n=500,
+            p=49,
+            method="ising",
+            Sigma=V,
+            sparsity=0.5,
+            x_dist="gibbs",
+            reps=NUM_REPS,
+            filter_kwargs={"ksampler": "ising",},
+        )
+
+    @pytest.mark.slow
+    def test_ising_dlasso(self):
+        """ Makes sure Ising works in combination with debiased lasso """
+
+        # Need to pull in specially-estimated Sigma
+        p = 49
+        V = np.loadtxt(f"{file_directory}/test_covs/vout{p}.txt")
+        self.check_fdr_control(
+            n=500,
+            p=49,
+            method="ising",
+            Sigma=V,
+            sparsity=0.5,
+            x_dist="gibbs",
+            reps=1,
+            q=1,
+            filter_kwargs={"ksampler": "ising", "fstat": "dlasso",},
+        )
+
+    @pytest.mark.slow
+    def test_lars_control(self):
+
+        # Scenario 1: daibarber2016
+        p = 500
+        rho = 0.3
+        S = (1 - rho) * np.eye(p)
+        self.check_fdr_control(
+            reps=10,
+            n=1000,
+            p=p,
+            S=S,
+            method="daibarber2016",
+            gamma=1,
+            rho=rho,
+            sparsity=0.5,
+            y_dist="gaussian",
+            coeff_dist="uniform",
+            coeff_size=5,
+            filter_kwargs={"fstat_kwargs": {"use_lars": True}},
+        )
+
+    @pytest.mark.quick
+    def test_selection_procedure(self):
+
+        mxfilter = KnockoffFilter()
+        W1 = np.concatenate([np.ones(10), -0.4 * np.ones(100)])
+        selections = mxfilter.make_selections(W1, fdr=0.1)
+        num_selections = np.sum(selections)
+        expected = np.sum(W1 > 0)
+        self.assertTrue(
+            num_selections == expected,
+            f"selection procedure makes {num_selections} discoveries, expected {expected}",
+        )
+
+        # Repeat to test zero handling
+        W2 = np.concatenate([np.abs(np.random.randn(500)), np.zeros(1)])
+        selections2 = mxfilter.make_selections(W2, fdr=0.2)
+        num_selections2 = np.sum(selections2)
+        expected2 = np.sum(W2 > 0)
+        self.assertTrue(
+            num_selections2 == expected2,
+            f"selection procedure makes {num_selections2} discoveries, expected {expected2}",
+        )
+
+    # @pytest.mark.quick
+    # def test_sdp_degen(self):
+
+    # 	mxfilter = KnockoffFilter()
+    # 	p=50
+    # 	n=100
+    # 	rho=0.8
+    # 	S = min(1, 2-2*rho)*np.eye(p)
+    # 	dgprocess = dgp.DGP()
+    # 	X, y, _, _, Sigma = dgprocess.sample_data(
+    # 		rho=rho,
+    # 		gamma=1,
+    # 		method='daibarber2016',
+    # 		p=p,
+    # 		n=n,
+    # 	)
+
+    # 	# Baseline, no degeneracy
+    # 	mxfilter.forward(
+    # 		X=X,
+    # 		y=y,
+    # 		Sigma=Sigma,
+    # 		knockoff_kwargs={'S':0.9999*S, 'verbose':False},
+    # 	)
+    # 	colsum = X + mxfilter.knockoffs
+    # 	colsum_nunique = np.unique(colsum).shape[0]
+    # 	self.assertTrue(
+    # 		colsum_nunique == n*p,
+    # 		f'Expected {n*p} unique values for _sdp_degen False, got {colsum_nunique}'
+    # 	)
+
+    # 	# Try again with degeneracy
+    # 	mxfilter = KnockoffFilter()
+    # 	mxfilter.forward(
+    # 		X=X,
+    # 		y=y,
+    # 		Sigma=Sigma,
+    # 		knockoff_kwargs={'S':S, 'verbose':False, '_sdp_degen':True},
+    # 	)
+    # 	colsum = np.around(X + mxfilter.knockoffs, 12) # rounding to prevent floating-pt errors
+    # 	colsum_nunique = np.unique(colsum).shape[0]
+    # 	self.assertTrue(
+    # 		colsum_nunique == n,
+    # 		f'Expected {n} unique values for _sdp_degen True, got {colsum_nunique}'
+    # 	)
 
 
-	@pytest.mark.slow
-	def test_fxknockoff_control(self):
-
-		# Scenario 1: AR1, recycle, lasso, p = 50
-		self.check_fdr_control(
-			reps=NUM_REPS, n=500, p=50, method='AR1', sparsity=0.5, y_dist='gaussian',
-			filter_kwargs={'ksampler':'fx'},
-		)
-
-	@pytest.mark.slow
-	def test_deeppink_control(self):
-		if not TORCH_AVAILABLE:
-			return None
-		self.check_fdr_control(
-			reps=NUM_REPS, n=5000, p=150, method='AR1', sparsity=0.5, y_dist='gaussian', 
-			filter_kwargs={'fstat':'deeppink'},
-		)
-
-	@pytest.mark.slow
-
-	def test_t_control(self):
-		""" FDR control with t-distributed designs """
-
-		# Scenario 1: AR1 a = 1, b = 1, low sparsity
-		self.check_fdr_control(
-			n=500, p=50, method='AR1', sparsity=0.5, x_dist='ar1t',
-			reps=NUM_REPS,
-			df_t=5, 
-			filter_kwargs={
-				'ksampler':'artk',
-			},
-		)
-		# Scenario 2: block-T R1 a = 1, b = 1, high sparsity
-		self.check_fdr_control(
-			n=500, p=50, method='daibarber2016', gamma=0,
-			sparsity=0.5, x_dist='blockt', reps=NUM_REPS, df_t=5, 
-			filter_kwargs={
-				'ksampler':'blockt', 
-			},
-		)
-
-	@pytest.mark.slow
-	def test_ising_control(self):
-
-		# Need to pull in specially-estimated Sigma
-		p = 49
-		V = np.loadtxt(f'{file_directory}/test_covs/vout{p}.txt')
-		self.check_fdr_control(
-			n=500, p=49, method='ising', Sigma=V,
-			sparsity=0.5, x_dist='gibbs', reps=NUM_REPS,
-			filter_kwargs={
-				'ksampler':'ising', 
-			},
-		)
-
-	@pytest.mark.slow
-	def test_ising_dlasso(self):
-		""" Makes sure Ising works in combination with debiased lasso """
-
-		# Need to pull in specially-estimated Sigma
-		p = 49
-		V = np.loadtxt(f'{file_directory}/test_covs/vout{p}.txt')
-		self.check_fdr_control(
-			n=500, p=49, method='ising', Sigma=V,
-			sparsity=0.5, x_dist='gibbs', reps=1, q=1,
-			filter_kwargs={
-				'ksampler':'ising', 'fstat':'dlasso',
-			},
-		)
-
-	@pytest.mark.slow
-	def test_lars_control(self):
-
-		# Scenario 1: daibarber2016
-		p = 500
-		rho = 0.3
-		S = (1-rho)*np.eye(p)
-		self.check_fdr_control(
-			reps=10, 
-			n=1000,
-			p=p,
-			S=S,
-			method='daibarber2016',
-			gamma=1,
-			rho=rho,
-			sparsity=0.5, 
-			y_dist='gaussian', 
-			coeff_dist='uniform', 
-			coeff_size=5, 
-			filter_kwargs={
-				'fstat_kwargs':{'use_lars':True}
-			},
-		)
-
-	@pytest.mark.quick
-	def test_selection_procedure(self):
-
-		mxfilter = KnockoffFilter()
-		W1 = np.concatenate([np.ones(10), -0.4*np.ones(100)])
-		selections = mxfilter.make_selections(W1, fdr=0.1)
-		num_selections = np.sum(selections)
-		expected = np.sum(W1 > 0)
-		self.assertTrue(
-			 num_selections == expected,
-			f"selection procedure makes {num_selections} discoveries, expected {expected}"
-		)
-
-		# Repeat to test zero handling
-		W2 = np.concatenate([np.abs(np.random.randn(500)), np.zeros(1)])
-		selections2 = mxfilter.make_selections(W2, fdr=0.2)
-		num_selections2 = np.sum(selections2)
-		expected2 = np.sum(W2 > 0)
-		self.assertTrue(
-			 num_selections2 == expected2,
-			f"selection procedure makes {num_selections2} discoveries, expected {expected2}"
-		)
-
-	# @pytest.mark.quick
-	# def test_sdp_degen(self):
-
-	# 	mxfilter = KnockoffFilter()
-	# 	p=50
-	# 	n=100
-	# 	rho=0.8
-	# 	S = min(1, 2-2*rho)*np.eye(p)
-	#	dgprocess = dgp.DGP()
-	# 	X, y, _, _, Sigma = dgprocess.sample_data(
-	# 		rho=rho,
-	# 		gamma=1,
-	# 		method='daibarber2016',
-	# 		p=p,
-	# 		n=n,
-	# 	)
-
-	# 	# Baseline, no degeneracy
-	# 	mxfilter.forward(
-	# 		X=X, 
-	# 		y=y, 
-	# 		Sigma=Sigma, 
-	# 		knockoff_kwargs={'S':0.9999*S, 'verbose':False},
-	# 	)
-	# 	colsum = X + mxfilter.knockoffs
-	# 	colsum_nunique = np.unique(colsum).shape[0]
-	# 	self.assertTrue(
-	# 		colsum_nunique == n*p,
-	# 		f'Expected {n*p} unique values for _sdp_degen False, got {colsum_nunique}'
-	# 	)
-
-	# 	# Try again with degeneracy 
-	# 	mxfilter = KnockoffFilter()
-	# 	mxfilter.forward(
-	# 		X=X, 
-	# 		y=y, 
-	# 		Sigma=Sigma, 
-	# 		knockoff_kwargs={'S':S, 'verbose':False, '_sdp_degen':True},
-	# 	)
-	# 	colsum = np.around(X + mxfilter.knockoffs, 12) # rounding to prevent floating-pt errors
-	# 	colsum_nunique = np.unique(colsum).shape[0]
-	# 	self.assertTrue(
-	# 		colsum_nunique == n,
-	# 		f'Expected {n} unique values for _sdp_degen True, got {colsum_nunique}'
-	# 	)
-
-
-if __name__ == '__main__':
-	unittest.main()
+if __name__ == "__main__":
+    unittest.main()

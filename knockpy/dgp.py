@@ -12,10 +12,11 @@ import scipy.spatial.distance as ssd
 
 DEFAULT_DF_T = 3
 
+
 def Wishart(d=100, p=100, tol=1e-2):
     """
-    Let W be a random d x p matrix with i.i.d. Gaussian
-    entries. Then Sigma = cov2corr(W^T W).
+    Let W be a random `d` x `p` matrix with i.i.d. Gaussian
+    entries. Then Sigma = ``cov2corr``(W^T W).
     """
 
     W = np.random.randn(d, p)
@@ -23,32 +24,34 @@ def Wishart(d=100, p=100, tol=1e-2):
     V = cov2corr(V)
     return cov2corr(shift_until_PSD(V, tol=tol))
 
+
 def UniformDot(d=100, p=100, tol=1e-2):
     """
-    Let U be a random d x p matrix with i.i.d. uniform
-    entries. Then Sigma = cov2corr(U^T U)
+    Let U be a random `d` x `p` matrix with i.i.d. uniform
+    entries. Then Sigma = ``cov2corr``(U^T U)
     """
     U = np.random.uniform(size=(d, p))
     V = np.dot(U.T, U)
     V = cov2corr(V)
     return cov2corr(shift_until_PSD(V, tol=tol))
 
+
 def DirichletCorr(p=100, temp=1, tol=1e-6):
     """
     Generates a correlation matrix by sampling p eigenvalues
-    from a dirichlet distribution whose p parameters are i.i.d.
-    uniform [tol, temp] and generating a random covariance matrix
+    from a dirichlet distribution whose `p` parameters are i.i.d.
+    uniform [`tol`, `temp`] and generating a random covariance matrix
     with those eigenvalues.
     """
     alpha = np.random.uniform(temp, size=p)
     d = stats.dirichlet(alpha=alpha).rvs().reshape(-1)
 
     # We have to round to prevent errors from random_correlation,
-    # which is supperr sensitive to d.sum() != p even when the 
+    # which is supperr sensitive to d.sum() != p even when the
     # error is a floating point error.
-    d = np.around(d+tol, 6)
+    d = np.around(d + tol, 6)
     d = p * d / d.sum()
-    d[0] += p - d.sum() # This is like 1e-10 but otherwise throws an error
+    d[0] += p - d.sum()  # This is like 1e-10 but otherwise throws an error
 
     # Create and return matrix
     V = stats.random_correlation.rvs(d)
@@ -56,11 +59,12 @@ def DirichletCorr(p=100, temp=1, tol=1e-6):
 
 
 def AR1(p=30, a=1, b=1, tol=1e-3, rho=None):
-    """ Generates correlation matrix for AR(1) Gaussian process,
-    where $Corr(X_t, X_{t-1})$ are drawn from Beta(a,b),
-    independently for each t. 
-    If rho is specified, then $Corr(X_t, X_{t-1}) = rho
-    for all t.
+    """
+    Generates `p`-dimensional correlation matrix for
+    AR(1) Gaussian process, where successive correlations
+    are drawn from Beta(`a`,`b`) independelty. If `rho` is
+    specified, then the process is stationary with correlation
+    `rho`.
     """
 
     # Generate rhos, take log to make multiplication easier
@@ -84,6 +88,7 @@ def AR1(p=30, a=1, b=1, tol=1e-3, rho=None):
 
     return corr_matrix
 
+
 def NestedAR1(p=500, a=7, b=1, tol=1e-3, num_nests=5, nest_size=2):
     """
     Generates correlation matrix for AR(1) Gaussian process
@@ -94,12 +99,12 @@ def NestedAR1(p=500, a=7, b=1, tol=1e-3, num_nests=5, nest_size=2):
     rhos[0] = 0
 
     # Create nested structure
-    for j in range(1, num_nests+1):
+    for j in range(1, num_nests + 1):
         rho_samples = np.log(stats.beta.rvs(size=p, a=a, b=b))
         # These indexes will get smaller correlations
-        nest_inds = np.array([
-            x for x in range(p) if x % (nest_size**j) == int(nest_size / 2)
-        ]).astype('int')
+        nest_inds = np.array(
+            [x for x in range(p) if x % (nest_size ** j) == int(nest_size / 2)]
+        ).astype("int")
         mask = np.zeros(p)
         mask[nest_inds] = 1
         rhos += mask * rho_samples
@@ -117,9 +122,11 @@ def NestedAR1(p=500, a=7, b=1, tol=1e-3, num_nests=5, nest_size=2):
 
     return corr_matrix
 
+
 def ErdosRenyi(p=300, delta=0.2, lower=0.1, upper=1, tol=1e-1):
-    """ Randomly samples bernoulli flags as well as values
-    for partial correlations to generate sparse precision
+    """ 
+    Randomly samples bernoulli flags as well as values
+    for partial correlations to generate sparse square
     matrices. Follows https://arxiv.org/pdf/1908.11611.pdf.
     """
 
@@ -130,7 +137,7 @@ def ErdosRenyi(p=300, delta=0.2, lower=0.1, upper=1, tol=1e-1):
     # Sample the upper triangle
     mask = stats.bernoulli.rvs(delta, size=triang_size)
     vals = np.random.uniform(lower, upper, size=triang_size)
-    flags = 2*np.random.binomial(1, 0.5, triang_size) - 1
+    flags = 2 * np.random.binomial(1, 0.5, triang_size) - 1
     triang = mask * flags * vals
 
     # Set values and add diagonal
@@ -144,17 +151,16 @@ def ErdosRenyi(p=300, delta=0.2, lower=0.1, upper=1, tol=1e-1):
 
     return V
 
+
 def FactorModel(
-        p=500,
-        rank=2,
-    ):
+    p=500, rank=2,
+):
     """
-    Generates random correlation matrix from a factor model.
-    :param p: Dimensionality
-    :param rank: rank of factor model.
+    Generates random correlation matrix from a factor model 
+    with dimension `p` and rank `rank`.
     """
     diag_entries = np.random.uniform(0, 1, size=p)
-    noise = np.random.randn(p, rank)/np.sqrt(rank)
+    noise = np.random.randn(p, rank) / np.sqrt(rank)
     V = np.diag(diag_entries) + np.dot(noise, noise.T)
     V = utilities.cov2corr(V)
     Q = utilities.chol2inv(V)
@@ -162,17 +168,17 @@ def FactorModel(
 
 
 def PartialCorr(
-    p=300,
-    rho=0.3,
+    p=300, rho=0.3,
 ):
     """
-    Creates the correlation matrix corresponding to partial correlation rho.
+    Creates a correlation matrix of dimension `p` with partial correlation `rho`.
     """
-    Q_init = rho*np.ones((p, p)) + (1-rho)*np.eye(p)
+    Q_init = rho * np.ones((p, p)) + (1 - rho) * np.eye(p)
     V = utilities.chol2inv(Q_init)
     V = utilities.cov2corr(V)
     Q = utilities.chol2inv(V)
     return V, Q
+
 
 def daibarber2016_graph(
     n=3000,
@@ -194,7 +200,7 @@ def daibarber2016_graph(
     Same data-generating process as Dai and Barber 2016 (see https://arxiv.org/abs/1602.03589). 
     :param int group_size: The size of groups. Defaults to 5.
     :param int sparsity: The proportion of groups with nonzero effects.
-     Defaults to 0.1 (the daibarber2016 default).
+        Defaults to 0.1 (the daibarber2016 default).
     :param rho: Within-group correlation
     :param gamma: The between-group correlation = rho * gamma
     :param beta: If supplied, the linear response
@@ -234,7 +240,7 @@ def daibarber2016_graph(
             iid_signs=iid_signs,
             coeff_dist=coeff_dist,
             corr_signals=corr_signals,
-            n=n
+            n=n,
         )
 
     # Sample design matrix
@@ -245,6 +251,7 @@ def daibarber2016_graph(
     y = sample_response(X, beta, **kwargs)
 
     return X, y, beta, Q, Sigma, groups + 1
+
 
 def create_sparse_coefficients(
     p,
@@ -299,7 +306,7 @@ def create_sparse_coefficients(
         if corr_signals:
             nonnull_start = np.random.randint(0, p - num_nonzero + 1)
             beta = np.zeros(p)
-            beta[nonnull_start:nonnull_start + num_nonzero] = coeff_size
+            beta[nonnull_start : nonnull_start + num_nonzero] = coeff_size
         else:
             beta = np.array([coeff_size] * num_nonzero + [0] * (p - num_nonzero))
             np.random.shuffle(beta)
@@ -313,9 +320,11 @@ def create_sparse_coefficients(
         beta = beta * signs
     else:
         num_pos = int(np.floor(num_nonzero * sign_prob))
-        signs = np.concatenate([np.ones((num_pos)), -1*np.ones((num_nonzero - num_pos))])
+        signs = np.concatenate(
+            [np.ones((num_pos)), -1 * np.ones((num_nonzero - num_pos))]
+        )
         np.random.shuffle(signs)
-        beta[beta_nonzeros] = beta[beta_nonzeros]*signs
+        beta[beta_nonzeros] = beta[beta_nonzeros] * signs
 
     # Possibly change the absolute values of beta
     if coeff_dist is not None:
@@ -323,20 +332,20 @@ def create_sparse_coefficients(
             beta = (beta + np.random.randn(p)) * beta_nonzeros
         elif str(coeff_dist).lower() == "uniform":
             beta = beta * np.random.uniform(size=p) / 2 + beta / 2
-        elif str(coeff_dist).lower() == 'dsliu2020':
+        elif str(coeff_dist).lower() == "dsliu2020":
             if num_nonzero != 50:
                 raise ValueError(
                     f"To replicate dsliu2020 paper, need num_nonzero ({num_nonzero})=50"
                 )
             variance = 10 * np.sqrt(np.log(p) / n)
-            beta = (beta_nonzeros * np.sqrt(variance) * np.random.randn(p))
-        elif str(coeff_dist).lower() == 'gmliu2019':
+            beta = beta_nonzeros * np.sqrt(variance) * np.random.randn(p)
+        elif str(coeff_dist).lower() == "gmliu2019":
             if num_nonzero != 60:
                 raise ValueError(
                     f"To replicate gmliu2019 paper, need num_nonzero ({num_nonzero})=60"
                 )
             variance = 20 / np.sqrt(n)
-            beta = (beta_nonzeros * np.sqrt(variance) * np.random.randn(p))
+            beta = beta_nonzeros * np.sqrt(variance) * np.random.randn(p)
         elif str(coeff_dist).lower() == "none":
             pass
         else:
@@ -347,7 +356,7 @@ def create_sparse_coefficients(
     return beta
 
 
-def sample_response(X, beta, cond_mean='linear', y_dist="gaussian"):
+def sample_response(X, beta, cond_mean="linear", y_dist="gaussian"):
     """ Given a design matrix X and coefficients beta, samples a response y.
     :param cond_mean: How to calculate the conditional mean of y given X,
     denoted mu(X). Six options:
@@ -366,17 +375,17 @@ def sample_response(X, beta, cond_mean='linear', y_dist="gaussian"):
     n = X.shape[0]
     p = X.shape[1]
 
-    if cond_mean == 'linear':
+    if cond_mean == "linear":
         cond_mean = np.dot(X, beta)
-    elif cond_mean == 'quadratic':
+    elif cond_mean == "quadratic":
         cond_mean = np.dot(np.power(X, 2), beta)
-    elif cond_mean == 'cubic':
+    elif cond_mean == "cubic":
         cond_mean = np.dot(np.power(X, 3), beta) - np.dot(X, beta)
-    elif cond_mean == 'trunclinear':
-        cond_mean = ((X * beta >= 1) * np.sign(beta)).sum(axis = 1)
-    elif cond_mean == 'cos':
-        cond_mean = (np.sign(beta)*(beta!=0)*np.cos(X)).sum(axis=1)
-    elif cond_mean == 'pairint':
+    elif cond_mean == "trunclinear":
+        cond_mean = ((X * beta >= 1) * np.sign(beta)).sum(axis=1)
+    elif cond_mean == "cos":
+        cond_mean = (np.sign(beta) * (beta != 0) * np.cos(X)).sum(axis=1)
+    elif cond_mean == "pairint":
         # Pair up the coefficients
         pairs = [[]]
         for j in range(p):
@@ -395,7 +404,9 @@ def sample_response(X, beta, cond_mean='linear', y_dist="gaussian"):
                 interaction_term = interaction_term * X[:, j]
             cond_mean += interaction_term
     else:
-        raise ValueError(f"cond_mean must be one of 'linear', 'quadratic', cubic', 'trunclinear', 'cos', 'pairint', not {cond_mean}")
+        raise ValueError(
+            f"cond_mean must be one of 'linear', 'quadratic', cubic', 'trunclinear', 'cos', 'pairint', not {cond_mean}"
+        )
 
     # Create y, one of two families
     if y_dist == "gaussian":
@@ -408,17 +419,16 @@ def sample_response(X, beta, cond_mean='linear', y_dist="gaussian"):
 
     return y
 
+
 def sample_ar1t(
-    rhos,
-    n=50,
-    df_t=DEFAULT_DF_T, 
+    rhos, n=50, df_t=DEFAULT_DF_T,
 ):
     """
     Samples t-distributed variables according to a Markov chain.
     """
     # Initial t samples
     p = rhos.shape[0] + 1
-    tvars = stats.t(df=df_t).rvs(size=(n,p))
+    tvars = stats.t(df=df_t).rvs(size=(n, p))
 
     # Initialize X
     X = np.zeros((n, p))
@@ -426,11 +436,12 @@ def sample_ar1t(
     X[:, 0] = scale * tvars[:, 0]
 
     # Loop through variables according to markov chain
-    conjugates = np.sqrt(1 - rhos**2)
+    conjugates = np.sqrt(1 - rhos ** 2)
     for j in range(1, p):
-        X[:,j] = rhos[j-1]*X[:,j-1] + conjugates[j-1]*scale*tvars[:,j]
+        X[:, j] = rhos[j - 1] * X[:, j - 1] + conjugates[j - 1] * scale * tvars[:, j]
 
     return X
+
 
 def cov2blocks(V, tol=1e-5):
     """
@@ -440,7 +451,7 @@ def cov2blocks(V, tol=1e-5):
     blocks = []
     block_start = 0
     block_inds = []
-    for j in range(p+1):
+    for j in range(p + 1):
         # Detect if we have exited the block
         if j == p:
             blocks.append(V[block_start:j, block_start:j])
@@ -453,11 +464,9 @@ def cov2blocks(V, tol=1e-5):
 
     return blocks, block_inds
 
+
 def sample_block_tmvn(
-    blocks,
-    block_sqrts=None,
-    n=50,
-    df_t=DEFAULT_DF_T,
+    blocks, block_sqrts=None, n=50, df_t=DEFAULT_DF_T,
 ):
     """
     Samples a block-diagonal multivariate t from a set of 
@@ -483,11 +492,11 @@ def sample_block_tmvn(
     for i, block_sqrt in enumerate(block_sqrts):
         # Dimensionality and also sample chisquares
         p_block = block_sqrt.shape[0]
-        chi_block = stats.chi2.rvs(df=df_t, size=(n,1))
+        chi_block = stats.chi2.rvs(df=df_t, size=(n, 1))
 
         # Linear transformatino + chi square multiplication
-        Z_block = np.random.randn(n,p_block) # n x p 
-        t_block = np.dot(Z_block, block_sqrt.T) # n x p
+        Z_block = np.random.randn(n, p_block)  # n x p
+        t_block = np.dot(Z_block, block_sqrt.T)  # n x p
         t_block = np.sqrt(df_t / chi_block) * t_block
         X.append(t_block)
 
@@ -496,8 +505,9 @@ def sample_block_tmvn(
     X = scale * np.concatenate(X, axis=1)
     return X
 
-### Helper functions for Gibbs Sampling 
-def num2coords(i, gridwidth = 10):
+
+### Helper functions for Gibbs Sampling
+def num2coords(i, gridwidth=10):
     """
     Coordinates of variable i in a Gibbs grid
     :param i: Position of variable in ordering
@@ -506,8 +516,9 @@ def num2coords(i, gridwidth = 10):
     length_coord = i % gridwidth
     width_coord = i // gridwidth
     return int(length_coord), int(width_coord)
-    
-def coords2num(l, w, gridwidth = 10):
+
+
+def coords2num(l, w, gridwidth=10):
     """ Takes coordinates of variable in a Gibbs grid, returns position"""
     if l < 0 or w < 0:
         return -1
@@ -515,29 +526,31 @@ def coords2num(l, w, gridwidth = 10):
         return -1
     return int(w * gridwidth + l)
 
+
 def Q2cliques(Q):
     """
     Turns graph Q of connections into binary cliques for Gibbs grid
     """
     p = Q.shape[0]
-    clique_dict = {i:[] for i in range(p)}
+    clique_dict = {i: [] for i in range(p)}
     for i in range(p):
         for j in range(i):
-            if Q[i,j] != 0:
-                clique_dict[i].append((i,j))
-                clique_dict[j].append((j,i))
+            if Q[i, j] != 0:
+                clique_dict[i].append((i, j))
+                clique_dict[j].append((j, i))
     # Remove duplicates
     for i in range(p):
         clique_dict[i] = list(set(clique_dict[i]))
     return clique_dict
 
+
 def sample_gibbs(
-        n, p, gibbs_graph=None, method='ising', temp=1, num_iter=15, K=20, max_val=2.5,
-    ):
+    n, p, gibbs_graph=None, method="ising", temp=1, num_iter=15, K=20, max_val=2.5,
+):
     """ Samples from a Gibbs measure on a square grid using a Gibbs sampler."""
 
     # Create buckets from (approximately) -max_val to max_val
-    buckets = np.arange(-K+1, K+1, 2) / (K/max_val)
+    buckets = np.arange(-K + 1, K + 1, 2) / (K / max_val)
 
     # Infer dimensionality
     gridwidth = int(np.sqrt(p))
@@ -548,29 +561,29 @@ def sample_gibbs(
         if X2 is None:
             X2 = X1[:, 1]
             X1 = X1[:, 0]
-        return -1*temp*np.abs(X1 - X2)
+        return -1 * temp * np.abs(X1 - X2)
 
     # Construct cliques
-    clique_dict = {i:[] for i in range(p)}
+    clique_dict = {i: [] for i in range(p)}
     if gibbs_graph is None:
         print(f"Generating new gibbs_graph parameter, method={method}...")
-        gibbs_graph = np.zeros((p, p)) # The UGM
+        gibbs_graph = np.zeros((p, p))  # The UGM
         for i1 in range(p):
             # For ising model
-            if method=='ising':
+            if method == "ising":
                 lc, wc = num2coords(i1, gridwidth=gridwidth)
                 for ladd in [-1, 1]:
                     i2 = coords2num(lc + ladd, wc, gridwidth=gridwidth)
                     if i2 != -1:
                         clique_dict[i1].append((i1, i2))
-                        sign = 1 - 2*np.random.binomial(1, 0.5)
+                        sign = 1 - 2 * np.random.binomial(1, 0.5)
                         gibbs_graph[i1, i2] = temp * sign
                         gibbs_graph[i2, i1] = temp * sign
                 for wadd in [-1, 1]:
                     i2 = coords2num(lc, wc + wadd, gridwidth=gridwidth)
                     if i2 != -1:
                         clique_dict[i1].append((i1, i2))
-                        sign = 1 - 2*np.random.binomial(1, 0.5)
+                        sign = 1 - 2 * np.random.binomial(1, 0.5)
                         gibbs_graph[i1, i2] = temp * sign
                         gibbs_graph[i2, i1] = temp * sign
             # Otherwise method must be an integer:
@@ -581,7 +594,7 @@ def sample_gibbs(
                 for i2 in connections:
                     clique_dict[i1].append((i1, i2))
                     clique_dict[i2].append((i2, i1))
-                    sign = 1 - 2*np.random.binomial(1, 0.5)
+                    sign = 1 - 2 * np.random.binomial(1, 0.5)
                     gibbs_graph[i1, i2] = temp * sign
                     gibbs_graph[i2, i1] = temp * sign
         # Get rid of duplicates
@@ -620,13 +633,14 @@ def sample_gibbs(
 
             # Batched multinomial sampling using uniforms
             # (faster than for loops + numpy)
-            unifs = np.random.uniform(size=(n,1))
+            unifs = np.random.uniform(size=(n, 1))
             Xnew = buckets[np.argmax(unifs <= marginals, axis=-1)]
             X[:, j] = Xnew
 
     return X, gibbs_graph
 
-class DGP():
+
+class DGP:
     """
     Creates a (random) data-generating process for a design matrix X
     and a response y. Usually the X-data is Gaussian, but not always. 
@@ -638,10 +652,8 @@ class DGP():
     If these parameters are not passed in, they will be randomly
     generated in the sample_data method.
     """
-    def __init__(
-            self, mu=None, Sigma=None, invSigma=None, beta=None 
-    ):
 
+    def __init__(self, mu=None, Sigma=None, invSigma=None, beta=None):
 
         self.mu = mu
         self.Sigma = Sigma
@@ -660,7 +672,7 @@ class DGP():
         x_dist="gaussian",
         y_dist="gaussian",
         df_t=DEFAULT_DF_T,
-        cond_mean='linear',
+        cond_mean="linear",
         sign_prob=0.5,
         iid_signs=True,
         corr_signals=False,
@@ -698,7 +710,7 @@ class DGP():
             self.mu = np.zeros(p)
 
         # Ising / Gibbs Sampling
-        if x_dist == 'gibbs':
+        if x_dist == "gibbs":
             # Sample X, Q
             X, gibbs_graph = sample_gibbs(
                 n=n, p=p, gibbs_graph=gibbs_graph, method=method, **kwargs
@@ -721,9 +733,9 @@ class DGP():
             elif method == "nestedar1":
                 self.Sigma = NestedAR1(p=p, **kwargs)
                 self.invSigma = chol2inv(self.Sigma)
-            elif method == 'partialcorr':
+            elif method == "partialcorr":
                 self.Sigma, self.invSigma = PartialCorr(p=p, **kwargs)
-            elif method == 'factor':
+            elif method == "factor":
                 self.Sigma, self.invSigma = FactorModel(p=p, **kwargs)
             elif method == "daibarber2016":
                 _, _, self.beta, self.invSigma, self.Sigma, _ = daibarber2016_graph(
@@ -738,20 +750,20 @@ class DGP():
                     beta=self.beta,
                     **kwargs,
                 )
-            elif method == 'ver':
+            elif method == "ver":
                 self.Sigma = cov2corr(ErdosRenyi(p=p, **kwargs))
                 self.invSigma = chol2inv(self.Sigma)
-            elif method == 'qer':
+            elif method == "qer":
                 self.invSigma = ErdosRenyi(p=p, **kwargs)
                 self.Sigma = cov2corr(chol2inv(self.invSigma))
                 self.invSigma = chol2inv(self.Sigma)
-            elif method == 'dirichlet':
+            elif method == "dirichlet":
                 self.Sigma = DirichletCorr(p=p, **kwargs)
                 self.invSigma = chol2inv(self.Sigma)
-            elif method == 'wishart':
+            elif method == "wishart":
                 self.Sigma = Wishart(p=p, **kwargs)
                 self.invSigma = chol2inv(self.Sigma)
-            elif method == 'uniformdot':
+            elif method == "uniformdot":
                 self.Sigma = UniformDot(p=p, **kwargs)
                 self.invSigma = chol2inv(self.Sigma)
             else:
@@ -780,19 +792,23 @@ class DGP():
             )
 
         # Sample design matrix
-        if x_dist == 'gibbs':
+        if x_dist == "gibbs":
             pass
-        elif x_dist == 'gaussian':
+        elif x_dist == "gaussian":
             X = stats.multivariate_normal.rvs(mean=self.mu, cov=self.Sigma, size=n)
-        elif x_dist == 'ar1t':
-            if str(method).lower() != 'ar1':
-                raise ValueError(f"For x_dist={x_dist}, method ({method}) should equal 'ar1'")
+        elif x_dist == "ar1t":
+            if str(method).lower() != "ar1":
+                raise ValueError(
+                    f"For x_dist={x_dist}, method ({method}) should equal 'ar1'"
+                )
             X = sample_ar1t(n=n, rhos=np.diag(self.Sigma, 1), df_t=df_t)
-        elif x_dist == 'blockt':
+        elif x_dist == "blockt":
             blocks, _ = cov2blocks(self.Sigma)
             X = sample_block_tmvn(blocks, n=n, df_t=df_t)
         else:
-            raise ValueError(f"x_dist must be one of 'gaussian', 'gibbs', 'ar1t', 'blockt'")
+            raise ValueError(
+                f"x_dist must be one of 'gaussian', 'gibbs', 'ar1t', 'blockt'"
+            )
 
         # Sample y
         y = sample_response(X=X, beta=self.beta, y_dist=y_dist, cond_mean=cond_mean)

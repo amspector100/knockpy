@@ -13,6 +13,7 @@ import torch.nn.functional as F
 from ..constants import GAMMA_VALS
 from .. import utilities, mrc
 
+
 def block_diag_sparse(*arrs):
     """ Given a list of 2D torch tensors, creates a sparse block-diagonal matrix
     See https://github.com/pytorch/pytorch/issues/31942
@@ -37,6 +38,7 @@ def block_diag_sparse(*arrs):
         r += rr
         c += cc
     return out
+
 
 class MVRLoss(nn.Module):
     """
@@ -71,7 +73,8 @@ class MVRLoss(nn.Module):
     :param method: One of mvr or mmi.
     """
 
-    def __init__(self, 
+    def __init__(
+        self,
         Sigma,
         groups,
         init_S=None,
@@ -79,7 +82,7 @@ class MVRLoss(nn.Module):
         rec_prop=0,
         smoothing=0.01,
         min_smoothing=1e-4,
-        method='mvr',
+        method="mvr",
     ):
 
         super().__init__()
@@ -92,9 +95,7 @@ class MVRLoss(nn.Module):
         # Save sigma and groups
         self.p = Sigma.shape[0]
         self.groups = torch.from_numpy(groups).long()
-        self.group_sizes = torch.from_numpy(
-            utilities.calc_group_sizes(groups)
-        ).long()
+        self.group_sizes = torch.from_numpy(utilities.calc_group_sizes(groups)).long()
         self.Sigma = torch.from_numpy(Sigma).float()
 
         # Save inverse cov matrix, rec_prop
@@ -126,15 +127,12 @@ class MVRLoss(nn.Module):
         # Find a good initial scaling
         best_gamma = 1
         best_loss = np.inf
-        if method == 'mvr':
+        if method == "mvr":
             objective = mrc.mvr_loss
         else:
             objective = mrc.mmi_loss
         for gamma in GAMMA_VALS:
-            loss = objective(
-                Sigma=Sigma,
-                S=(1-self.rec_prop)*gamma*init_S,
-            )
+            loss = objective(Sigma=Sigma, S=(1 - self.rec_prop) * gamma * init_S,)
             if loss >= 0 and loss < best_loss:
                 best_gamma = gamma
                 best_loss = loss
@@ -165,7 +163,7 @@ class MVRLoss(nn.Module):
         S = torch.mm(self.sqrt_S.t(), self.sqrt_S)
         return S
 
-    def forward(self, smoothing = None):
+    def forward(self, smoothing=None):
         """ Calculates trace of inverse grahm feature-knockoff matrix"""
 
         # TODO: This certainly works and is more efficient in a forward
@@ -185,14 +183,13 @@ class MVRLoss(nn.Module):
         # Take eigenvalues
         eigvals = torch.symeig(G_schurr, eigenvectors=True)
         eigvals = eigvals[0]
-        if self.method == 'mvr':
+        if self.method == "mvr":
             inv_eigs = 1 / (smoothing + eigvals)
-        elif self.method == 'mmi':
+        elif self.method == "mmi":
             inv_eigs = torch.log(
                 1 / torch.max((smoothing + eigvals), torch.tensor(smoothing).float()),
             )
         return inv_eigs.sum()
-
 
     def scale_sqrt_S(self, tol, num_iter):
         """ Scales sqrt_S such that 2 Sigma - S is PSD."""
@@ -200,11 +197,10 @@ class MVRLoss(nn.Module):
         # No gradients
         with torch.no_grad():
 
-            # This shift only applies for 
+            # This shift only applies for
             for block in self.blocks:
                 if block.data.shape[0] == 1:
                     block.data = torch.max(torch.tensor(tol).float(), block.data)
-
 
             # Construct S
             S = self.pull_S()
@@ -260,14 +256,14 @@ class PSGDSolver:
         tol=1e-5,
         line_search_iter=10,
         convergence_tol=1e-1,
-        **kwargs
+        **kwargs,
     ):
 
         # Add Sigma
         self.p = Sigma.shape[0]
         self.Sigma = Sigma
         self.groups = groups
-        self.opt_S = None # Output initialization
+        self.opt_S = None  # Output initialization
         self.opt_loss = np.inf
 
         # Save parameters for optimization
@@ -326,9 +322,7 @@ class PSGDSolver:
             # Step 1: Calculate loss (trace of feature-knockoff precision)
             loss = self.losscalc()
             if np.isnan(loss.detach().item()):
-                warnings.warn(
-                    f"Loss of {self.losscalc.method} solver is NaN"
-                )
+                warnings.warn(f"Loss of {self.losscalc.method} solver is NaN")
                 break
             self.all_losses.append(loss.item())
 
@@ -337,14 +331,13 @@ class PSGDSolver:
             loss.backward(retain_graph=True)
             optimizer.step()
 
-
             # Step 3: Reproject to be PSD
             if j % 3 == 0 or j == self.max_epochs - 1:
                 self.losscalc.project(tol=self.tol, num_iter=self.line_search_iter)
 
                 # If this is optimal after reprojecting, save
                 with torch.no_grad():
-                    new_loss = self.losscalc(smoothing = 0)
+                    new_loss = self.losscalc(smoothing=0)
                 if new_loss < self.opt_loss and new_loss >= 0:
                     self.cache_S(new_loss)
                 else:
@@ -358,18 +351,24 @@ class PSGDSolver:
                 if j != 0 and j % 10 == 0:
                     diff = self.prev_opt_loss - self.opt_loss
                     l1diff = np.abs(self.opt_S - self.prev_opt_S).sum()
-                    improvement = 2*(diff)/3 + improvement/3
+                    improvement = 2 * (diff) / 3 + improvement / 3
                     if self.verbose:
-                        print(f"L1 diff is {l1diff}, loss diff={diff}, improvement is {improvement}, best loss is {self.opt_loss} at iter {j}")
+                        print(
+                            f"L1 diff is {l1diff}, loss diff={diff}, improvement is {improvement}, best loss is {self.opt_loss} at iter {j}"
+                        )
                 self.improvements.append(improvement)
 
                 # Break if improvement is small
                 if improvement < self.convergence_tol and j % 10 == 0:
                     if self.losscalc.smoothing > self.losscalc.min_smoothing:
-                        improvement = 1 + convergence_tol # Reset
-                        self.losscalc.smoothing = max(self.losscalc.min_smoothing, self.losscalc.smoothing / 10)
+                        improvement = 1 + convergence_tol  # Reset
+                        self.losscalc.smoothing = max(
+                            self.losscalc.min_smoothing, self.losscalc.smoothing / 10
+                        )
                         if self.verbose:
-                            print(f"Nearing convergence, reducing smoothing to {self.losscalc.smoothing} \n")
+                            print(
+                                f"Nearing convergence, reducing smoothing to {self.losscalc.smoothing} \n"
+                            )
                     elif self.verbose:
                         print(f"Converged at iteration {j}")
                     break
@@ -383,11 +382,9 @@ class PSGDSolver:
         )
         return S
 
+
 def solve_mrc_psgd(
-    Sigma,
-    groups=None,
-    method='mvr',
-    **kwargs,
+    Sigma, groups=None, method="mvr", **kwargs,
 ):
     """
     Wraps the PSGDSolver class.
@@ -400,11 +397,6 @@ def solve_mrc_psgd(
     to optimizer method.
     :returns: opt_S
     """
-    solver = PSGDSolver(
-        Sigma=Sigma,
-        groups=groups,
-        method=method,
-        **kwargs
-    )
+    solver = PSGDSolver(Sigma=Sigma, groups=groups, method=method, **kwargs)
     opt_S = solver.optimize()
     return opt_S

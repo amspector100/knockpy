@@ -79,6 +79,7 @@ def cov2corr(M):
     scale = np.sqrt(np.diag(M))
     return M / np.outer(scale, scale)
 
+
 def chol2inv(X):
     """ Uses cholesky decomp to get inverse of matrix """
     triang = np.linalg.inv(np.linalg.cholesky(X))
@@ -156,6 +157,7 @@ def permute_matrix_by_groups(groups):
 
     return inds, inv_inds
 
+
 def blockdiag_to_blocks(M, groups):
     """
     Given a matrix M, pulls out the diagonal blocks as specified by groups.
@@ -168,6 +170,7 @@ def blockdiag_to_blocks(M, groups):
         full_inds = np.ix_(inds, inds)
         blocks.append(M[full_inds].copy())
     return blocks
+
 
 ### Feature-statistic helpers
 def random_permutation_inds(length):
@@ -190,9 +193,10 @@ def random_permutation_inds(length):
     np.random.set_state(st0)
     return inds, rev_inds
 
+
 ### Helper for MX knockoffs when we infer Sigma, and also when
 ### X comes from the gibbs model
-def estimate_covariance(X, tol=1e-4, shrinkage = 'ledoitwolf'):
+def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf"):
     """ Estimates covariance matrix of X. 
     :param X: n x p data matrix
     :param tol: threshhold for minimum eigenvalue
@@ -208,18 +212,20 @@ def estimate_covariance(X, tol=1e-4, shrinkage = 'ledoitwolf'):
     mineig = np.linalg.eigh(Sigma)[0].min()
 
     # Parse none strng
-    if str(shrinkage).lower() == 'none':
+    if str(shrinkage).lower() == "none":
         shrinkage = None
 
     # Possibly shrink Sigma
     if mineig < tol or shrinkage is not None:
         # Which shrinkage to use
-        if str(shrinkage).lower() == 'ledoitwolf' or shrinkage is None: 
+        if str(shrinkage).lower() == "ledoitwolf" or shrinkage is None:
             ShrinkEst = sklearn.covariance.LedoitWolf()
-        elif str(shrinkage).lower() == 'graphicallasso':
+        elif str(shrinkage).lower() == "graphicallasso":
             ShrinkEst = sklearn.covariance.GraphicalLasso(alpha=0.1)
         else:
-            raise ValueError(f"Shrinkage arg must be one of None, 'ledoitwolf', 'graphicallasso', not {shrinkage}")
+            raise ValueError(
+                f"Shrinkage arg must be one of None, 'ledoitwolf', 'graphicallasso', not {shrinkage}"
+            )
 
         # Fit shrinkage. Sometimes the Graphical Lasso raises errors
         # so we handle these here.
@@ -244,6 +250,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage = 'ledoitwolf'):
 
 ### Multiprocessing helper
 
+
 def one_arg_function(list_of_inputs, args, func, kwargs):
     """
     Globally-defined helper function for pickling in multiprocessing.
@@ -257,12 +264,8 @@ def one_arg_function(list_of_inputs, args, func, kwargs):
         new_kwargs[args[i]] = inp
     return func(**new_kwargs, **kwargs)
 
-def apply_pool(
-        func, 
-        constant_inputs={}, 
-        num_processes=1,
-        **kwargs
-    ):
+
+def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
     """
     Spawns num_processes processes to apply func to many different arguments.
     This wraps the multiprocessing.pool object plus the functools partial function. 
@@ -294,10 +297,7 @@ def apply_pool(
 
     # Construct partial function
     partial_func = partial(
-        one_arg_function,
-        args=args,
-        func=func,
-        kwargs=constant_inputs,
+        one_arg_function, args=args, func=func, kwargs=constant_inputs,
     )
 
     # Don't use the pool object if num_processes=1
@@ -312,10 +312,12 @@ def apply_pool(
 
     return all_outputs
 
+
 ### Dependency management
 def check_kpytorch_available(purpose):
     try:
         from . import kpytorch
+
         return None
     except ImportError as err:
         warnings.warn(

@@ -339,7 +339,7 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
 def fit_group_lasso(
     X, Xk, y, groups, use_pyglm=True, y_dist=None, group_lasso=True, **kwargs,
 ):
-"""
+    """
     Fits cross-validated ridge on [X, Xk] and y.
 
     Parameters

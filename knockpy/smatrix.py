@@ -6,6 +6,7 @@ from . import dgp
 from . import utilities
 from . import constants
 
+
 def parse_method(method, groups, p):
     """ Decides which method to use to create the 
     knockoff S matrix """
@@ -20,6 +21,7 @@ def parse_method(method, groups, p):
             method = "sdp"
     return method
 
+
 def divide_computation(Sigma, max_block):
     """
     Approximates Sigma as a block-diagonal matrix.
@@ -28,32 +30,33 @@ def divide_computation(Sigma, max_block):
     covariance matrix.
     """
 
+
 def divide_computation(Sigma, max_block):
     """
     Approximates a correlation matrix Sigma as a block-diagonal matrix
     using hierarchical clustering. Roughly follows the R knockoff package.
     """
-    
+
     # Correlation tree. We add noise to deal with highly structured Sigma.
     p = Sigma.shape[0]
-    noise = np.random.randn(p,p)*1e-6
+    noise = np.random.randn(p, p) * 1e-6
     noise += noise.T
     Sigma = Sigma + noise
     link = dgp.create_correlation_tree(Sigma)
-    
+
     # Set up binary search
     max_clusters = p
     min_clusters = 1
     prev_max_clusters = p
     prev_min_clusters = 1
-    
+
     # Binary search to create clusters
     for j in range(100):
         # Create new groups and check maximum size
         n_clusters = int((max_clusters + min_clusters) / 2)
         groups = hierarchy.cut_tree(link, n_clusters).reshape(-1) + 1
         current_max_block = utilities.calc_group_sizes(groups).max()
-       
+
         # Cache search info and check maximum size
         prev_max_clusters = max_clusters
         prev_min_clusters = min_clusters
@@ -66,8 +69,9 @@ def divide_computation(Sigma, max_block):
             if current_max_block > max_block:
                 groups = hierarchy.cut_tree(link, n_clusters + 1).reshape(-1) + 1
             break
-            
+
     return merge_groups(groups, max_block)
+
 
 def merge_groups(groups, max_block):
     """
@@ -94,19 +98,22 @@ def merge_groups(groups, max_block):
             current_size = old_group_size
             new_group_id += 1
         else:
-            raise ValueError(f"Group {old_group_id} has size {old_group_size}, exceeding max_block {max_block}")
+            raise ValueError(
+                f"Group {old_group_id} has size {old_group_size}, exceeding max_block {max_block}"
+            )
         new_groups[flag] = new_group_id
 
     return new_groups
+
 
 def compute_smatrix(
     Sigma,
     groups=None,
     method=None,
-    solver='cd',
+    solver="cd",
     max_block=1000,
     num_processes=1,
-    **kwargs
+    **kwargs,
 ):
     """
     Wraps a variety of S-matrix generation functions. 
@@ -131,11 +138,11 @@ def compute_smatrix(
     # If S in kwargs, just return S (important
     # for chaining methods in metro sampling)
     kwargs = kwargs.copy()
-    if 'S' in kwargs:
-        if kwargs['S'] is not None:
-            return kwargs['S']
+    if "S" in kwargs:
+        if kwargs["S"] is not None:
+            return kwargs["S"]
         else:
-            kwargs.pop('S')
+            kwargs.pop("S")
 
     # Initial params
     p = Sigma.shape[0]
@@ -153,23 +160,25 @@ def compute_smatrix(
     # Possibly use block-diagonal approximation, either using
     # hierarchical clustering for non-grouped knockoffs or
     # randomly merging groups for group knockoffs.
-    if p > max_block and method not in ['equicorrelated', 'eq', 'ci', 'ciknock']:
+    if p > max_block and method not in ["equicorrelated", "eq", "ci", "ciknock"]:
         if np.all(groups == np.arange(1, p + 1, 1)):
             blocks = divide_computation(Sigma, max_block)
         else:
             blocks = merge_groups(groups, max_block)
         block_sizes = utilities.calc_group_sizes(blocks)
         nblocks = block_sizes.shape[0]
-        print(f"Using blockdiag approx. with nblocks={nblocks} and max_size={block_sizes.max()}...")
+        print(
+            f"Using blockdiag approx. with nblocks={nblocks} and max_size={block_sizes.max()}..."
+        )
         Sigma_blocks = utilities.blockdiag_to_blocks(Sigma, blocks)
         group_blocks = []
-        for j in range(int(blocks.min()), int(blocks.max())+1):
+        for j in range(int(blocks.min()), int(blocks.max()) + 1):
             group_blocks.append(utilities.preprocess_groups(groups[blocks == j]))
         # Recursive subcall for each block. Possibly use multiprocessing.
         constant_inputs = {
-                'method':method,
-                'solver':solver,
-                'max_block':p,
+            "method": method,
+            "solver": solver,
+            "max_block": p,
         }
         for key in kwargs:
             constant_inputs[key] = kwargs[key]
@@ -178,11 +187,11 @@ def compute_smatrix(
             constant_inputs=constant_inputs,
             Sigma=Sigma_blocks,
             groups=group_blocks,
-            num_processes=num_processes
+            num_processes=num_processes,
         )
         print("Finished comp of blocks, putting together")
         # Put blocks together
-        S = np.zeros((p,p))
+        S = np.zeros((p, p))
         block_id = 1
         for Sigma_block, S_block in zip(Sigma_blocks, S_blocks):
             block_inds = np.where(blocks == block_id)[0]
@@ -192,23 +201,23 @@ def compute_smatrix(
         # Make S feasible
         S, _ = utilities.scale_until_PSD(
             Sigma=Sigma,
-            S=S, 
-            tol=kwargs.get('tol', constants.DEFAULT_TOL),
-            num_iter=kwargs.get('num_iter', 10)
+            S=S,
+            tol=kwargs.get("tol", constants.DEFAULT_TOL),
+            num_iter=kwargs.get("num_iter", 10),
         )
         # Line search for MRC methods
         smoothing = 1
-        if 'smoothing' in kwargs:
-            smoothing = kwargs['smoothing']
-        if method == 'mvr':
+        if "smoothing" in kwargs:
+            smoothing = kwargs["smoothing"]
+        if method == "mvr":
             obj = mrc.mvr_loss
-        elif method == 'mmi' or method == 'maxent':
+        elif method == "mmi" or method == "maxent":
             obj = mrc.mmi_loss
-        if method in ['mvr', 'mmi', 'maxent']:
+        if method in ["mvr", "mmi", "maxent"]:
             best_gamma = 1
             best_loss = obj(Sigma=Sigma, S=S, smoothing=smoothing)
             for gamma in constants.GAMMA_VALS:
-                loss = obj(Sigma=Sigma, S=gamma*S, smoothing=smoothing)
+                loss = obj(Sigma=Sigma, S=gamma * S, smoothing=smoothing)
                 if loss < best_loss:
                     best_gamma = gamma
                     best_loss = loss
@@ -220,38 +229,23 @@ def compute_smatrix(
     # Currently cd solvers cannot handle group knockoffs
     # (this is todo)
     if not np.all(groups == np.arange(1, p + 1, 1)):
-        solver = 'psgd'
-    if (method == 'mvr' or method == 'mmi') and solver == 'psgd':
+        solver = "psgd"
+    if (method == "mvr" or method == "mmi") and solver == "psgd":
         # Check for imports
-        utilities.check_kpytorch_available(
-            purpose='group MRC knockoffs OR PSGD solver'
-        )
+        utilities.check_kpytorch_available(purpose="group MRC knockoffs OR PSGD solver")
         from .kpytorch import mrcgrad
-        S = mrcgrad.solve_mrc_psgd(
-            Sigma=Sigma, groups=groups, method=method, **kwargs
-        )
-    elif method == 'mvr':
-        S = mrc.solve_mvr(
-            Sigma=Sigma, **kwargs
-        )
-    elif method == 'mmi':
-        S = mrc.solve_mmi(
-            Sigma=Sigma, **kwargs
-        )
+
+        S = mrcgrad.solve_mrc_psgd(Sigma=Sigma, groups=groups, method=method, **kwargs)
+    elif method == "mvr":
+        S = mrc.solve_mvr(Sigma=Sigma, **kwargs)
+    elif method == "mmi":
+        S = mrc.solve_mmi(Sigma=Sigma, **kwargs)
     elif method == "sdp" or method == "asdp":
-        S = mac.solve_group_SDP(
-            Sigma,
-            groups,
-            **kwargs,
-        )
-    elif method == 'ciknock' or method == 'ci':
-        S = mrc.solve_ciknock(
-            Sigma, **kwargs
-        )
-    elif method == "equicorrelated" or method == 'eq':
-        S = mac.solve_equicorrelated(
-            Sigma, groups, **kwargs
-        )
+        S = mac.solve_group_SDP(Sigma, groups, **kwargs,)
+    elif method == "ciknock" or method == "ci":
+        S = mrc.solve_ciknock(Sigma, **kwargs)
+    elif method == "equicorrelated" or method == "eq":
+        S = mac.solve_equicorrelated(Sigma, groups, **kwargs)
     else:
         raise ValueError(f"Unrecognized method {method}")
 

@@ -92,9 +92,9 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
     # Get eigenvalues and decomposition
     p = Sigma.shape[0]
     if groups is None:
-        groups = np.arange(1, p+1, 1)
-    if np.all(groups == np.arange(1, p+1, 1)):
-        gamma = min(2*np.linalg.eigh(Sigma)[0].min(), 1)
+        groups = np.arange(1, p + 1, 1)
+    if np.all(groups == np.arange(1, p + 1, 1)):
+        gamma = min(2 * np.linalg.eigh(Sigma)[0].min(), 1)
         S = gamma * np.eye(p)
     else:
         gamma = calc_min_group_eigenvalue(Sigma, groups, tol=tol, verbose=verbose)
@@ -116,13 +116,8 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
 
     return S
 
-def solve_SDP(
-    Sigma,
-    verbose=False,
-    num_iter=10,
-    tol=DEFAULT_TOL,
-    **kwargs
-):
+
+def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL, **kwargs):
     """ 
     Much faster solution to SDP without grouping
     """
@@ -134,17 +129,17 @@ def solve_SDP(
     # Ay <= b
     # F0 + y1 F1 + ... + yp Fp > 0 where F0,...Fp are PSD matrices
     # However the variables here do NOT correspond to the variables
-    # in the equations because the Sedumi format is strange - 
+    # in the equations because the Sedumi format is strange -
     # see https://www.ece.uvic.ca/~wslu/Talk/SeDuMi-Remarks.pdf
-    # Also, the "l" argument in the K options dictionary 
+    # Also, the "l" argument in the K options dictionary
     # in the SDP package may not work.
-    # TODO: make this work for group SDP. 
+    # TODO: make this work for group SDP.
     # Idea: basically, add more variables for the off-diagonal elements
     # and maximize their sum subject to the constraint that they can't
     # be larger than the corresponding off-diagonal elements of Sigma
     # (I.e. make the linear constraints larger...)
 
-    # Constants 
+    # Constants
     p = Sigma.shape[0]
     maxtol = np.linalg.eigh(Sigma)[0].min() / 10
     if tol > maxtol and verbose:
@@ -156,36 +151,36 @@ def solve_SDP(
     # Construct C (-b + vec(F0) from above)
     # Note the tolerance here prevents the min. val
     # of S from being too small.
-    Cl1 = np.diag(-1*tol*np.ones(p)).reshape(1, p**2)
-    Cl2 = np.diag(np.ones(p)).reshape(1, p**2)
-    Cs = np.reshape(2*Sigma,[1,p*p])
-    C = np.concatenate([Cl1,Cl2,Cs],axis=1)
+    Cl1 = np.diag(-1 * tol * np.ones(p)).reshape(1, p ** 2)
+    Cl2 = np.diag(np.ones(p)).reshape(1, p ** 2)
+    Cs = np.reshape(2 * Sigma, [1, p * p])
+    C = np.concatenate([Cl1, Cl2, Cs], axis=1)
 
-    # Construct A 
+    # Construct A
     rows = []
     cols = []
     data = []
     for j in range(p):
         rows.append(j)
-        cols.append((p+1)*j)
-        data.append(-1) 
+        cols.append((p + 1) * j)
+        data.append(-1)
     Al1 = sp.sparse.csr_matrix((data, (rows, cols)))
-    Al2 = -1*Al1.copy()
+    Al2 = -1 * Al1.copy()
     As = Al2.copy()
     A = sp.sparse.hstack([Al1, Al2, As])
 
     # Construct b
-    b = np.ones([p,1])
+    b = np.ones([p, 1])
 
     # Options
     K = {}
-    K['s'] = [p,p,p]
+    K["s"] = [p, p, p]
     OPTIONS = {
-        'gaptol':1e-6,
-        'maxit':1000,
-        'logsummary':1 if verbose else 0,
-        'outputstats':1 if verbose else 0,
-        'print':1 if verbose else 0
+        "gaptol": 1e-6,
+        "maxit": 1000,
+        "logsummary": 1 if verbose else 0,
+        "outputstats": 1 if verbose else 0,
+        "print": 1 if verbose else 0,
     }
 
     # Solve
@@ -194,12 +189,10 @@ def solve_SDP(
     warnings.resetwarnings()
 
     # Raise an error if unsolvable
-    status = result['STATS']['stype']
-    if status != 'PDFeasible':
-        raise ValueError(
-            f"DSDP solver returned status {status}, should be PDFeasible"
-        )
-    S = np.diag(result['y'])
+    status = result["STATS"]["stype"]
+    if status != "PDFeasible":
+        raise ValueError(f"DSDP solver returned status {status}, should be PDFeasible")
+    S = np.diag(result["y"])
 
     # Scale to make this PSD using binary search
     S, gamma = scale_until_PSD(Sigma, S, tol, num_iter)
@@ -210,6 +203,7 @@ def solve_SDP(
         )
 
     return S
+
 
 def solve_group_SDP(
     Sigma,
@@ -258,7 +252,7 @@ def solve_group_SDP(
     # Default groups
     p = Sigma.shape[0]
     if groups is None:
-        groups = np.arange(1, p+1, 1)
+        groups = np.arange(1, p + 1, 1)
 
     # Test corr matrix
     TestIfCorrMatrix(Sigma)
@@ -286,12 +280,7 @@ def solve_group_SDP(
 
     # Possibly solve non-grouped SDP
     if m == p:
-        return solve_SDP(
-            Sigma=Sigma,
-            verbose=verbose,
-            num_iter=num_iter,
-            tol=tol,
-        )
+        return solve_SDP(Sigma=Sigma, verbose=verbose, num_iter=num_iter, tol=tol,)
 
     # Sort the covariance matrix according to the groups
     inds, inv_inds = utilities.permute_matrix_by_groups(groups)

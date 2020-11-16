@@ -8,11 +8,10 @@ all = [
     "metro",
     "mrc",
     "smatrix",
-    "tree_processing"
-    "utilities",
+    "tree_processing" "utilities",
 ]
 
-__version__ = "0.1.3"
+__version__ = "0.1.5"
 
 from . import dgp
 from . import knockoffs

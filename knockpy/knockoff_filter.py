@@ -67,13 +67,19 @@ class KnockoffFilter:
         first p coordinates correspond to features, the last p correspond
         to knockoffs.
     W : np.ndarray
-        a p-dimensional array of feature statistics. 
+        an array of feature statistics. This is ``(p,)``-dimensional
+        for regular knockoffs and ``(num_groups,)``-dimensional for
+        group knockoffs.
     S : np.ndarray
         the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs.
-    Xk : np.ndarray
-        the ``(n, p)``-shaped design matrix of knockoffs
+    X : np.ndarray
+        the ``(n, p)``-shaped design
     Xk : np.ndarray
         the ``(n, p)``-shaped matrix of knockoffs
+    groups : np.ndarray
+        For group knockoffs, a p-length array of integers from 1 to 
+        num_groups such that ``groups[j] == i`` indicates that variable `j`
+        is a member of group `i`. Defaults to None (regular knockoffs).
     rejections : np.ndarray
         a ``(p,)``-shaped boolean array where rejections[j] == 1 iff the
         the knockoff filter rejects the jth feature.

@@ -46,7 +46,6 @@ setuptools.setup(
         "scikit-dsdp",
         "networkx>=1.11",
         "tqdm>=4.36.1",
-        "torch>=1.4.0",
         "group_lasso",
         "pyglmnet"
     ],
