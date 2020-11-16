@@ -12,6 +12,8 @@ all = [
     "utilities",
 ]
 
+__version__ = "0.0.1"
+
 from . import dgp
 from . import knockoffs
 from . import knockoff_filter

@@ -1,4 +1,6 @@
-# Knockadapt
+# Knockpy
+
+A python implementation of the knockoffs framework for variable selection. More docs to come!
 
 ## To run tests
 
@@ -12,36 +14,3 @@ There are also more flags/options for outputs in the command line command.
 - Alternatively, cprofilev is much better.
 To run cprofilev, copy and paste the test to proftest/* and then run 
 ``python3 -m cprofilev proftest/test_name.py``.
-
-
-## To do
-
-1. Graphs --> ren to dgp, class based
-2. 
-
-### Knockoff Generation
-
-1. Gaussian knockoff generator should be class based
-2. There should be an overarching "sample knockoffs"
-function where you can put the type of knockoffs
-you want to sample in as an input argument.
-3. It would be cool if we moved the KS test code and used
-it as a method to validate the knockoffs.
-
-### FX Knockoff Support
-
-1. Knockoff Filter + Debiased Lasso
-2. Need to think about whether we'll actually shift X
-
-### Knockoff Construction
-
-1. Add hierarchical clustering to ASDP group-making
-
-### MCV Computation
-
-1. Gradient-based method can be sped up
-2. Add value for rec_prop
-
-### Graphs
-
-1. DGP class? instead of returning like 6 things?
