@@ -49,7 +49,7 @@ def parse_logistic_flag(kwargs):
     return False
 
 
-def combine_Z_stats(Z, groups=None, pair_agg="cd", group_agg="sum"):
+def combine_Z_stats(Z, groups=None, antisym="cd", group_agg="sum"):
     """
     Given a "Z" statistic for each feature AND each knockoff, returns
     grouped W statistics. First combines each Z statistic and its 
@@ -58,7 +58,7 @@ def combine_Z_stats(Z, groups=None, pair_agg="cd", group_agg="sum"):
     values correspond to true features, and the last p correspond
     to knockoffs (in the same order as the true features).
     :param groups: p length numpy array of groups. 
-    :param str pair_agg: Specifies how to create pairwise W 
+    :param str antisym: Specifies how to create pairwise W 
     statistics. Two options: 
         - "CD" (Difference of absolute vals of coefficients),
         - "SM" (signed maximum).
@@ -77,20 +77,20 @@ def combine_Z_stats(Z, groups=None, pair_agg="cd", group_agg="sum"):
     if groups is None:
         groups = np.arange(1, p + 1, 1)
 
-    pair_agg = str(pair_agg).lower()
+    antisym = str(antisym).lower()
     # Absolute coefficient differences
-    if pair_agg == "cd":
+    if antisym == "cd":
         pair_W = np.abs(Z[0:p]) - np.abs(Z[p:])
     # Signed maxes
-    elif pair_agg == "sm":
+    elif antisym == "sm":
         inds = np.arange(0, p, 1)
         pair_W = np.maximum(np.abs(Z[inds]), np.abs(Z[inds + p]))
         pair_W = pair_W * np.sign(np.abs(Z[inds]) - np.abs(Z[inds + p]))
     # Simple coefficient differences
-    elif pair_agg == "scd":
+    elif antisym == "scd":
         pair_W = Z[0:p] - Z[p:]
     else:
-        raise ValueError(f'pair_agg ({pair_agg}) must be one of "cd", "sm", "scd"')
+        raise ValueError(f'antisym ({antisym}) must be one of "cd", "sm", "scd"')
 
     # Step 2: Group statistics
     m = np.unique(groups).shape[0]
@@ -388,7 +388,7 @@ class FeatureStatistic:
             y, 
             groups=None,
             feature_importance='swap',
-            pair_agg='cd',
+            antisym='cd',
             group_agg='avg',
             **kwargs
         ):
@@ -407,7 +407,7 @@ class FeatureStatistic:
             - "swapint": The swap-integral defined from
             http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
         Defaults to 'swap'
-        :param pair_agg: Specifies how to create pairwise W 
+        :param antisym: Specifies how to create pairwise W 
         statistics. Two options: 
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
@@ -448,7 +448,7 @@ class FeatureStatistic:
 
         # Combine Z statistics
         self.groups = groups
-        self.W = combine_Z_stats(self.Z, self.groups, pair_agg=pair_agg, group_agg=group_agg)
+        self.W = combine_Z_stats(self.Z, self.groups, antisym=antisym, group_agg=group_agg)
         return self.W
 
     def swap_feature_importances(self, features, y):
@@ -625,7 +625,7 @@ class RidgeStatistic(FeatureStatistic):
         Xk,
         y,
         groups=None,
-        pair_agg='cd',
+        antisym='cd',
         group_agg='avg',
         cv_score=False,     
         **kwargs
@@ -644,7 +644,7 @@ class RidgeStatistic(FeatureStatistic):
         :param y: p length response numpy array
         :param groups: p length numpy array of groups. If None,
         defaults to giving each feature its own group.
-        :param pair_agg: Specifies how to create pairwise W 
+        :param antisym: Specifies how to create pairwise W 
         statistics. Two options: 
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
@@ -689,7 +689,7 @@ class RidgeStatistic(FeatureStatistic):
             raise ValueError(f"y_dist must be one of gaussian, binomial, not {kwargs['y_dist']}")
 
         # Combine Z statistics
-        W_group = combine_Z_stats(Z, groups, pair_agg=pair_agg, group_agg=group_agg)
+        W_group = combine_Z_stats(Z, groups, antisym=antisym, group_agg=group_agg)
 
         # Save values for later use
         self.Z = Z
@@ -714,7 +714,7 @@ class LassoStatistic(FeatureStatistic):
         zstat="coef",
         use_pyglm=True,
         group_lasso=False,
-        pair_agg="cd",
+        antisym="cd",
         group_agg="avg",
         cv_score=False,
         debias=False,
@@ -744,7 +744,7 @@ class LassoStatistic(FeatureStatistic):
         Else use the group-lasso one.
         :param bool group_lasso: If True and zstat='coef', then runs
         group lasso. Defaults to False (recommended). 
-        :param str pair_agg: Specifies how to create pairwise W 
+        :param str antisym: Specifies how to create pairwise W 
         statistics. Two options: 
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
@@ -848,7 +848,7 @@ class LassoStatistic(FeatureStatistic):
             raise ValueError(f'zstat ({zstat}) must be one of "coef", "lars_path"')
 
         # Combine Z statistics
-        W_group = combine_Z_stats(Z, groups, pair_agg=pair_agg, group_agg=group_agg)
+        W_group = combine_Z_stats(Z, groups, antisym=antisym, group_agg=group_agg)
 
         # Save values for later use
         self.Z = Z
@@ -958,7 +958,7 @@ class RandomForestStatistic(FeatureStatistic):
         groups=None,
         cv_score=False,
         feature_importance='swap',
-        pair_agg="cd",
+        antisym="cd",
         group_agg="sum",
         **kwargs
     ):
@@ -1016,7 +1016,7 @@ class RandomForestStatistic(FeatureStatistic):
 
         # Get W statistics
         self.W = combine_Z_stats(
-            self.Z, self.groups, pair_agg=pair_agg, group_agg=group_agg
+            self.Z, self.groups, antisym=antisym, group_agg=group_agg
         )
 
         # Possibly score model
@@ -1035,7 +1035,7 @@ class DeepPinkStatistic(FeatureStatistic):
         y,
         feature_importance='deeppink',
         groups=None,
-        pair_agg="cd",
+        antisym="cd",
         group_agg="sum",
         cv_score=False,
         train_kwargs={'verbose':False},
@@ -1110,7 +1110,7 @@ class DeepPinkStatistic(FeatureStatistic):
 
         # Get W statistics
         self.W = combine_Z_stats(
-            self.Z, self.groups, pair_agg=pair_agg, group_agg=group_agg
+            self.Z, self.groups, antisym=antisym, group_agg=group_agg
         )
 
         # Possibly score model

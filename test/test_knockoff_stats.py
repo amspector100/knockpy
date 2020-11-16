@@ -94,7 +94,7 @@ class KStatVal(unittest.TestCase):
 		if m == p:
 			pair_W = W
 		else:
-			pair_W = kstats.combine_Z_stats(fstat.Z, pair_agg='cd')
+			pair_W = kstats.combine_Z_stats(fstat.Z, antisym='cd')
 		l2norm = np.power(pair_W - np.abs(beta), 2)
 		l2norm = l2norm.mean()
 		self.assertTrue(l2norm < max_l2norm,
@@ -182,7 +182,7 @@ class TestFeatureStatistics(KStatVal):
 		self.check_kstat_fit(
 			fstat=kstats.LassoStatistic(),
 			fstat_name='LARS path statistic',
-			fstat_kwargs={'zstat':'lars_path', 'pair_agg':'sm'},
+			fstat_kwargs={'zstat':'lars_path', 'antisym':'sm'},
 			n=300,
 			p=100,
 			rho=0.7,
@@ -352,7 +352,7 @@ class TestFeatureStatistics(KStatVal):
 		fake_knockoffs = np.zeros((n, p))
 
 		# Run to make sure there are no errors for
-		# different pair_aggs
+		# different antisyms
 		np.random.seed(110)
 		lasso_stat = kstats.LassoStatistic()
 		lasso_stat.fit(
@@ -360,7 +360,7 @@ class TestFeatureStatistics(KStatVal):
 			Xk=fake_knockoffs,
 			y=y, 
 			y_dist=None,
-			pair_agg='cd'
+			antisym='cd'
 		)
 		W_cd = lasso_stat.W
 		Z_cd = lasso_stat.Z
@@ -373,7 +373,7 @@ class TestFeatureStatistics(KStatVal):
 
 
 		# Run to make sure there are no errors for
-		# different pair_aggs
+		# different antisyms
 		np.random.seed(110)
 		lasso_stat = kstats.LassoStatistic()
 		lasso_stat.fit(
@@ -381,7 +381,7 @@ class TestFeatureStatistics(KStatVal):
 			Xk=fake_knockoffs,
 			y=y, 
 			y_dist=None,
-			pair_agg='sm'
+			antisym='sm'
 		)
 		Z_sm = lasso_stat.Z
 		W_sm = lasso_stat.W
@@ -391,7 +391,7 @@ class TestFeatureStatistics(KStatVal):
 		)
 
 		# Run to make sure there are no errors for
-		# different pair_aggs
+		# different antisyms
 		np.random.seed(110)
 		lasso_stat = kstats.LassoStatistic()
 		lasso_stat.fit(
@@ -399,7 +399,7 @@ class TestFeatureStatistics(KStatVal):
 			Xk=fake_knockoffs,
 			y=y, 
 			y_dist=None,
-			pair_agg='scd'
+			antisym='scd'
 		)
 		W_scd = lasso_stat.W
 		Z_scd = lasso_stat.Z

@@ -59,7 +59,7 @@ class KnockoffFilter:
         elif fstat == 'lsm':
             fstat = kstats.LassoStatistic()
             self.fstat_kwargs['zstat'] = 'lars_path'
-            self.fstat_kwargs['pair_agg'] = 'sm'
+            self.fstat_kwargs['antisym'] = 'sm'
         elif fstat == 'dlasso':
             fstat = kstats.LassoStatistic()
             self.fstat_kwargs['debias'] = True
