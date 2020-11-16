@@ -130,6 +130,7 @@ class TestFdrControl(unittest.TestCase):
 					if kwargs['x_dist'] == 'gibbs':
 						gibbs_graph = Q
 						knockoff_kwargs['gibbs_graph'] = gibbs_graph
+					knockoff_kwargs.pop('S', None)
 
 				selections = knockoff_filter.forward(
 					X=X, 

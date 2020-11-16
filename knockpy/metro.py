@@ -301,7 +301,9 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         method, which finds the optimal S matrix.
         """
 
-        # Find the optimal S matrix
+        # Find the optimal S matrix. In general, we should set a
+        # fairly high tolerance to avoid numerical errors.
+        kwargs['tol'] = kwargs.pop('tol', 1e-2)
         self.S = smatrix.compute_smatrix(
             Sigma=self.V,
             **kwargs
@@ -406,10 +408,15 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
             self.cond_vars[j] = marg_var - np.dot(c, c)
 
             # Sanity check
+            msg = "This is likely a numerical error --- try increasing the tol kwarg."
             if self.cond_vars[j] < 0:
-                raise ValueError(f"Cond_vars[{j}] = {self.cond_vars[j]} < 0")
+                raise ValueError(
+                    f"Cond_vars[{j}]={self.cond_vars[j]} < 0. {msg}"
+                )
             elif self.cond_vars[j] > marg_var:
-                raise ValueError(f"Cond_vars[{j}] = {self.cond_vars[j]} > marginal variance {marg_var}")
+                raise ValueError(
+                    f"Cond_vars[{j}]={self.cond_vars[j]} > marginal variance {marg_var}. {msg}"
+                )
 
             # Mean transform
             mean_transform = sp.linalg.solve_triangular(
