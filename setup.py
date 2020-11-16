@@ -50,8 +50,8 @@ setuptools.setup(
         "group_lasso",
         "pyglmnet"
     ],
-    dependency_links=[
-        'git://github.com/jcrudy/choldate.git#egg=choldate',
-        'https://download.pytorch.org/whl/torch_stable.html'
+    extras_require={
+        "torch":["torch>=1.4.0"],
+    }
     ]
 )

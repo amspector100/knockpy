@@ -4,9 +4,13 @@ import scipy as sp
 import choldate
 from scipy import stats
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+try:
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    TORCH_AVAILABLE = TRUE
+except:
+    TORCH_AVAILABLE = FALSE
 
 from . import utilities
 from .utilities import calc_group_sizes, preprocess_groups
