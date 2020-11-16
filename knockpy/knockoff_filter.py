@@ -1,71 +1,107 @@
 import numpy as np
+from . import constants
 from . import utilities
 from . import mrc
 from . import knockoffs
 from . import metro
-from . import knockoff_stats as kstats 
+from . import knockoff_stats as kstats
+
 
 class KnockoffFilter:
     """
-    A generic class for performing knockoff-based inference, which 
-    both samples knockoffs and performs inference using the knockoffs.
-    This class wraps generic knockoff and 
+    Performs knockoff-based inference, from start to finish.
+    
+
+    This wraps both the ``knockoffs.KnockoffSampler`` and 
+    ``knockoff_stats.FeatureStatistic`` classes.
 
     Parameters 
     ----------
-    :param fstat: The feature statistic to use in the knockoff
-    filter. This may be a string identifying a specific type of
-    feature statistic like the 'lasso' or an initialized class inheriting from
-    the base FeatureStatistic class. 
-    Options for string identifiers include:
-        - 'lasso' or 'lcd': cross-validated lasso coefficients differences.
-        - 'lsm': signed maximum of the lasso path statistic as
-        in Barber and Candes 2015.
+    fstat : str or knockpy.knockoff_stats.FeatureStatistic
+        The feature statistic to use in the knockoff filter.
+        This may also be a string identifier, including:
+        - 'lasso' or 'lcd': cross-validated lasso coefficients differences 
+        - 'lsm': signed maximum of the lasso path statistic as 
+            in Barber and Candes 2015
         - 'dlasso': Cross-validated debiased lasso coefficients
         - 'ridge': Cross validated ridge coefficients
         - 'ols': Ordinary least squares coefficients
         - 'margcorr': marginal correlations between features and response
         - 'deeppink': The deepPINK statistic as in Lu et al. 2018
-        - 'randomforest': A random forest statistic with swap importances
-    :param ksampler: The method for sampling knockoffs. This may be
-    a class inheriting from KnockoffSampler or a string identifying 
-    a specific knockoff sampling strategy. String identifiers include:
+        - 'randomforest': A random forest with swap importances
+    ksampler : str or knockpy.knockoffs.KnockoffSampler
+        The knockoff sampler to use in the knockoff filter.
+        This may also be a string identifier, including:
         - 'gaussian': Gaussian Model-X knockoffs
         - 'fx': Fixed-X knockoffs
         - 'metro': Generic metropolized knockoff sampler.
         - 'artk': t-tailed Markov chain
         - 'blockt': Blocks of t-distributed 
         - 'ising': Discrete gibbs grid
-    An alternative to specifying the ksampler is to simply pass in a knockoff
-    matrix during the ``forward`` call.
-    :param fstat_kwargs: Kwargs to pass to the feature statistic fit function,
-    excluding the required arguments (X, Xk, y, groups), defaults to {} 
-    :param knockoff_kwargs: Kwargs for instantiating the knockoff sampler
-    argument. This can be empty for some types of knockoffs such as gaussian
-    or fx knockoffs, but additional keyword arguments are required for
-    complex samplers such as the metropolized knockoff sampler. 
-    Defaults to {}.
+        An alternative to specifying the ksampler is to simply pass
+        in a knockoff matrix during the ``forward`` call.
+    fstat_kwargs : dict
+        Kwargs to pass to the feature statistic ``fit`` function,
+        excluding the required arguments, defaults to {} 
+    knockoff_kwargs : dict
+        Kwargs for instantiating the knockoff sampler argument if
+        the ksampler argument is a string identifier. This can be
+        the empt dict for some identifiers such as "gaussian" or "fx",
+        but additional keyword arguments are required for complex samplers
+        such as the "metro" identifier. Defaults to {}
 
     Attributes
     ----------
-    :ivar fstat: The feature statistics to use for inference. 
-    This inherits from ```knockpy.knockoff_stats.FeatureStatistic```.
-    :ivar ksampler: The knockoff sampler to use during inference.
-    This eventually inherits from ```knockpy.knockoffs.KnockoffSampler```,
-    but 
-    :ivar fstat_kwargs: Dictionary of kwargs to pass to the feature 
-    statistic's ``fit`` call.
-    :ivar knockoff_kwargs: If ksampler is not yet initialized, 
-    a dictionary of kwargs to pass to the ksampler. Else, this is ignored.
+    fstat : knockpy.knockoff_stats.FeatureStatistic
+        The feature statistics to use for inference. This inherits
+        from ``knockoff_stats.FeatureStatistic``.
+    ksampler : knockpy.knockoffs.KnockoffSampler
+        The knockoff sampler to use during inference. This eventually
+        inherits from ``knockoffs.KnockoffSampler``.
+    fstat_kwargs : dict
+        Dictionary of kwargs to pass to the ``fit`` call of ``self.fstat``.
+    knockoff_kwargs : dict
+        If ``ksampler`` is not yet initialized, kwargs to pass to ``ksampler``.
+    Z : np.ndarray
+        a ``2p``-dimsional array of feature and knockoff importances. The
+        first p coordinates correspond to features, the last p correspond
+        to knockoffs.
+    W : np.ndarray
+        a p-dimensional array of feature statistics. 
+    S : np.ndarray
+        the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs.
+    Xk : np.ndarray
+        the ``(n, p)``-shaped design matrix of knockoffs
+    Xk : np.ndarray
+        the ``(n, p)``-shaped matrix of knockoffs
+    rejections : np.ndarray
+        a ``(p,)``-shaped boolean array where rejections[j] == 1 iff the
+        the knockoff filter rejects the jth feature.
+    G : np.ndarray
+        the ``(2p, 2p)``-shaped feature-knockoff covariance matrix
 
+    Examples
+    --------
+    # Fake data-generating process for Gaussian linear model
+    >>> import knockpy as kpy
+    >>> dgprocess = kpy.dgp.DGP()
+    >>> dgprocess.sample_data(n=500, p=500, sparsity=0.1)
+
+    # LCD statistic with Gaussian MX knockoffs
+    # This uses LedoitWolf covariance estimation by default.
+    >>> from knockpy.knockoff_filter import KnockoffFilter 
+    >>> kfilter = KnockoffFilter( 
+        fstat='lcd', 
+        ksampler='gaussian', 
+        knockoff_kwargs={"method":"mvr"}, 
+    )
+    >>> rejections = kfilter.forward(X=dgprocess.X, y=dgprocess.y)
+    ```
     """
+
     def __init__(
-            self,
-            fstat='lasso',
-            ksampler='gaussian',
-            fstat_kwargs={},
-            knockoff_kwargs={},
-        ):
+        self, fstat="lasso", ksampler="gaussian", fstat_kwargs={}, knockoff_kwargs={},
+    ):
         """
         Initialize the class.
         """
@@ -78,24 +114,24 @@ class KnockoffFilter:
         if isinstance(fstat, kstats.FeatureStatistic):
             pass
         # Else parse flags
-        elif fstat == "lasso" or fstat == 'lcd':
+        elif fstat == "lasso" or fstat == "lcd":
             fstat = kstats.LassoStatistic()
-        elif fstat == 'lsm':
+        elif fstat == "lsm":
             fstat = kstats.LassoStatistic()
-            self.fstat_kwargs['zstat'] = 'lars_path'
-            self.fstat_kwargs['antisym'] = 'sm'
-        elif fstat == 'dlasso':
+            self.fstat_kwargs["zstat"] = "lars_path"
+            self.fstat_kwargs["antisym"] = "sm"
+        elif fstat == "dlasso":
             fstat = kstats.LassoStatistic()
-            self.fstat_kwargs['debias'] = True
-        elif fstat == 'ridge':
+            self.fstat_kwargs["debias"] = True
+        elif fstat == "ridge":
             fstat = kstats.RidgeStatistic()
         elif fstat == "ols":
             fstat = kstats.OLSStatistic()
         elif fstat == "margcorr":
             fstat = kstats.MargCorrStatistic()
-        elif fstat == 'randomforest':
+        elif fstat == "randomforest":
             fstat = kstats.RandomForestStatistic()
-        elif fstat == 'deeppink':
+        elif fstat == "deeppink":
             fstat = kstats.DeepPinkStatistic()
         else:
             raise ValueError(f"Unrecognized fstat {fstat}")
@@ -111,7 +147,7 @@ class KnockoffFilter:
             self.ksampler = ksampler
         if isinstance(ksampler, knockoffs.FXSampler):
             self._mx = False
-        elif self.knockoff_type == 'fx':
+        elif self.knockoff_type == "fx":
             self._mx = False
         else:
             self._mx = True
@@ -119,74 +155,55 @@ class KnockoffFilter:
         # Initialize
         self.S = None
 
-
-
     def sample_knockoffs(self):
+        """
+        Samples knockoffs during ``forward``.
+        """
 
         # If we have already computed S, signal this
         # because this is expensive
         if self.S is not None:
-            if 'S' not in self.knockoff_kwargs:
-                self.knockoff_kwargs['S'] = self.S
+            if "S" not in self.knockoff_kwargs:
+                self.knockoff_kwargs["S"] = self.S
 
         # Possibly initialize ksampler
         if self.ksampler is None:
             # Args common to all ksamplers
-            args = {
-                'X':self.X,
-                'Sigma':self.Sigma
-            }
-            if self.knockoff_type == 'gaussian':
+            args = {"X": self.X, "Sigma": self.Sigma}
+            if self.knockoff_type == "gaussian":
                 self.ksampler = knockoffs.GaussianSampler(
-                    groups=self.groups,
-                    mu=self.mu,
-                    **args,
-                    **self.knockoff_kwargs
+                    groups=self.groups, mu=self.mu, **args, **self.knockoff_kwargs
                 )
-            elif self.knockoff_type == 'fx':
+            elif self.knockoff_type == "fx":
                 self.ksampler = knockoffs.FXSampler(
-                    X=self.X,
-                    groups=self.groups,
-                    **self.knockoff_kwargs,
+                    X=self.X, groups=self.groups, **self.knockoff_kwargs,
                 )
-            elif self.knockoff_type == 'artk':
-                self.ksampler = metro.ARTKSampler(
-                    **args,
-                    **self.knockoff_kwargs,
-                )
-            elif self.knockoff_type == 'blockt':
-                self.ksampler = metro.BlockTSampler(
-                    **args, 
-                    **self.knockoff_kwargs,
-                )
-            elif self.knockoff_type == 'metro':
+            elif self.knockoff_type == "artk":
+                self.ksampler = metro.ARTKSampler(**args, **self.knockoff_kwargs,)
+            elif self.knockoff_type == "blockt":
+                self.ksampler = metro.BlockTSampler(**args, **self.knockoff_kwargs,)
+            elif self.knockoff_type == "metro":
                 self.ksampler = metro.MetropolizedKnockoffSampler(
-                    **args,
-                    mu=self.mu,
-                    **self.knockoff_kwargs
+                    **args, mu=self.mu, **self.knockoff_kwargs
                 )
-            elif self.knockoff_type == 'ising':
-                if 'gibbs_graph' not in self.knockoff_kwargs:
+            elif self.knockoff_type == "ising":
+                if "gibbs_graph" not in self.knockoff_kwargs:
                     raise ValueError(
                         f"For ising knockoffs, must provide gibbs graph as knockoff_kwarg"
                     )
                 self.ksampler = metro.IsingKnockoffSampler(
-                    **args,
-                    mu=self.mu,
-                    **self.knockoff_kwargs
+                    **args, mu=self.mu, **self.knockoff_kwargs
                 )
             else:
-                raise ValueError(
-                    f"Unrecognized ksampler string {self.knockoff_type}"
-                )
+                raise ValueError(f"Unrecognized ksampler string {self.knockoff_type}")
         Xk = self.ksampler.sample_knockoffs()
         self.S = self.ksampler.fetch_S()
 
         # Possibly use recycling
         if self.recycle_up_to is not None:
             # Split
-            rec_Xk = self.X[:self.recycle_up_to]
-            new_Xk = Xk[self.recycle_up_to:]
+            rec_Xk = self.X[: self.recycle_up_to]
+            new_Xk = Xk[self.recycle_up_to :]
             # Combine
             Xk = np.concatenate((rec_Xk, new_Xk), axis=0)
         self.Xk = Xk
@@ -231,41 +248,54 @@ class KnockoffFilter:
         fdr=0.10,
         fstat_kwargs={},
         knockoff_kwargs={},
-        shrinkage='ledoitwolf',
+        shrinkage="ledoitwolf",
         recycle_up_to=None,
     ):
         """
-        Runs the knockoff filter and returns whether each variable 
-        was selected.
-        :param X: n x p design matrix
-        :param y: p-length response array
-        :param Xk: n x p knockoff matrix. If None, this will construct
-        knockoffs as specified by the ksampler argument in the class
-        initialization.
-        :param mu: p-length numpy array, the mean of the features.
-        This defaults to the empirical mean of the features.
-        :param Sigma: p x p covariance matrix of X. This is ignored for 
-        fixed-X knockoffs.
-        :param groups: For group knockoffs, a p-length array of integers 
-        from 1 to num_groups groups[j] = i indicates that variable j is
-        a member of group i. Defaults to None (regular knockoffs). 
-        :param fdr: The desired level of false discovery rate control.
-        :param fstat_kwargs: Kwargs to pass to the feature statistic.
-        This overrides any fstat_kwargs passed in during class 
-        initialization.
-        :param knockoff_kwargs: Kwargs to pass to the knockoffs 
-        constructor. This overrides any knockoff_kwargs passed in during
-        class initialization.
-        :param shrinkage: Shrinkage method if estimating the covariance
-        matrix. Defaults to "LedoitWolf." Other options include "MLE"
-        and "glasso" (graphical lasso).
-        :param recycle_up_to: Three options:
-            - if None, does nothing.
-            - if an integer > 1, uses the first "recycle_up_to"
-            rows of X as the the first "recycle_up_to" rows of knockoffs.
-            - if a float between 0 and 1 (inclusive), interpreted
-            as the proportion of rows to recycle. 
-        For more on recycling, see https://arxiv.org/abs/1602.03574
+        Runs the knockoff filter; returns whether each feature was rejected.
+        
+        Parameters
+        ----------
+        X : np.ndarray
+            ``(n, p)``-shaped design matrix
+        y : np.ndarray
+            ``(n,)``-shaped response vector
+        Xk : np.ndarray
+            ``(n, p)``-shaped knockoff matrix. If None, this will construct
+            knockoffs using ``self.ksampler``.
+        mu : np.ndarray
+            ``(p, )``-shaped mean of the features. If None, this defaults to
+            the empirical mean of the features.
+        Sigma : np.ndarray
+            ``(p, p)``-shaped covariance matrix of the features. If None, this
+            is estimated using the ``shrinkage`` option. This is ignored for
+            fixed-X knockoffs.
+        groups : np.ndarray
+            For group knockoffs, a p-length array of integers from 1 to 
+            num_groups such that ``groups[j] == i`` indicates that variable `j`
+            is a member of group `i`. Defaults to None (regular knockoffs). 
+        fdr : float
+            The desired level of false discovery rate control.
+        fstat_kwargs : dict
+            Extra kwargs to pass to the feature statistic ``fit`` function,
+            excluding the required arguments.
+        knockoff_kwargs : dict
+            Extra kwargs for instantiating the knockoff sampler argument if
+            the ksampler argument is a string identifier. This can be
+            the empt dict for some identifiers such as "gaussian" or "fx",
+            but additional keyword arguments are required for complex samplers
+            such as the "metro" identifier. Defaults to {}
+        shrinkage : str
+            Shrinkage method if estimating the covariance matrix. Defaults to 
+            "LedoitWolf." Other options are "MLE" and "glasso" (graphical lasso).
+        recycle_up_to : int or float
+            Three options:
+                - if None, does nothing.
+                - if an integer > 1, uses the first "recycle_up_to"
+                rows of X as the the first "recycle_up_to" rows of knockoffs.
+                - if a float between 0 and 1 (inclusive), interpreted
+                as the proportion of rows to recycle. 
+            For more on recycling, see https://arxiv.org/abs/1602.03574
         """
 
         # Preliminaries - infer covariance matrix for MX
@@ -300,15 +330,15 @@ class KnockoffFilter:
         else:
             recycle_up_to = int(recycle_up_to)
         self.recycle_up_to = recycle_up_to
- 
+
         # Sample knockoffs
         if self.Xk is None:
             self.Xk = self.sample_knockoffs()
 
         # As an edge case, pass Ginv to debiased lasso
-        if 'debias' in self.fstat_kwargs:
-            if self.fstat_kwargs['debias']:
-                self.fstat_kwargs['Ginv'] = self.Ginv
+        if "debias" in self.fstat_kwargs:
+            if self.fstat_kwargs["debias"]:
+                self.fstat_kwargs["Ginv"] = self.Ginv
 
         # Feature statistics
         self.fstat.fit(
@@ -319,7 +349,7 @@ class KnockoffFilter:
         self.W = self.fstat.W
         self.score = self.fstat.score
         self.score_type = self.fstat.score_type
-        self.selected_flags = self.make_selections(self.W, fdr)
+        self.rejections = self.make_selections(self.W, fdr)
 
         # Return
-        return self.selected_flags
+        return self.rejections
