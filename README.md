@@ -1,6 +1,20 @@
 # Knockpy
 
-A python implementation of the knockoffs framework for variable selection. More docs to come!
+A python implementation of the knockoffs framework for variable selection.
+
+## Installation
+
+To install knockpy, first install choldate:
+``pip install git+git://github.com/jcrudy/choldate.git``
+Then, install knockpy using pip:
+``pip install knockpy``
+To use the (optional) kpytorch submodule, you will need to install [pytorch](https://pytorch.org/). If the installation fails on your system, please reach out to me and I'll try to help.
+
+## Basic Usage
+
+
+
+## Modularity
 
 ## To run tests
 

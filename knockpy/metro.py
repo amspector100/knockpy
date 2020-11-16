@@ -118,7 +118,9 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         if mu is None:
             mu = X.mean(axis=0)
         V = Sigma  # Improves readability slightly
+        cov_est = False
         if V is None:
+            cov_est = True
             V, Q = utilities.estimate_covariance(X, tol=1e-3, shrinkage=None)
 
         # Possibly learn order / active frontier
@@ -146,12 +148,15 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
             warnings.resetwarnings()
             np.fill_diagonal(mask, 1)
             # Handle case where the graph is entirely dense
-            if (mask == 0).sum() > 0:
+            if (mask == 0).sum() > 0 and not cov_est:
                 max_nonedge = np.max(np.abs(Q[mask == 0]))
                 if max_nonedge > 1e-2:
                     raise ValueError(
                         f"Precision matrix Q is not compatible with undirected graph (nonedge has value {max_nonedge})"
                     )
+            elif cov_est:
+                Q[mask == 0] = 0
+                V = utilities.chol2inv(Q)
 
         # Save order and inverse order
         self.order = order

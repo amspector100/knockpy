@@ -1,12 +1,12 @@
-Knockoff S-Matrix Generation
+Knockoff S-Matrix Generation API Reference
 =========================================
 
-API Rerefence: knockpy.mac
+MAC-Minimizing Knockoffs
 ------------------------------
 .. automodule:: knockpy.mac
   :members:
 
-API Rerefence: knockpy.mrc
+Minimum Reconstructability Knockoffs
 ------------------------------
 .. automodule:: knockpy.mrc
   :members:

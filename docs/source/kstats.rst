@@ -1,7 +1,5 @@
-Knockoff Feature Statistics
+Knockoff Feature Statistics API Reference
 =========================================
 
-API Rerefence
---------------------
 .. automodule:: knockpy.knockoff_stats
   :members:

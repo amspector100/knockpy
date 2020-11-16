@@ -1,8 +1,6 @@
-Knockoff Samplers
+Knockoff Sampler API Reference
 =========================================
 
-API Rerefence
---------------------
 .. automodule:: knockpy.knockoffs
   :members:
 

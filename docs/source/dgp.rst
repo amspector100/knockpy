@@ -1,8 +1,7 @@
-Data Sampling and Utilities
+Utilities API Reference
 =========================================
 
-API Rerefence
---------------------
+
 .. automodule:: knockpy.dgp
   :members:
 

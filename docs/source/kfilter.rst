@@ -1,7 +1,5 @@
-Knockoff Filter
+Knockoff Filter API Reference
 =========================================
 
-API Rerefence
---------------------
 .. automodule:: knockpy.knockoff_filter
   :members:
