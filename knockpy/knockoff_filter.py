@@ -37,7 +37,7 @@ class KnockoffFilter:
         - 'metro': Generic metropolized knockoff sampler.
         - 'artk': t-tailed Markov chain
         - 'blockt': Blocks of t-distributed 
-        - 'ising': Discrete gibbs grid
+        - 'gibbs_grid': Discrete gibbs grid
         An alternative to specifying the ksampler is to simply pass
         in a knockoff matrix during the ``forward`` call.
     fstat_kwargs : dict
@@ -192,12 +192,8 @@ class KnockoffFilter:
                 self.ksampler = metro.MetropolizedKnockoffSampler(
                     **args, mu=self.mu, **self.knockoff_kwargs
                 )
-            elif self.knockoff_type == "ising":
-                if "gibbs_graph" not in self.knockoff_kwargs:
-                    raise ValueError(
-                        f"For ising knockoffs, must provide gibbs graph as knockoff_kwarg"
-                    )
-                self.ksampler = metro.IsingKnockoffSampler(
+            elif self.knockoff_type == "gibbs_grid":
+                self.ksampler = metro.GibbsGridSampler(
                     **args, mu=self.mu, **self.knockoff_kwargs
                 )
             else:

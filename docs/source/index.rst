@@ -53,13 +53,14 @@ Given a data-matrix `X` and a response vector `y`, knockpy makes it easy to use 
 	)
 	rejections = kfilter.forward(X=X, y=y, Sigma=Sigma)
 
-Most importantly, knockpy is built to be modular, so researchers and analysts can easily layer functionality on top of it. See [usage] for more details!
+Most importantly, knockpy is built to be modular, so researchers and analysts can easily layer functionality on top of it. See usage for more details!
 
 
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
 
+   usage.ipyb
    kfilter
    ksamplers
    kstats

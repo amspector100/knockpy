@@ -527,7 +527,7 @@ def coords2num(l, w, gridwidth=10):
     return int(w * gridwidth + l)
 
 
-def Q2cliques(Q):
+def graph2cliques(Q):
     """
     Turns graph Q of connections into binary cliques for Gibbs grid
     """
@@ -543,67 +543,88 @@ def Q2cliques(Q):
         clique_dict[i] = list(set(clique_dict[i]))
     return clique_dict
 
-
-def sample_gibbs(
-    n, p, gibbs_graph=None, method="ising", temp=1, num_iter=15, K=20, max_val=2.5,
-):
-    """ Samples from a Gibbs measure on a square grid using a Gibbs sampler."""
-
-    # Create buckets from (approximately) -max_val to max_val
-    buckets = np.arange(-K + 1, K + 1, 2) / (K / max_val)
-
+def construct_gibbs_grid(n, p, temp=1):
+    """
+    Creates gridlike ``gibbs_graph`` parameter for ``sample_gibbs``.
+    See ``sample_gibbs``.
+    """
     # Infer dimensionality
     gridwidth = int(np.sqrt(p))
     variables = set(list(range(p)))
 
-    # Log potentials and cliques
+    # Generate
+    gibbs_graph = np.zeros((p, p))  
+    for i1 in range(p):
+        lc, wc = num2coords(i1, gridwidth=gridwidth)
+        for ladd in [-1, 1]:
+            i2 = coords2num(lc + ladd, wc, gridwidth=gridwidth)
+            if i2 != -1:
+                sign = 1 - 2 * np.random.binomial(1, 0.5)
+                gibbs_graph[i1, i2] = temp * sign
+                gibbs_graph[i2, i1] = temp * sign
+        for wadd in [-1, 1]:
+            i2 = coords2num(lc, wc + wadd, gridwidth=gridwidth)
+            if i2 != -1:
+                sign = 1 - 2 * np.random.binomial(1, 0.5)
+                gibbs_graph[i1, i2] = temp * sign
+                gibbs_graph[i2, i1] = temp * sign
+
+    return gibbs_graph
+
+def sample_gibbs(
+    n, p, gibbs_graph=None, temp=1, num_iter=15, K=20, max_val=2.5,
+):
+    """ Samples from a discrete Gibbs measure using a gibbs sampler.
+
+    The joint likelihood for the `p`-dimensional data X1 through Xp
+    is the product of all terms of the following form: 
+        ```np.exp(-1*gibbs_graph[i,j]*np.abs(Xi - Xj))```
+    where `gibbs_graph` is assumed to be symmetric (and is usually
+    sparse). Each feature takes values on an evenly spaced grid from
+    ``-1*max_val`` to ``max_val`` with ``K`` values.
+
+    Parameters
+    ----------
+    n : int
+        How many data points to sample
+    p : int
+        Dimensionality of the data
+    gibbs_graph : np.ndarray
+        A symmetric ``(p, p)``-shaped array. See likelihood equation.
+        By default, this is corresponds to an undirected graphical
+        model with a square grid (like an Ising model) with nonzero
+        entries set to 1 or -1 with equal probability.
+    temp : float
+        Governs the strength of interactions between features---see 
+        the likelihood equation.
+    num_iter : int
+        Number of iterations in the Gibbs sampler; defaults to 15.
+    K : int
+        Number of discrete values each sampled feature can take.
+    max_val : float
+        The maximum absolute value each feature can take.
+
+    Returns
+    -------
+    X : np.ndarray
+        ``(n, p)``-shaped array of data
+    gibbs_graph : np.ndarray
+        The generated `gibbs_graph`.
+    """
+    # Create buckets from (approximately) -max_val to max_val
+    buckets = np.arange(-K + 1, K + 1, 2) / (K / max_val)
+
+    # Log potentials generator
     def log_potential(X1, X2=None, temp=1):
         if X2 is None:
             X2 = X1[:, 1]
             X1 = X1[:, 0]
         return -1 * temp * np.abs(X1 - X2)
 
-    # Construct cliques
-    clique_dict = {i: [] for i in range(p)}
+    # Construct cliques from gibbs_graph
     if gibbs_graph is None:
-        print(f"Generating new gibbs_graph parameter, method={method}...")
-        gibbs_graph = np.zeros((p, p))  # The UGM
-        for i1 in range(p):
-            # For ising model
-            if method == "ising":
-                lc, wc = num2coords(i1, gridwidth=gridwidth)
-                for ladd in [-1, 1]:
-                    i2 = coords2num(lc + ladd, wc, gridwidth=gridwidth)
-                    if i2 != -1:
-                        clique_dict[i1].append((i1, i2))
-                        sign = 1 - 2 * np.random.binomial(1, 0.5)
-                        gibbs_graph[i1, i2] = temp * sign
-                        gibbs_graph[i2, i1] = temp * sign
-                for wadd in [-1, 1]:
-                    i2 = coords2num(lc, wc + wadd, gridwidth=gridwidth)
-                    if i2 != -1:
-                        clique_dict[i1].append((i1, i2))
-                        sign = 1 - 2 * np.random.binomial(1, 0.5)
-                        gibbs_graph[i1, i2] = temp * sign
-                        gibbs_graph[i2, i1] = temp * sign
-            # Otherwise method must be an integer:
-            # we randomly connect this variable method others
-            else:
-                choices = list(variables.difference(set([i1])))
-                connections = np.random.choice(choices, method, replace=False)
-                for i2 in connections:
-                    clique_dict[i1].append((i1, i2))
-                    clique_dict[i2].append((i2, i1))
-                    sign = 1 - 2 * np.random.binomial(1, 0.5)
-                    gibbs_graph[i1, i2] = temp * sign
-                    gibbs_graph[i2, i1] = temp * sign
-        # Get rid of duplicates
-        for i in range(p):
-            clique_dict[i] = list(set(clique_dict[i]))
-    # Construct cliques from Q
-    else:
-        print(f"Using old gibbs_graph parameter, method={method}...")
-        clique_dict = Q2cliques(gibbs_graph)
+        gibbs_graph = construct_gibbs_grid(n=n, p=p, temp=temp)
+    clique_dict = graph2cliques(gibbs_graph)
 
     # Initialize
     X = np.random.randn(n, p, 1)
@@ -643,7 +664,25 @@ def sample_gibbs(
 class DGP:
     """
     Creates a (random) data-generating process for a design matrix X
-    and a response y. Usually the X-data is Gaussian, but not always. 
+    and a response y. If the parameters are not specified, they will
+    be randomly generated during the ``sample_data`` call. 
+
+    Parameters
+    ----------
+    mu : np.ndarray
+        ``(p,)``-shaped mean vector for X data
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix for X data
+    invSigma : np.ndarray
+        ``(p, p)``-shaped precision matrix for X data
+    beta : np.ndarray
+        coefficients used to generate y from X in a single 
+    index or sparse additive model.
+    gibbs_graph : np.ndarray
+        ``(p, p)``-shaped matrix of coefficients for gibbs
+        grid method.
+
+
     :param mu: mean vector for X data
     :param Sigma: covariance matrix for X data
     :param invSigma: precision matrix for X data
@@ -653,12 +692,20 @@ class DGP:
     generated in the sample_data method.
     """
 
-    def __init__(self, mu=None, Sigma=None, invSigma=None, beta=None):
+    def __init__(
+            self, 
+            mu=None,
+            Sigma=None, 
+            invSigma=None,
+            beta=None,
+            gibbs_graph=None
+        ):
 
         self.mu = mu
         self.Sigma = Sigma
         self.invSigma = invSigma
         self.beta = beta
+        self.gibbs_graph = gibbs_graph
 
     def sample_data(
         self,
@@ -676,7 +723,6 @@ class DGP:
         sign_prob=0.5,
         iid_signs=True,
         corr_signals=False,
-        gibbs_graph=None,
         **kwargs,
     ):
         """ Creates a random covariance matrix using method
@@ -700,7 +746,7 @@ class DGP:
         generate the response. (If 'binomial', uses logistic link fn). 
         :param kwargs: kwargs to the graph generator (e.g. AR1 kwargs).
         returns: X, y, beta, Q, corr_matrix
-        Note that Q will be a precision matrix unless x_dist=='ising' 
+        Note that Q will be a precision matrix unless x_dist=='grid' 
         or 'gibbs': in this case, Q will be the UGM structure of the graph
         (corresponding to the gibbs_graph parameter).
         """
@@ -709,19 +755,19 @@ class DGP:
         if self.mu is None:
             self.mu = np.zeros(p)
 
-        # Ising / Gibbs Sampling
+        # grid / Gibbs Sampling
         if x_dist == "gibbs":
             # Sample X, Q
-            X, gibbs_graph = sample_gibbs(
-                n=n, p=p, gibbs_graph=gibbs_graph, method=method, **kwargs
+            self.X, self.gibbs_graph = sample_gibbs(
+                n=n, p=p, gibbs_graph=self.gibbs_graph, **kwargs
             )
 
             # Estimate cov matrix
             if self.Sigma is None:
                 self.Sigma, _ = utilities.estimate_covariance(
-                    X, tol=1e-6, shrinkage=None
+                    self.X, tol=1e-6, shrinkage=None
                 )
-            self.invSigma = gibbs_graph
+            self.invSigma = None
 
         # Create covariance matrix
         if self.invSigma is None and self.Sigma is None:
@@ -795,27 +841,25 @@ class DGP:
         if x_dist == "gibbs":
             pass
         elif x_dist == "gaussian":
-            X = stats.multivariate_normal.rvs(mean=self.mu, cov=self.Sigma, size=n)
+            self.X = stats.multivariate_normal.rvs(mean=self.mu, cov=self.Sigma, size=n)
         elif x_dist == "ar1t":
             if str(method).lower() != "ar1":
                 raise ValueError(
                     f"For x_dist={x_dist}, method ({method}) should equal 'ar1'"
                 )
-            X = sample_ar1t(n=n, rhos=np.diag(self.Sigma, 1), df_t=df_t)
+            self.X = sample_ar1t(n=n, rhos=np.diag(self.Sigma, 1), df_t=df_t)
         elif x_dist == "blockt":
             blocks, _ = cov2blocks(self.Sigma)
-            X = sample_block_tmvn(blocks, n=n, df_t=df_t)
+            self.X = sample_block_tmvn(blocks, n=n, df_t=df_t)
         else:
             raise ValueError(
                 f"x_dist must be one of 'gaussian', 'gibbs', 'ar1t', 'blockt'"
             )
 
         # Sample y
-        y = sample_response(X=X, beta=self.beta, y_dist=y_dist, cond_mean=cond_mean)
-
-        # Save and return output
-        self.X = X
-        self.y = y
+        self.y = sample_response(
+            X=self.X, beta=self.beta, y_dist=y_dist, cond_mean=cond_mean
+        )
         return self.X, self.y, self.beta, self.invSigma, self.Sigma
 
 

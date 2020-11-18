@@ -17,7 +17,7 @@ class TestSampleData(unittest.TestCase):
 
         p = 50
         dgprocess = dgp.DGP()
-        X, y, beta, Q, corr_matrix = dgprocess.sample_data(p=p, y_dist="binomial")
+        X, y, beta, Q, Sigma = dgprocess.sample_data(p=p, y_dist="binomial")
 
         # Test outputs are binary
         y_vals = np.unique(y)
@@ -252,7 +252,7 @@ class TestSampleData(unittest.TestCase):
         diag_diff = np.mean(np.abs(np.diag(V) - 1))
         self.assertTrue(
             diag_diff < 1e-4,
-            f"Partial corr corr_matrix={V} for rho={rho} is not a correlation matrix",
+            f"Partial corr Sigma={V} for rho={rho} is not a correlation matrix",
         )
         pairwise_corr = V[0, 1]
         expected = -1 / (p - 1)
@@ -271,7 +271,7 @@ class TestSampleData(unittest.TestCase):
         diag_diff = np.mean(np.abs(np.diag(V) - 1))
         self.assertTrue(
             diag_diff < 1e-4,
-            f"Factor corr_matrix={V} for rank={rank} is not a correlation matrix",
+            f"Factor Sigma={V} for rank={rank} is not a correlation matrix",
         )
         mineig = np.linalg.eigh(V)[0].min()
 
@@ -591,10 +591,12 @@ class TestSampleData(unittest.TestCase):
         # Check that we get a decent correlation matrix
         # with the right type of Q matrix
         np.random.seed(110)
-        n = 50000
+        n = 150000
         p = 9
         dgprocess = dgp.DGP()
-        X, _, _, Q, V = dgprocess.sample_data(n=n, p=p, method="ising", x_dist="gibbs",)
+        X,_,_,_,V = dgprocess.sample_data(n=n, p=p, method="ising", x_dist="gibbs",)
+        gibbs_graph = dgprocess.gibbs_graph
+
         # Mean test
         np.testing.assert_almost_equal(
             X.mean(),
@@ -604,42 +606,32 @@ class TestSampleData(unittest.TestCase):
         )
         # Test Q
         expected_edges = 4 * p - (4 * np.sqrt(p))
-        num_edges = (Q != 0).sum()
+        num_edges = (gibbs_graph != 0).sum()
         self.assertTrue(
             num_edges == expected_edges,
-            f"Ising gibbs dist has unexpected number of edges ({num_edges}, expected {expected_edges})",
+            f"Gibbs grid dist has unexpected number of edges ({num_edges}, expected {expected_edges})",
         )
-        # Check the non-grid-based method
-        dgprocess = dgp.DGP()
-        X, _, _, Q, V = dgprocess.sample_data(
-            n=n, p=p, method=3, x_dist="gibbs", y_dist="binomial",
+        # Check consistency of gibbs_graph when passed in
+        dgprocess2 = dgp.DGP(gibbs_graph=gibbs_graph)
+        X2,_,_,_,V2 = dgprocess2.sample_data(
+            n=n, p=p, x_dist="gibbs", y_dist="binomial"
         )
-        # Mean test
-        np.testing.assert_almost_equal(
-            X.mean(),
-            0,
-            decimal=1,
-            err_msg=f"Gibbs (non-ising) sampler has unexpected mean (expected 0, got {X.mean()})",
-        )
-        # Test consistency of Q
-        dgprocess = dgp.DGP()
-        X2, _, _, Q2, V2 = dgprocess.sample_data(
-            n=n, p=p, gibbs_graph=Q, method=3, x_dist="gibbs", y_dist="binomial"
-        )
+        gibbs_graph2 = dgprocess2.gibbs_graph
         np.testing.assert_array_almost_equal(
-            Q,
-            Q2,
+            gibbs_graph,
+            gibbs_graph2,
             decimal=5,
-            err_msg=f"Gibbs (non-ising) sampler is not consistent when Q passed in",
+            err_msg=f"Gibbs (non-ising) sampler is not consistent when gibbs_graph passed in",
         )
+        error = np.abs(V - V2).mean()
         self.assertTrue(
-            np.abs(V - V2).mean() < 0.01,
-            msg=f"Gibbs (non-ising) data is not consistent when Q passed in",
+            error < 0.01,
+            msg=f"Gibbs emp. covs are inconsistent (error {error} > 0.01) for same gibbs_graph",
         )
 
         # Test this works without errors for n < p
         dgprocess = dgp.DGP()
-        _ = dgprocess.sample_data(n=5, p=p, method=3, x_dist="gibbs", y_dist="binomial")
+        _ = dgprocess.sample_data(n=5, p=p, x_dist="gibbs", y_dist="binomial")
 
     def test_xdist_error(self):
 

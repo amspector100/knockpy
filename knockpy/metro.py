@@ -1134,7 +1134,7 @@ class BlockTSampler(KnockoffSampler):
         return self.Xk
 
 
-class IsingKnockoffSampler(KnockoffSampler):
+class GibbsGridSampler(KnockoffSampler):
     def __init__(self, X, gibbs_graph, Sigma, Q=None, mu=None, max_width=6, **kwargs):
         """
         :param X: design matrix

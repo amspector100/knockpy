@@ -487,7 +487,7 @@ class TestIsing(unittest.TestCase):
         V = np.loadtxt(f"{file_directory}/test_covs/vout{p}.txt")
 
         # Initialize sampler
-        metro_sampler = metro.IsingKnockoffSampler(
+        metro_sampler = metro.GibbsGridSampler(
             X=X, gibbs_graph=gibbs_graph, mu=mu, Sigma=V, max_width=2,
         )
 
@@ -551,7 +551,7 @@ class TestIsing(unittest.TestCase):
         )
 
         # Initialize sampler
-        metro_sampler = metro.IsingKnockoffSampler(
+        metro_sampler = metro.GibbsGridSampler(
             X=X,
             gibbs_graph=gibbs_graph,
             mu=mu,
@@ -589,7 +589,7 @@ class TestIsing(unittest.TestCase):
         )
 
         # Initialize sampler
-        metro_sampler = metro.IsingKnockoffSampler(
+        metro_sampler = metro.GibbsGridSampler(
             X=X, gibbs_graph=gibbs_graph, mu=mu, Sigma=V, Q=Q, max_width=2,
         )
 
