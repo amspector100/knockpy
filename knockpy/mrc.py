@@ -12,8 +12,25 @@ from .utilities import calc_group_sizes, preprocess_groups
 ### Coordinate Descent Solvers
 def mvr_loss(Sigma, S, smoothing=0):
     """ 
-    Computes trace of inverse of feature-knockoff
-    precision matrix using numpy (no backprop)
+    Computes minimum variance-based reconstructability
+    loss for knockoffs, e.g., the trace of the feature-knockoff
+    precision matrix.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    S : np.ndarray
+        ``(p, p)``-shaped S-matrix used to generate knockoffs
+    smoothing : float
+        Add ``smoothing`` to all eigenvalues of the feature-knockoff
+        precision matrix before inverting to avoid numerical
+        instability. Defaults to 0.
+
+    Returns
+    -------
+    loss : float
+        The MVR loss for Sigma and S.
     """
 
     # Inverse of eigenvalues
@@ -24,8 +41,25 @@ def mvr_loss(Sigma, S, smoothing=0):
 
 def mmi_loss(Sigma, S, smoothing=0):
     """
-    Computes (smoothed) determinant of feature-knockoff covariance.
-    Does not support group knockoffs as of yet.
+    Computes the log determinant of the feature-knockoff covariance
+    matrix, which is inversely related to the mutual information
+    between X and XK.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    S : np.ndarray
+        ``(p, p)``-shaped S-matrix used to generate knockoffs
+    smoothing : float
+        Add ``smoothing`` to all eigenvalues of the feature-knockoff
+        precision matrix before taking the log determinant
+        to avoid numerical instability. Defaults to 0.
+
+    Returns
+    -------
+    loss : float
+        The MMI loss for Sigma and S.
     """
     p = Sigma.shape[0]
     detG = np.log(np.linalg.det(2 * Sigma - S + smoothing * np.eye(p)))
@@ -37,15 +71,30 @@ def solve_mvr(
     Sigma, tol=1e-5, verbose=False, num_iter=10, smoothing=0, rej_rate=0, converge_tol=1
 ):
     """
-    Uses a coordinate-descent algorithm to find the solution to the smoothed
-    MVR problem. 
-    :param Sigma: p x p covariance matrix
-    :param tol: Minimum eigenvalue of 2Sigma - S and S
-    :param num_iter: Number of coordinate descent iterations
-    :param rej_rate: Expected proportion of rejections for knockoffs under the
-    metropolized knockoff sampling framework.
-    :param verbose: if true, will give progress reports
-    :param smoothing: computes smoothed mvr loss
+    Computes S-matrix used to generate minimum variance-based
+    reconstructability knockoffs using coordinate descent.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    verbose : bool
+        If True, prints updates during optimization.
+    num_iter : int
+        The number of coordinate descent iterations. Defaults to 10.
+    smoothing : float
+        Add ``smoothing`` to all eigenvalues of the feature-knockoff
+        precision matrix before inverting to avoid numerical
+        instability. Defaults to 0.
+    converge_tol : float
+        A parameter specifying the criteria for convergence.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
 
     # Initial constants
@@ -149,30 +198,34 @@ def solve_mvr(
     S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
     return S
 
-
-def solve_ciknock(
-    Sigma, tol=1e-5, num_iter=10,
-):
-    # Compute vanilla S_CI
-    S = 1 / (np.diag(np.linalg.inv(Sigma)))
-    S = np.diag(S)
-    # Ensure validity of solution
-    S = utilities.shift_until_PSD(S, tol=tol)
-    S, _ = utilities.scale_until_PSD(Sigma, S, tol=tol, num_iter=num_iter)
-    return S
-
-
 def solve_mmi(
     Sigma, tol=1e-5, verbose=False, num_iter=10, smoothing=0, converge_tol=1e-4
 ):
     """
-    Uses a coordinate-descent algorithm to find the solution to the
-    minimum mutual information. 
-    :param Sigma: p x p covariance matrix
-    :param tol: Minimum eigenvalue of 2Sigma - S and S
-    :param num_iter: Number of coordinate descent iterations
-    :param verbose: if true, will give progress reports
-    :param smoothing: computes smoothed mmi loss
+    Computes S-matrix used to generate minimum mutual information
+    knockoffs using coordinate descent.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    verbose : bool
+        If True, prints updates during optimization.
+    num_iter : int
+        The number of coordinate descent iterations. Defaults to 10.
+    smoothing : float
+        Add ``smoothing`` to all eigenvalues of the feature-knockoff
+        precision matrix before inverting to avoid numerical
+        instability. Defaults to 0.
+    converge_tol : float
+        A parameter specifying the criteria for convergence.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
 
     if smoothing > 0:
@@ -237,4 +290,40 @@ def solve_mmi(
     # Ensure validity of solution
     S = utilities.shift_until_PSD(S, tol=tol)
     S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
+    return S
+
+def solve_ciknock(
+    Sigma, tol=1e-5, num_iter=10,
+):
+    """
+    Computes S-matrix used to generate conditional independence
+    knockoffs.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    num_iter : int
+        The number of iterations in the binary search to ensure
+        S is feasible.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
+
+    Notes
+    -----
+    When the S-matrix corresponding to conditional independence knockoffs
+    is not feasible, this computes that S matrix and then does a binary 
+    search to find the maximum gamma such that gamma * S is feasible.
+    """
+    # Compute vanilla S_CI
+    S = 1 / (np.diag(np.linalg.inv(Sigma)))
+    S = np.diag(S)
+    # Ensure validity of solution
+    S = utilities.shift_until_PSD(S, tol=tol)
+    S, _ = utilities.scale_until_PSD(Sigma, S, tol=tol, num_iter=num_iter)
     return S

@@ -151,7 +151,9 @@ class TestSDP(CheckSMatrix):
         # Test non-group SDP first
         n = 200
         p = 50
-        X, _, _, _, corr_matrix, groups = dgp.daibarber2016_graph(n=n, p=p, gamma=0.3)
+        X, _, _, _, corr_matrix, groups = dgp.block_equi_graph(
+            n=n, p=p, gamma=0.3
+        )
 
         # S matrix
         trivial_groups = np.arange(0, p, 1) + 1
@@ -162,7 +164,7 @@ class TestSDP(CheckSMatrix):
             S_triv,
             np.eye(p),
             decimal=2,
-            err_msg="solve_group_SDP does not produce optimal S matrix (daibarber graphs)",
+            err_msg="solve_group_SDP does not produce optimal S matrix (blockequi graphs)",
         )
         self.check_S_properties(corr_matrix, S_triv, trivial_groups)
 
@@ -176,12 +178,12 @@ class TestSDP(CheckSMatrix):
             S_triv2,
             np.eye(p),
             decimal=2,
-            err_msg="solve_group_SDP does not produce optimal S matrix (daibarber graphs)",
+            err_msg="solve_group_SDP does not produce optimal S matrix (blockequi graphs)",
         )
         self.check_S_properties(corr_matrix, S_triv2, trivial_groups)
 
         # Test slightly harder case
-        _, _, _, _, expected_out, _ = dgp.daibarber2016_graph(n=n, p=p, gamma=0)
+        _, _, _, _, expected_out, _ = dgp.block_equi_graph(n=n, p=p, gamma=0)
         ksampler = knockoffs.GaussianSampler(
             X=X, Sigma=corr_matrix, groups=groups, verbose=False, method="sdp"
         )
@@ -190,7 +192,7 @@ class TestSDP(CheckSMatrix):
             S_harder,
             expected_out,
             decimal=2,
-            err_msg="solve_group_SDP does not produce optimal S matrix (daibarber graphs)",
+            err_msg="solve_group_SDP does not produce optimal S matrix (blockequi graphs)",
         )
         self.check_S_properties(corr_matrix, S_harder, groups)
 
@@ -208,7 +210,7 @@ class TestSDP(CheckSMatrix):
             S_harder_ASDP,
             expected_out,
             decimal=2,
-            err_msg="solve_group_ASDP does not produce optimal S matrix (daibarber graphs)",
+            err_msg="solve_group_ASDP does not produce optimal S matrix (blockequi graphs)",
         )
         self.check_S_properties(corr_matrix, S_harder_ASDP, groups)
 
@@ -600,7 +602,7 @@ class TestMRCSolvers(CheckSMatrix):
         # 1. Block equicorrelated
         dgprocess = dgp.DGP()
         _, _, _, _, Vblock = dgprocess.sample_data(
-            p=p, method="daibarber2016", gamma=0, rho=rho, group_size=2
+            p=p, method="blockequi", gamma=0, rho=rho, block_size=2
         )
         S_CI = mrc.solve_ciknock(Vblock)
         np.testing.assert_almost_equal(
@@ -612,7 +614,7 @@ class TestMRCSolvers(CheckSMatrix):
         # 2. Equicorelated
         dgprocess = dgp.DGP()
         _, _, _, _, V = dgprocess.sample_data(
-            p=p, method="daibarber2016", gamma=1, rho=rho
+            p=p, method="blockequi", gamma=1, rho=rho
         )
         S_CI = mrc.solve_ciknock(V)
         np.testing.assert_almost_equal(
@@ -626,7 +628,7 @@ class TestBlockdiagApprx(CheckSMatrix):
 		final blocks do not exceed the specified block size."""
 
         p = 120
-        for method in ["daibarber2016", "ar1", "ver", "qer"]:
+        for method in ["blockequi", "ar1", "ver", "qer"]:
             dgprocess = dgp.DGP()
             _, _, _, _, V = dgprocess.sample_data(p=p, method=method)
             for max_block in [3, 12, 15, 54, 76]:
@@ -647,7 +649,7 @@ class TestBlockdiagApprx(CheckSMatrix):
         groups = np.arange(1, p + 1, 1)
         dgprocess = dgp.DGP()
         _, _, _, _, V = dgprocess.sample_data(
-            p=p, method="daibarber2016", gamma=gamma, rho=rho
+            p=p, method="blockequi", gamma=gamma, rho=rho
         )
 
         for method in ["mvr", "mmi", "sdp"]:
@@ -776,18 +778,12 @@ class TestKnockoffGen(CheckValidKnockoffs):
             out2 == "sdp", "parse method fails to return SDP for grouped knockoffs"
         )
 
-        # Otherwise ASDP
-        p = 1001
-        groups = np.ones(p)
-        out2 = smatrix.parse_method(None, groups, p)
-        self.assertTrue(out2 == "asdp", "parse method fails to return asdp for large p")
-
     def test_error_raising(self):
 
         # Generate data
         n = 100
         p = 100
-        X, _, _, _, corr_matrix, groups = dgp.daibarber2016_graph(
+        X, _, _, _, corr_matrix, groups = dgp.block_equi_graph(
             n=n, p=p, gamma=1, rho=0.8
         )
         S_bad = np.eye(p)
@@ -875,7 +871,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
                 for method in ["mvr", "sdp"]:
 
                     mu = 10 * np.random.randn(p)
-                    X, _, _, _, corr_matrix, _ = dgp.daibarber2016_graph(
+                    X, _, _, _, corr_matrix, _ = dgp.block_equi_graph(
                         n=n, p=p, gamma=gamma, rho=rho, mu=mu
                     )
 
@@ -884,13 +880,13 @@ class TestKnockoffGen(CheckValidKnockoffs):
                         X,
                         mu=mu,
                         Sigma=corr_matrix,
-                        msg=f"daibarber graph, rho = {rho}, gamma = {gamma}",
+                        msg=f"blockequi graph, rho = {rho}, gamma = {gamma}",
                     )
 
                     # Check validity for estimation
                     self.check_valid_mxknockoffs(
                         X,
-                        msg=f"ESTIMATED daibarber graph, rho = {rho}, gamma = {gamma}",
+                        msg=f"ESTIMATED blockequi graph, rho = {rho}, gamma = {gamma}",
                     )
 
     def test_FX_knockoff_dist(self):
@@ -902,7 +898,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
             for gamma in [0.5, 1]:
                 for method in ["mvr", "sdp"]:
                     # X values
-                    X, _, _, _, corr_matrix, _ = dgp.daibarber2016_graph(
+                    X, _, _, _, corr_matrix, _ = dgp.block_equi_graph(
                         n=n, p=p, gamma=gamma, rho=rho
                     )
                     # S matrix
@@ -927,7 +923,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
                     # Test G has correct structure
                     msg = f"Feature-knockoff cov matrix has incorrect values "
-                    msg += f"for daibarber graph, FX knockoffs, rho = {rho}, gamma = {gamma}"
+                    msg += f"for blockequi graph, FX knockoffs, rho = {rho}, gamma = {gamma}"
                     np.testing.assert_array_almost_equal(G_hat, G, 5, msg)
 
     def test_scaling_consistency(self):

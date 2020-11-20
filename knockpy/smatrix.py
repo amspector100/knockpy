@@ -8,26 +8,32 @@ from . import constants
 
 
 def parse_method(method, groups, p):
-    """ Decides which method to use to create the 
-    knockoff S matrix """
+    """ Decides which method to use to create the knockoff S matrix """
     if method is not None:
         return method
     if np.all(groups == np.arange(1, p + 1, 1)):
         method = "mvr"
     else:
-        if p > 1000:
-            method = "asdp"
-        else:
-            method = "sdp"
+        method = "sdp"
     return method
 
 
 def divide_computation(Sigma, max_block):
     """
     Approximates Sigma as a block-diagonal matrix.
-    :param Sigma: Covariance matrix.
-    :param max_size: Maximum size of a block in the 
-    covariance matrix.
+    
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    max_size : int
+        Maximum size of a block in the block-diagonal approximation.
+
+    Returns
+    -------
+    blocks : np.ndarray
+        ``(p, )``-shaped numpy array where ``blocks[i] == j`` indicates
+        that variable ``i`` belongs to block ``j``. 
     """
 
 
@@ -116,24 +122,37 @@ def compute_smatrix(
     **kwargs,
 ):
     """
-    Wraps a variety of S-matrix generation functions. 
-    For mvr, mmi, and sdp losses, this uses a block-diagonal
+    Wraps a variety of S-matrix generation functions.
+    For mvr, mmi, and sdp methods, this uses a block-diagonal
     approximation of Sigma if the dimension of Sigma exceeds
     max_block.
-    :param Sigma: covariance matrix
-    :param groups: groups for group knockoffs
-    :param method: Method for constructing
-    S-matrix. One of mvr, mmi, sdp, equicorrelated, ci 
-    (conditional independence).
-    :param solver: Method for solving mrc knockoffs.
-    One of 'cd' (coordinate descent) or 'psgd'
-    (projected gradient descent).
-    :param max_block: The maximum block in the block-diagonal
-    approximation of Sigma.
-    :param num_processes: Number of parallel processes to use
-    if Sigma is approximated as a block-diagonal matrix. 
-    :param **kwargs: kwargs to one of the downstream
-    functions.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+    ``(p, p)``-shaped covariance matrix of X
+    groups : np.ndarray
+        For group knockoffs, a p-length array of integers from 1 to 
+        num_groups such that ``groups[j] == i`` indicates that variable `j`
+        is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
+    method : str
+        Method for constructing S-matrix. One of mvr, mmi, sdp, equicorrelated, ci.
+    solver : str
+        Method for solving mrc knockoffs. One of 'cd' (coordinate descent) 
+        or 'psgd' (projected gradient descent). Coordinate descent is 
+        highly recommended.
+    max_block : int
+        The maximum size of a block in a block-diagonal approximation of Sigma.
+    num_processes : int
+        Number of parallel process to use if Sigma is approximated as
+        a block-diagonal matrix. 
+    kwargs : dict
+        kwargs to pass to one of the wrapped S-matrix solvers.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
     # If S in kwargs, just return S (important
     # for chaining methods in metro sampling)

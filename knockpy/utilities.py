@@ -10,8 +10,7 @@ from functools import partial
 ### Group helpers
 def preprocess_groups(groups):
     """
-    Maps the m unique elements of a "groups" array to the integers from 1 to m.
-    :param groups: A p-dimensional numpy array with m unique elements
+    Maps the m unique elements of a 1D "groups" array to the integers from 1 to m.
     """
     unique_vals = np.unique(groups)
     conversion = {unique_vals[i]: i for i in range(unique_vals.shape[0])}
@@ -21,12 +20,6 @@ def preprocess_groups(groups):
 def fetch_group_nonnulls(non_nulls, groups):
     """ 
     Combines feature-level null hypotheses into group-level hypothesis.
-    :param non_nulls: a p-length array of coefficients where 
-    a 0 indicates that a variable is null
-    :param groups: a p-length array indicating group membership,
-    with m groups (corresponding to ints ranging from 1 to m)
-    :returns: a m-length array of 1s and 0s where 0s correspond
-    to nulls.
     """
 
     if not isinstance(non_nulls, np.ndarray):
@@ -47,9 +40,20 @@ def fetch_group_nonnulls(non_nulls, groups):
 
 def calc_group_sizes(groups):
     """
+    Given a list of groups, finds the sizes of the groups.
+    
+    Parameters
+    ----------
+    groups : np.ndarray
+        ``(p, )``-shaped array which takes m integer values from
+        1 to m. If ``groups[i] == j``, this indicates that coordinate
+        ``i`` belongs to group ``j``.
     :param groups: p-length array of integers between 1 and m, 
-    where m <= p
-    returns: m-length array of group sizes 
+    
+    Returns
+    -------
+    sizes : np.ndarray
+        ``(m, )``-length array of group sizes.
     """
     if not isinstance(groups, np.ndarray):
         groups = np.array(groups)
@@ -98,16 +102,15 @@ def shift_until_PSD(M, tol):
 
 def scale_until_PSD(Sigma, S, tol, num_iter):
     """ 
-    Perform a binary search to find the largest gamma such that 2*Sigma - gamma*S is PSD as well.
-
-    :param Sigma: A p x p numpy array, likely a covariance matrix.
-    :param S: a p x p numpy array. 
-    :param tol: The minimum eigenvalue for 2*Sigma - S
-    :param num_iter: The number of iterations in the binary search.
-
-    We let gamma in [0,1] denote the optimal value from the binary search.
-
-    returns: gamma * S, gamma
+    Perform a binary search to find the largest ``gamma`` such that the minimum
+    eigenvalue of ``2*Sigma - gamma*S`` is at least ``tol``.
+    
+    Returns
+    -------
+    gamma * S : np.ndarray
+        See description.
+    gamma : float
+        See description
     """
 
     # Raise value error if S is not PSD
@@ -137,11 +140,6 @@ def scale_until_PSD(Sigma, S, tol, num_iter):
 def permute_matrix_by_groups(groups):
     """
     Create indices which permute a (covariance) matrix according to a list of groups.
-    :param groups: a p-length array of integers.
-    returns: inds and inv_inds
-    Given a p x p matrix M, Mp = M[inds][:, inds] permutes the matrix according to the group.
-    This means that if group j contains k elements, then those k elements appear sequentially in M.
-    Then, Mp[inv_inds][:, inv_inds] unpermutes the matrix back to its original form. 
     """
     # Create sorting indices
     inds_and_groups = [(i, group) for i, group in enumerate(groups)]
@@ -160,9 +158,21 @@ def permute_matrix_by_groups(groups):
 
 def blockdiag_to_blocks(M, groups):
     """
-    Given a matrix M, pulls out the diagonal blocks as specified by groups.
-    :param M: p x p numpy array
-    :param groups: p length numpy array 
+    Given a square array `M`, returns a list of diagonal blocks of `M` as specified by `groups`.
+
+    Parameters:
+    -----------
+    M : np.ndarray
+        ``(p, p)``-shaped array
+    groups : np.ndarray
+        ``(p, )``-shaped array with m unique values. If ``groups[i] == j``,
+        this indicates that coordinate ``i`` belongs to group ``j``.
+
+    Returns
+    -------
+    blocks : list
+        A list of square np.ndarrays. blocks[i] corresponds to group identified
+        by the ith smallest unique value of ``groups``.
     """
     blocks = []
     for j in np.sort(np.unique(groups)):
@@ -174,14 +184,19 @@ def blockdiag_to_blocks(M, groups):
 
 ### Feature-statistic helpers
 def random_permutation_inds(length):
-    """ Returns indexes which correspond to a random permutation,
-    as well as indexes which undo the permutation. Is truly random
-    (calls np.random.seed()) but does not change random state."""
+    """ Returns indexes which will randomly permute/unpermute a numpy
+    array of length `length`. Also returns indices which will
+    undo this permutation.
 
-    # Save random state and change it
-    st0 = np.random.get_state()
-    # np.random.seed()
-
+    Returns
+    -------
+    inds : np.ndarray
+        ``(length,)``-shaped ndarray corresponding to a random permutation
+        from 0 to `length`-1.
+    rev_inds : np.ndarray
+        ``(length,)``-shaped ndarray such that for any ``(length,)``-shaped 
+        array called ``x``, ``x[inds][rev_inds]`` equals ``x``.
+    """
     # Create inds and rev inds
     inds = np.arange(0, length, 1)
     np.random.shuffle(inds)
@@ -189,8 +204,6 @@ def random_permutation_inds(length):
     for (i, j) in enumerate(inds):
         rev_inds[j] = i
 
-    # Reset random state and return
-    np.random.set_state(st0)
     return inds, rev_inds
 
 
@@ -198,15 +211,24 @@ def random_permutation_inds(length):
 ### X comes from the gibbs model
 def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf"):
     """ Estimates covariance matrix of X. 
-    :param X: n x p data matrix
-    :param tol: threshhold for minimum eigenvalue
-    :shrinkage: The type of shrinkage to apply.
-     One of "ledoitwolf," "graphicallasso," or 
-     None (no shrinkage). Note even if shrinkage is None,
-    if the minim eigenvalue of the empirical cov matrix
-    is below a certain tolerance, this will apply shrinkage
-    anyway.
-    :returns: Sigma, invSigma
+
+    Parameters
+    ----------
+    X : np.ndarray
+        ``(n, p)``-shaped design matrix
+    shrinkage : str
+        The type of shrinkage to apply during estimation. One of
+        "ledoitwolf", "graphicallasso", or None (no shrinkage). 
+    tol : float
+        If shrinkage is None but the minimum eigenvalue of the MLE
+        is below tol, apply LedoitWolf shrinkage anyway.
+
+    Returns
+    -------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped estimated covariance matrix of X
+    invSigma : np.ndarray
+        ``(p, p)``-shaped estimated precision matrix of X
     """
     Sigma = np.cov(X.T)
     mineig = np.linalg.eigh(Sigma)[0].min()
@@ -249,9 +271,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf"):
 
 
 ### Multiprocessing helper
-
-
-def one_arg_function(list_of_inputs, args, func, kwargs):
+def _one_arg_function(list_of_inputs, args, func, kwargs):
     """
     Globally-defined helper function for pickling in multiprocessing.
     :param list of inputs: List of inputs to a function
@@ -269,19 +289,32 @@ def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
     """
     Spawns num_processes processes to apply func to many different arguments.
     This wraps the multiprocessing.pool object plus the functools partial function. 
-    :param func: a function
-    :param constant_inputs: A dictionary of arguments to func which do not
-    change in each of the processes spawned, defaults to {}.
-    :param num_processes: The maximum number of processes spawned, defaults to 1.
-    :type num_processes: int
-    :param **kwargs: Each kwarg 
-    returns: List of outputs for each input, in sorted order.
+    
+    Parameters
+    ----------
+    func : function
+        An arbitrary function
+    constant_inputs : dictionary
+        A dictionary of arguments to func which do not change in each
+        of the processes spawned, defaults to {}.
+    num_processes : int
+        The maximum number of processes spawned, defaults to 1.
+    kwargs : dict
+        Each key should correspond to an argument to func and should
+        map to a list of different arguments.
 
-    For example, if we are varying inputs 'a' and 'b', we might have
-    apply_pool(
+    Returns
+    -------
+    outputs : list
+        List of outputs for each input, in the order of the inputs.
+
+    Example
+    -------
+    If we are varying inputs 'a' and 'b', we might have
+    ``apply_pool(
         func=my_func, a=[1,3,5], b=[2,4,6]
-    )
-    which would return [f(a=1, b=2), f(a=3,b=4), f(a=5,b=6)].
+    )``
+    which would return ``[my_func(a=1, b=2), my_func(a=3,b=4), my_func(a=5,b=6)]``.
     """
 
     # Construct input sequence
@@ -297,7 +330,7 @@ def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
 
     # Construct partial function
     partial_func = partial(
-        one_arg_function, args=args, func=func, kwargs=constant_inputs,
+        _one_arg_function, args=args, func=func, kwargs=constant_inputs,
     )
 
     # Don't use the pool object if num_processes=1
@@ -316,11 +349,8 @@ def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
 ### Dependency management
 def check_kpytorch_available(purpose):
     try:
-        from . import kpytorch
-
-        return None
+        import torch
     except ImportError as err:
-        warnings.warn(
-            f"Pytorch is required for {purpose}. See https://pytorch.org/get-started/locally/."
+        raise ValueError(
+            f"Pytorch is required for {purpose}, but importing torch raised {err}. See https://pytorch.org/get-started/."
         )
-        raise err

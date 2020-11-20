@@ -68,17 +68,9 @@ class TestUtils(unittest.TestCase):
         )
 
     def test_random_permutation(self):
-        """ Tests random permutation and seed manipulations """
+        """ Tests random permutation """
 
-        # Check random state (sort of hacky, I'm unclear on the best way
-        # to check that two random states are equal)
-        np.random.seed(110)
-        x = np.random.randn()
-
-        # Reset seed
-        np.random.seed(110)
-
-        # Calculate random permutation, see if it's the same
+        # Calculate random permutation, see if rev_inds correctly undoes inds
         test_list = np.array([0, 5, 3, 6, 32, 2, 1])
         inds, rev_inds = utilities.random_permutation_inds(len(test_list))
         reconstructed = test_list[inds][rev_inds]
@@ -86,13 +78,7 @@ class TestUtils(unittest.TestCase):
             test_list,
             reconstructed,
             decimal=6,
-            err_msg="Random permutation is not reversible",
-        )
-
-        # Check that random state is still the same
-        y = np.random.randn()
-        np.testing.assert_almost_equal(
-            x, y, decimal=6, err_msg="Random permutation incorrectly resets random seed"
+            err_msg="Random permutation is not correctly reversed",
         )
 
     def test_force_pos_def(self):
@@ -135,7 +121,7 @@ class TestUtils(unittest.TestCase):
         sample_kwargs = {
             "n": 640,
             "p": 300,
-            "method": "daibarber2016",
+            "method": "blockequi",
             "gamma": 1,
             "rho": 0.8,
         }

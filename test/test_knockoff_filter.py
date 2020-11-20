@@ -90,6 +90,7 @@ class TestFdrControl(unittest.TestCase):
                 np.random.seed(j)
                 dgprocess = dgp.DGP(Sigma=Sigma, beta=beta)
                 X, y, _, Q, _ = dgprocess.sample_data(**kwargs)
+                gibbs_graph = dgprocess.gibbs_graph
 
                 # Infer y_dist
                 if "y_dist" in kwargs:
@@ -120,7 +121,6 @@ class TestFdrControl(unittest.TestCase):
                     knockoff_kwargs["df_t"] = kwargs["df_t"]
                 if "x_dist" in kwargs:
                     if kwargs["x_dist"] == "gibbs":
-                        gibbs_graph = Q
                         knockoff_kwargs["gibbs_graph"] = gibbs_graph
                     knockoff_kwargs.pop("S", None)
 
@@ -190,7 +190,7 @@ class TestKnockoffFilter(TestFdrControl):
 
         # Scenario 3: Dai Barber
         self.check_fdr_control(
-            method="daibarber2016",
+            method="blockequi",
             rho=0.6,
             sparsity=0,
             y_dist="binomial",
@@ -219,7 +219,7 @@ class TestKnockoffFilter(TestFdrControl):
 
         # Scenario 3: Dai Barber
         self.check_fdr_control(
-            method="daibarber2016",
+            method="blockequi",
             rho=0.8,
             sparsity=0.2,
             y_dist="binomial",
@@ -242,7 +242,7 @@ class TestKnockoffFilter(TestFdrControl):
 
         # Scenario 3: Dai Barber
         self.check_fdr_control(
-            method="daibarber2016",
+            method="blockequi",
             rho=0.4,
             sparsity=0.5,
             y_dist="gaussian",
@@ -372,7 +372,7 @@ class TestKnockoffFilter(TestFdrControl):
         self.check_fdr_control(
             n=500,
             p=50,
-            method="daibarber2016",
+            method="blockequi",
             gamma=0,
             sparsity=0.5,
             x_dist="blockt",
@@ -382,7 +382,7 @@ class TestKnockoffFilter(TestFdrControl):
         )
 
     @pytest.mark.slow
-    def test_ising_control(self):
+    def test_gibbs_grid_control(self):
 
         # Need to pull in specially-estimated Sigma
         p = 49
@@ -390,17 +390,17 @@ class TestKnockoffFilter(TestFdrControl):
         self.check_fdr_control(
             n=500,
             p=49,
-            method="ising",
+            method="gibbs_grid",
             Sigma=V,
             sparsity=0.5,
             x_dist="gibbs",
             reps=NUM_REPS,
-            filter_kwargs={"ksampler": "ising",},
+            filter_kwargs={"ksampler": "gibbs_grid",},
         )
 
     @pytest.mark.slow
-    def test_ising_dlasso(self):
-        """ Makes sure Ising works in combination with debiased lasso """
+    def test_gibbs_grid_dlasso(self):
+        """ Makes sure gibbs_grid works in combination with debiased lasso """
 
         # Need to pull in specially-estimated Sigma
         p = 49
@@ -408,19 +408,19 @@ class TestKnockoffFilter(TestFdrControl):
         self.check_fdr_control(
             n=500,
             p=49,
-            method="ising",
+            method="gibbs_grid",
             Sigma=V,
             sparsity=0.5,
             x_dist="gibbs",
             reps=1,
             q=1,
-            filter_kwargs={"ksampler": "ising", "fstat": "dlasso",},
+            filter_kwargs={"ksampler": "gibbs_grid", "fstat": "dlasso",},
         )
 
     @pytest.mark.slow
     def test_lars_control(self):
 
-        # Scenario 1: daibarber2016
+        # Scenario 1: blockequi
         p = 500
         rho = 0.3
         S = (1 - rho) * np.eye(p)
@@ -429,7 +429,7 @@ class TestKnockoffFilter(TestFdrControl):
             n=1000,
             p=p,
             S=S,
-            method="daibarber2016",
+            method="blockequi",
             gamma=1,
             rho=rho,
             sparsity=0.5,
@@ -474,7 +474,7 @@ class TestKnockoffFilter(TestFdrControl):
     # 	X, y, _, _, Sigma = dgprocess.sample_data(
     # 		rho=rho,
     # 		gamma=1,
-    # 		method='daibarber2016',
+    # 		method='blockequi',
     # 		p=p,
     # 		n=n,
     # 	)

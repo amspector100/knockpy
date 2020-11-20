@@ -5,8 +5,8 @@
     See https://arxiv.org/abs/1903.00434 for a description of the algorithm
     and proof of validity and runtime.
 
-    Initial author: Stephen Bates, October 2019.
-    Adapted by: Asher Spector, June 2020. 
+    This code was based on initial code written by Stephen Bates in October
+    2019, which was released in combination with https://arxiv.org/abs/1903.00434.
 """
 
 # The basics
@@ -22,7 +22,7 @@ from . import utilities, knockoffs, dgp
 
 # Network and UGM tools
 import networkx as nx
-from . import tree_processing
+from networkx.algorithms.approximation import treewidth
 from .knockoffs import KnockoffSampler
 from . import knockoffs, smatrix
 
@@ -50,7 +50,147 @@ def t_log_likelihood(X, df_t):
     return result
 
 
+def get_ordering(T):
+    """ 
+    Takes a junction tree and returns a variable ordering for the metro
+    knockoff sampler. The code from this function is adapted from
+    the code distributed with https://arxiv.org/abs/1903.00434.
+
+    Parameters
+    ----------
+    T : A networkx graph that is a junction tree.
+    Nodes must be sets with elements 0,...,p-1. 
+
+    Returns
+    -------
+    order : a numpy array with unique elements 0,...,p-1
+    active_frontier : list of lists
+        a list of length p gwhere entry j is the set of entries > j 
+        that are in V_j. This specifies the conditional independence structure
+        of a joint covariate distribution. See page 34 of
+        https://arxiv.org/abs/1903.00434.
+    """
+    # Initialize
+    T = T.copy()
+    order = []
+    active_frontier = []
+
+    while T.number_of_nodes() > 0:
+        # Loop through leaf nodes
+        gen = (x for x in T.nodes() if T.degree(x) <= 1)
+        active_node = next(gen)
+
+        # Parent nodes of leaf nodes
+        # active_vars get added to the order in this step
+        # activated set are just the variables in the active node
+        parents = list(T[active_node].keys())
+        if len(parents) == 0:
+            active_vars = set(active_node)
+            activated_set = active_vars.copy()
+        else:
+            active_vars = set(active_node.difference(parents[0]))
+            activated_set = active_vars.union(parents[0]).difference(set(order))
+        for i in list(active_vars)[::-1]:  # This line was changed too
+            order += [i]
+            frontier = list(activated_set.difference(set(order)))
+            active_frontier += [frontier]
+        T.remove_node(active_node)
+
+    return [np.array(order), active_frontier]
+
+
 class MetropolizedKnockoffSampler(KnockoffSampler):
+    """
+    A metropolized knockoff sampler for arbitrary random variables
+    using covariance-guided proposals.
+
+    Group knockoffs are not yet supported.
+
+    Parameters
+    ----------
+    lf : function
+        log-probability density. This function should take a ``(n, p)``-shaped
+        numpy array (n independent samples of a p-dimensional vector) and return
+        a ``(n,)`` shaped array of log-probabilities. This can also be supplied 
+        as ``None`` if cliques and log-potentials are supplied.
+    X : np.ndarray
+        the ``(n, p)``-shaped design matrix
+    Xk : np.ndarray
+        the ``(n, p)``-shaped matrix of knockoffs
+    mu : np.ndarray
+        The (estimated) mean of X. Exact FDR control is maintained
+        even when this vector is incorrect. Defaults to the mean of X,
+        e.g., ``X.mean(axis=0)``.
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of the features. If ``None``, this
+        is estimated using the data using a naive method to ensure compatability
+        with the proposals. Exact FDR control is maintained even when Sigma 
+        is incorrect.
+    undir_graph : np.ndarray or nx.Graph
+        An undirected graph specifying the conditional independence
+        structure of the data-generating process. This must be specified 
+        if either of the ``order`` or ``active_frontier`` params
+        are not specified. One of two options:
+        - A networkx undirected graph object
+        - A ``(p, p)``-shaped numpy array, where nonzero elements represent edges.
+    order : np.ndarray
+        A ``p``-length numpy array specifying the ordering to sample the variables.
+        Should be a vector with unique entries 0,...,p-1.
+    active_fontier : A list of lists of length p where entry j is the set of
+        entries > j that are in V_j. This specifies the conditional independence 
+        structure of the distribution given by lf. See page 34 of the paper.
+    gamma : float
+        A tuning parameter to increase / decrease the acceptance ratio.
+        See appendix F.2. Defaults to 0.999.
+    buckets : np.ndarray or list
+        A list or array of discrete values that X can take.
+        Covariance-guided proposals will be rounded to these values. 
+        If ``None``, Metro assumes the domain of each feature is all
+        real numbers.
+    kwargs : dict
+        kwargs to pass to the ``smatrix.compute_smatrix`` method for 
+        sampling proposals.
+
+    Attributes
+    ----------
+    order : np.ndarray
+        ``(p,)``-shaped array of indices which reorders ``X`` into the
+        order for sampling knockoffs. 
+    inv_order : np.ndarray
+        ``(p,)``-shaped array of indices which takes a set of variables
+        which have been reordered for metropolized sampling and returns
+        them to their initial order. For example,
+        ``X == X[:, self.order][:, self.inv_order]``.
+    X : np.ndarray
+        ``(n, p)`` design matrix reordered according to the order for
+        sampling knockoffs
+    X_prop : np.ndarray
+        ``(n, p)``-shaped array of knockoff proposals
+    Xk : np.ndarray
+        the ``(n, p)``-shaped array of knockoffs
+    acceptances : np.ndarray
+        a ``(n, p)``-shaped boolean array where ``acceptances[i, j] == 1``
+        indicates that ``X_prop[i, j]`` was accepted.
+    final_acc_probs : np.ndarray
+        a ``(n, p)``-shaped array where ``final_acc_probs[i, j]`` is the 
+        acceptance probability for ``X_prop[i, j]``.
+    Sigma : np.ndarray
+        the ``(p, p)``-shaped estimated covariance matrix of ``X``. The 
+        class constructor guarantees this is compatible with the conditional
+        independence structure of the data.
+    S : np.ndarray
+        the ``(p, p)``-shaped knockoff S-matrix used to generate the
+        covariance-guided proposals.
+
+    Notes
+    -----
+    All attributes of the MetropolizedKnockoffSampler are stored in the 
+    order that knockoffs are sampled, NOT the order that variables are 
+    initially passed in. For example, the ``X`` attribute will not necessarily
+    equal the ``X`` argument: instead, ``self.X = X[:, self.order]``. To reorder
+    attributes to the initial order of the ``X`` argument,
+    use the syntax ``self.attribute[:, self.inv_order]``.
+    """
     def __init__(
         self,
         lf,
@@ -67,44 +207,6 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         buckets=None,
         **kwargs,
     ):
-        """
-        A metropolized knockoff sampler for arbitrary random variables
-        using covariance-guided proposals.
-
-        Group knockoffs are not yet implemented.
-
-        :param lf: Log-probability density. This function should take
-        an n x p numpy array (n independent samples of a p-dim vector).
-        :param X: n x p array of data. (n independent samples of a 
-        p-dim vector).
-        This can be supplied as None if cliques are supplied.
-        :param mu: The mean of X. As described in
-        https://arxiv.org/abs/1903.00434, exact FDR control is maintained
-        even when this vector is incorrect.
-        :param V: The covariance matrix of X. As described in
-        https://arxiv.org/abs/1903.00434, exact FDR control is maintained
-        even when this covariance matrix is incorrect.
-        :param undir_graph: A undirected graph specifying the conditional independence
-        structure of the data-generating process. This must be specified 
-        if either of the ``order`` or ``active_frontier`` params
-        are not specified. One of two options:
-        - A networkx undirected graph object
-        - A p x p numpy array, where nonzero elements represent edges
-        :param order: A p-length numpy array specifying the ordering
-        to sample the variables. Should be a vector with unique
-        entries 0,...,p-1.
-        :param active_fontier: A list of lists of length p where
-        entry j is the set of entries > j that are in V_j. This specifies
-        the conditional independence structure of the distribution given by
-        lf. See page 34 of the paper.
-        :param gamma: A tuning parameter to increase / decrease the acceptance
-        ratio. See appendix F.2.
-        :param kwargs: kwargs to pass to the compute_smatrix method.
-        This is used to create the covariance-guided proposals.
-        :param buckets: If not None, a list of discrete values that X 
-        can take. Covariance-guided proposals will be rounded to these
-        values. This must be a K-length vector.
-        """
 
         # Random params
         self.n = X.shape[0]
@@ -133,8 +235,8 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
             if isinstance(undir_graph, np.ndarray):
                 undir_graph = nx.Graph(undir_graph != 0)
             # Run junction tree algorithm
-            self.width, self.T = tree_processing.treewidth_decomp(undir_graph)
-            order, active_frontier = tree_processing.get_ordering(self.T)
+            self.width, self.T = treewidth.treewidth_decomp(undir_graph)
+            order, active_frontier = get_ordering(self.T)
 
         # Undirected graph must be existent in this case
         if "invSigma" in kwargs:
@@ -151,8 +253,8 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
             if (mask == 0).sum() > 0 and not cov_est:
                 max_nonedge = np.max(np.abs(Q[mask == 0]))
                 if max_nonedge > 1e-2:
-                    raise ValueError(
-                        f"Precision matrix Q is not compatible with undirected graph (nonedge has value {max_nonedge})"
+                    warnings.warn(
+                        f"Precision matrix Q is not compatible with undirected graph (nonedge has value {max_nonedge}); naively forcing values to zero"
                     )
             elif cov_est:
                 Q[mask == 0] = 0
@@ -225,16 +327,17 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         Calculates the log of the likelihood ratio
         between two observations: X where X[:,j] 
         is replaced with Xjstar, divided by the likelihood
-        of X. This is equivalent to (but sometimes faster) than:
+        of X. This is equivalent to (but often faster) than:
 
-        ld_obs = self.lf(X)
-        Xnew = X.copy()
-        Xnew[:, j] = Xjstar
-        ld_prop = self.lf(Xnew)
-        ld_ratio = ld_prop - ld_obs
+        >>> ld_obs = self.lf(X)
+        >>> Xnew = X.copy()
+        >>> Xnew[:, j] = Xjstar
+        >>> ld_prop = self.lf(Xnew)
+        >>> ld_ratio = ld_prop - ld_obs
 
         When node potentials have been passed, this is much faster
         than calculating the log-likelihood function and subtracting.
+
         :param X: a n x p matrix of observations
         :param Xjstar: New observations for column j of X
         :param j: an int between 0 and p - 1, telling us which column to replace
@@ -296,8 +399,11 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
     def create_proposal_params(self, **kwargs):
         """
         Constructs the covariance-guided proposal. 
-        :param kwargs: kwargs for compute_smatrix
-        method, which finds the optimal S matrix.
+
+        Parameters
+        ----------
+        kwargs : dict
+            kwargs for the ``smatrix.compute_smatrix`` function
         """
 
         # Find the optimal S matrix. In general, we should set a
@@ -422,10 +528,8 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
     def fetch_proposal_params(self, X, prev_proposals):
         """
         Returns mean and variance of proposal j given X and
-        previous proposals.
-        :param X: n x p dimension numpy array of observed data
-        :param prev_proposals: n x (j - 1) numpy array of previous
-        proposals. If None, assumes j = 0.
+        previous proposals. Both ``X`` and ``prev_proposals``
+        must be in the order used to sample knockoff variables.
         """
 
         # Infer j from prev_proposals
@@ -495,10 +599,15 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         """
         Calculates the log-likelihood of a proposal Xjstar given X 
         and the previous proposals.
-        :param Xjstar: n-length numpy array of values to evaluate.
-        :param X: n x p dimension numpy array of observed data
-        :param prev_proposals: n x (j - 1) numpy array of previous
-        proposals. If None, assumes j = 0.
+        Xjstar : np.ndarray
+            ``(n,)``-shaped numpy array of values to evaluate the proposal
+            likelihood at.
+        X : np.ndarray
+            ``(n, p)``-shaped array of observed data, in the order used to
+            sample knockoff variables.
+        prev_proposals : np.ndarray
+            ``(n, j-1)``-shaped array of previous proposals, in the order
+            used to sample knockoff variables. If None, assumes j = 0.
         """
         if cond_mean is None or cond_var is None:
             cond_mean, cond_var = self.fetch_proposal_params(
@@ -524,11 +633,10 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         self, X, prev_proposals, cond_mean=None, cond_var=None,
     ):
         """
-        Samples 
-        :param Xjstar: n-length numpy array of values to evaluate.
-        :param X: n x p dimension numpy array of observed data
-        :param prev_proposals: n x (j - 1) numpy array of previous
-        proposals. If None, assumes j = 0.
+        Samples a continuous or discrete proposal given the design
+        matrix and the previous proposals. Can pass in the conditional
+        mean and variance of the new proposals, if cached, to save
+        computation.
         """
         # These will be compatible as long as Sigma is
         if cond_mean is None or cond_var is None:
@@ -557,7 +665,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 
         return proposal.reshape(-1)
 
-    def get_key(self, x_flags, j):
+    def _get_key(self, x_flags, j):
         """
         Fetches key for dp dicts
         """
@@ -581,7 +689,8 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         Xtemp = self.X.copy()
         Xtemp[x_flags == 1] = self.X_prop[x_flags == 1].copy()
 
-        TODO: make this so it copies less
+        TODO: make this so it copies less. This may require 
+        C code.
         """
 
         # Informative error
@@ -644,14 +753,14 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 
     def compute_F(self, x_flags, j):
         """
-        Computes the F function from Page 33 pf tje paper: 
+        Computes the F function from Page 33 pf the paper: 
         Pr(tildeXj=tildexj, Xjstar=xjstar | Xtemp, tildeX_{1:j-1}, Xjstar_{1:j-1})
         Note that tildexj and xjstar are NOT inputs because they do NOT change
         during the junction tree DP process.
         """
 
         # Get key, possibly return cached result
-        key = self.get_key(x_flags, j)
+        key = self._get_key(x_flags, j)
         if key in self.F_dicts[j]:
             return self.F_dicts[j][key]
         else:
@@ -683,12 +792,15 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         self, x_flags, j, log_q1=None, log_q2=None, Xtemp=None,
     ):
         """
-        Computes
+        Computes acceptance probability for variable ``j``
+        given a particular rejection pattern ``x_flags``.
+
+        Mathematically, this is:
         Pr(tildeXj = Xjstar | Xtemp, Xtilde_{1:j-1}, Xstar_{1:j})
         """
 
         # Get key, possibly return cached result
-        key = self.get_key(x_flags, j)
+        key = self._get_key(x_flags, j)
         if key in self.acc_dicts[j]:
             return self.acc_dicts[j][key]
 
@@ -726,14 +838,14 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         for j2 in self.affected_vars[j]:
 
             # Numerator
-            num_key = self.get_key(x_flags_num, j2)
+            num_key = self._get_key(x_flags_num, j2)
             if num_key in self.F_dicts[j2]:
                 Fj2_num = self.F_dicts[j2][num_key]
             else:
                 Fj2_num = self.compute_F(x_flags_num, j2)
 
             # Denominator uses same flags
-            denom_key = self.get_key(x_flags, j2)
+            denom_key = self._get_key(x_flags, j2)
             if denom_key in self.F_dicts[j2]:
                 Fj2_denom = self.F_dicts[j2][denom_key]
             else:
@@ -818,14 +930,26 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 
     def sample_knockoffs(self, clip=1e-5, cache=None):
         """
-        :param clip: To provide numerical stability,
-        we make the minimum acceptance probability 1e-5
-        (otherwise some acc probs get very slightly
-        negative due to floating point errors)
-        :param cache: If True, uses a very memory intensive
-        caching system to get a 2-3x speedup when calculating
-        conditional means for the proposals. Defaults to true
-        if n * (p**2) < 1e9.
+        Samples knockoffs using the metropolized knockoff
+        sampler.
+
+        Paramters
+        ---------
+        clip : float
+            To provide numerical stability, we make the minimum
+            acceptance probability clip. If ``clip=0``, some 
+            acceptance probabilities may become negative due to
+            floating point errors.
+        cache : bool
+            If True, uses a very memory intensive caching system
+            to get a 2-3x speedup when calculating conditional means
+            for the proposals. Defaults to true if n * (p**2) < 1e9.
+
+        Returns
+        -------
+        Xk : np.ndarray
+            A ``(n, p)``-shaped knockoff matrix in the original order 
+            the variables were passed in.
         """
 
         # Save clip constant for later
@@ -949,29 +1073,33 @@ def t_markov_loglike(X, rhos, df_t=3):
 
 
 class ARTKSampler(MetropolizedKnockoffSampler):
-    def __init__(self, X, Sigma, df_t, Q=None, **kwargs):
-        """
-        Samples knockoffs for AR1 t designs. (Hence, ARTK).
-        :param X: n x p design matrix, presumably following
-        t_{df_t}(0, Sigma) distribution.
+    """
+    Samples knockoffs for autoregressive T-distributed designs.
+    (Hence, ARTK). See https://arxiv.org/pdf/1903.00434.pdf
+    for details.
 
-        Currently does not support a mean parameter (mu).
-
-        :param V: Covariance matrix. The first diagonal should
-        be the pairwise correlations.
-        :param Q: Inverse of covariance matrix.
-        :param mu: Mean (location) parameter. Defaults to all zeros.
-        :param df_t: Degrees of freedom (default: 3).
-        :param kwargs: kwargs for Metro sampler.
-        """
+    Parameters
+    ----------
+    X : np.ndarray
+        the ``(n, p)``-shaped design matrix
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of the features. The first
+        diagonal should be the pairwise correlations which define the
+        Markov chain.
+    df_t : float
+        The degrees of freedom for the t-distributions.
+    kwargs : dict
+        kwargs to pass to the constructor method of the generic
+        ``MetropolizedKnockoffSampler`` class.
+    """
+    def __init__(self, X, Sigma, df_t, **kwargs):
 
         # Rhos and graph
         V = Sigma
         p = V.shape[0]
         self.df_t = df_t
         self.rhos = np.diag(V, 1)
-        if Q is None:
-            Q = utilities.chol2inv(V)
+        Q = utilities.chol2inv(V)
 
         # Account for the fact there will likely be rejections
         if "rec_prop" not in kwargs:
@@ -1014,7 +1142,6 @@ class ARTKSampler(MetropolizedKnockoffSampler):
             X=X,
             mu=np.zeros(p),
             Sigma=V,
-            # Q=Q,
             undir_graph=np.abs(Q) > 1e-4,
             cliques=cliques,
             log_potentials=log_potentials,
@@ -1043,15 +1170,34 @@ def t_mvn_loglike(X, invScale, mu=None, df_t=3):
 class BlockTSampler(KnockoffSampler):
     def __init__(self, X, Sigma, df_t, **kwargs):
         """
-        Samples knockoffs for block multivariate t designs.
-        :param X: n x p design matrix, presumably following
-        t_{df_t}(mu, Sigma) distribution.
+        Samples knockoffs for block multivariate t designs, where
+        each block is independent.
 
-        :param V: Covariance matrix for t distribution.
-        This should be in block-diagonal form.
-        :param mu: Mean parameter
-        :param df_t: Degrees of freedom (default: 3).
-        :param kwargs: kwargs for Metro sampler.
+        Parameters
+        ----------
+        X : np.ndarray
+            the ``(n, p)``-shaped design matrix
+        Sigma : np.ndarray
+            ``(p, p)``-shaped covariance matrix of the features. This must
+            be in block-diagonal form.
+        df_t : float
+            The degrees of freedom for the t-distributions.
+        kwargs : dict
+            kwargs to pass to the constructor method of the generic
+            ``MetropolizedKnockoffSampler`` class.
+
+        Attributes
+        ----------
+        samplers : list
+            A list of ``MetropolizedKnockoffSampler`` objects used to sample
+            knockoffs for each block.
+
+        Notes
+        -----
+        Unlike the attributes of a ``MetropolizedKnockoffSampler`` class,
+        the attributes of a ``BlockTSampler`` class are stored in the same
+        order that the design matrix is initially passed in. E.g., ``self.Xk``
+        corresponds with ``self.X``.
         """
 
         # Discover "block structure" of T
@@ -1107,7 +1253,18 @@ class BlockTSampler(KnockoffSampler):
     def sample_knockoffs(self, **kwargs):
         """
         Actually samples knockoffs sequentially for each block.
-        kwargs = kwargs for sampler.
+
+        Parameters
+        ----------
+        kwargs : dict
+            kwargs for the ``MetropolizedKnockoffSampler.sample_knockoffs``
+            call for each block.
+
+        Returns
+        -------
+        Xk : np.ndarray
+            A ``(n, p)``-shaped knockoff matrix in the original order 
+            the variables were passed in.
         """
         # Loop through blocks and sample
         self.Xk = []
@@ -1135,11 +1292,33 @@ class BlockTSampler(KnockoffSampler):
 
 
 class GibbsGridSampler(KnockoffSampler):
+    """
+    Samples knockoffs for a discrete gibbs grid using the divide-and-conquer
+    algorithm plus metropolized knockoff sampling.
+
+    Parameters
+    ----------
+    X : np.ndarray
+        the ``(n, p)``-shaped design matrix
+    gibbs_graph : np.ndarray
+        ``(p, p)``-shaped matrix specifying the distribution
+        of the gibbs grid: see ``knockpy.dgp.sample_gibbs``.
+        This must correspond to a grid-like undirected graphical
+        model.
+    Sigma : np.ndarray
+        ``(p, p)``-shaped estimated covariance matrix of the data.
+    max_width : int 
+        The maximum treewidth to allow in the divide-and-conquer
+        algorithm.
+
+    Notes
+    -----
+    Unlike the attributes of a ``MetropolizedKnockoffSampler`` class,
+    the attributes of a ``BlockTSampler`` class are stored in the same
+    order that the design matrix is initially passed in. E.g., ``self.Xk``
+    corresponds with ``self.X``.
+    """
     def __init__(self, X, gibbs_graph, Sigma, Q=None, mu=None, max_width=6, **kwargs):
-        """
-        :param X: design matrix
-        :param undir_graph: matrix of coefficients for log-potentials
-        """
 
         # Infer bucketization and V
         V = Sigma
@@ -1147,10 +1326,11 @@ class GibbsGridSampler(KnockoffSampler):
         self.p = X.shape[1]
         self.X = X
         self.V = V
+        self.S = None
         self.gibbs_graph = gibbs_graph
         self.gridwidth = int(np.sqrt(self.p))
         if self.gridwidth ** 2 != self.p:
-            raise ValueError(f"p {self.p} must be a square number for ising grid")
+            raise ValueError(f"p {self.p} must be a square number for gibbs grid")
         self.buckets = np.unique(X)
         if mu is None:
             mu = X.mean(axis=0)
@@ -1231,7 +1411,7 @@ class GibbsGridSampler(KnockoffSampler):
         for dc_key in self.dc_keys:
             div_type = dc_key.split("-")[0]
             trans = int(dc_key.split("-")[-1])
-            seps, dict_list = self.divide_variables(
+            seps, dict_list = self._divide_variables(
                 dc_key=dc_key,
                 translation=trans,
                 max_width=max_width,
@@ -1283,13 +1463,12 @@ class GibbsGridSampler(KnockoffSampler):
                 self.samplers[key].append((n_inds, p_inds, sampler))
 
     def num2coords(self, i):
-        """ Wraps num2coords from knockpy.graphs """
         return dgp.num2coords(i=i, gridwidth=self.gridwidth)
 
     def coords2num(self, lc, wc):
         return dgp.coords2num(l=lc, w=wc, gridwidth=self.gridwidth)
 
-    def get_ac(self, i, div_type):
+    def _get_ac(self, i, div_type):
         """
         Helper function for divide-and-conquer
         in Ising model. Extracts active coordinate
@@ -1303,13 +1482,24 @@ class GibbsGridSampler(KnockoffSampler):
             return wc, lc, wc
 
     def fetch_S(self):
-        """ Returns None because the divide-and-conquer approach means
+        """ Returns ``None`` because the divide-and-conquer approach means
         there is no one S-matrix."""
         return None
 
     def sample_knockoffs(self, **kwargs):
         """
-        :param kwargs: kwargs for the metro sampler.
+        Samples knockoffs using divide-and-conquer approach.
+
+        Parameters
+        ----------  
+        kwargs : dict
+            Keyword args for ``MetropolizedKnockoffSampler.sample_knockoffs``.
+
+        Returns
+        -------
+        Xk : np.ndarray
+            A ``(n, p)``-shaped knockoff matrix in the original order 
+            the variables were passed in.
         """
 
         self.Xk = np.zeros((self.n, self.p))
@@ -1354,7 +1544,7 @@ class GibbsGridSampler(KnockoffSampler):
 
         return self.Xk
 
-    def divide_variables(self, dc_key, translation, max_width, div_type):
+    def _divide_variables(self, dc_key, translation, max_width, div_type):
         """
         Takes translation, max_width of junction tree, and div_type
         and returns separator_inds + a list of dictionaries. 
@@ -1380,7 +1570,7 @@ class GibbsGridSampler(KnockoffSampler):
         for i in range(self.p):
             # Determine the AC or active coordinate based on
             # whether or not we are splitting up rows / columns
-            ac, _, _ = self.get_ac(i, div_type=div_type)
+            ac, _, _ = self._get_ac(i, div_type=div_type)
 
             # Ignore this variable if it is a separator
             if ac in separator_inds:
@@ -1433,8 +1623,8 @@ class GibbsGridSampler(KnockoffSampler):
                     ind = 0 if clique[0] == j1 else 1
                     j2 = clique[1 - ind]
                     # Coordinates for analysis
-                    ac1, lc1, wc1 = self.get_ac(j1, div_type)
-                    ac2, lc2, wc2 = self.get_ac(j2, div_type)
+                    ac1, lc1, wc1 = self._get_ac(j1, div_type)
+                    ac2, lc2, wc2 = self._get_ac(j2, div_type)
                     # Check if the new clique size is 1 after conditioning
                     if j2 not in div_group:
                         # This means j2 must be separating the groups

@@ -10,7 +10,6 @@ from . import knockoff_stats as kstats
 class KnockoffFilter:
     """
     Performs knockoff-based inference, from start to finish.
-    
 
     This wraps both the ``knockoffs.KnockoffSampler`` and 
     ``knockoff_stats.FeatureStatistic`` classes.
@@ -73,7 +72,7 @@ class KnockoffFilter:
     S : np.ndarray
         the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs.
     X : np.ndarray
-        the ``(n, p)``-shaped design
+        the ``(n, p)``-shaped design matrix
     Xk : np.ndarray
         the ``(n, p)``-shaped matrix of knockoffs
     groups : np.ndarray
@@ -85,6 +84,8 @@ class KnockoffFilter:
         the knockoff filter rejects the jth feature.
     G : np.ndarray
         the ``(2p, 2p)``-shaped feature-knockoff covariance matrix
+    threshold : float
+        the knockoff data-dependent threshold used to select variables
 
     Examples
     --------
@@ -174,7 +175,7 @@ class KnockoffFilter:
 
         # Possibly initialize ksampler
         if self.ksampler is None:
-            # Args common to all ksamplers
+            # Args common to all ksamplers except fx
             args = {"X": self.X, "Sigma": self.Sigma}
             if self.knockoff_type == "gaussian":
                 self.ksampler = knockoffs.GaussianSampler(
@@ -235,8 +236,8 @@ class KnockoffFilter:
 
     def make_selections(self, W, fdr):
         """" Calculate data dependent threshhold and selections """
-        T = kstats.data_dependent_threshhold(W=W, fdr=fdr)
-        selected_flags = (W >= T).astype("float32")
+        self.threshold = kstats.data_dependent_threshhold(W=W, fdr=fdr)
+        selected_flags = (W >= self.threshold).astype("float32")
         return selected_flags
 
     def forward(
@@ -263,19 +264,19 @@ class KnockoffFilter:
         y : np.ndarray
             ``(n,)``-shaped response vector
         Xk : np.ndarray
-            ``(n, p)``-shaped knockoff matrix. If None, this will construct
+            ``(n, p)``-shaped knockoff matrix. If ``None``, this will construct
             knockoffs using ``self.ksampler``.
         mu : np.ndarray
-            ``(p, )``-shaped mean of the features. If None, this defaults to
+            ``(p, )``-shaped mean of the features. If ``None``, this defaults to
             the empirical mean of the features.
         Sigma : np.ndarray
-            ``(p, p)``-shaped covariance matrix of the features. If None, this
+            ``(p, p)``-shaped covariance matrix of the features. If ``None``, this
             is estimated using the ``shrinkage`` option. This is ignored for
             fixed-X knockoffs.
         groups : np.ndarray
             For group knockoffs, a p-length array of integers from 1 to 
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
         fdr : float
             The desired level of false discovery rate control.
         fstat_kwargs : dict
@@ -284,7 +285,7 @@ class KnockoffFilter:
         knockoff_kwargs : dict
             Extra kwargs for instantiating the knockoff sampler argument if
             the ksampler argument is a string identifier. This can be
-            the empt dict for some identifiers such as "gaussian" or "fx",
+            the empty dict for some identifiers such as "gaussian" or "fx",
             but additional keyword arguments are required for complex samplers
             such as the "metro" identifier. Defaults to {}
         shrinkage : str
@@ -292,7 +293,7 @@ class KnockoffFilter:
             "LedoitWolf." Other options are "MLE" and "glasso" (graphical lasso).
         recycle_up_to : int or float
             Three options:
-                - if None, does nothing.
+                - if ``None``, does nothing.
                 - if an integer > 1, uses the first "recycle_up_to"
                 rows of X as the the first "recycle_up_to" rows of knockoffs.
                 - if a float between 0 and 1 (inclusive), interpreted

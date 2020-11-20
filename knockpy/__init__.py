@@ -8,10 +8,10 @@ all = [
     "metro",
     "mrc",
     "smatrix",
-    "tree_processing" "utilities",
+    "utilities",
 ]
 
-__version__ = "0.1.6"
+__version__ = "1.0.0dev"
 
 from . import dgp
 from . import knockoffs
@@ -21,5 +21,4 @@ from . import mac
 from . import metro
 from . import mrc
 from . import smatrix
-from . import tree_processing
 from . import utilities

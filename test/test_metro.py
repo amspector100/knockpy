@@ -3,10 +3,11 @@ import os
 import pytest
 import numpy as np
 import networkx as nx
+from networkx.algorithms.approximation import treewidth
 from scipy import stats
 import unittest
 from .context import knockpy
-from knockpy import utilities, dgp, metro, tree_processing
+from knockpy import utilities, dgp, metro
 from knockpy.mrc import mvr_loss
 
 
@@ -81,34 +82,6 @@ class TestMetroProposal(unittest.TestCase):
             )
             prev_proposals = Xstar[:, 0 : j + 1]
 
-    def test_compatibility_error(self):
-        """ Ensures metro class errors when you pass a non-compatible
-		proposal matrix """
-
-        # Fake data
-        np.random.seed(110)
-        n = 5
-        p = 200
-        dgprocess = dgp.DGP()
-        X, _, _, Q, V = dgprocess.sample_data(method="AR1", rho=0.3, n=n, p=p)
-
-        # Metro sampler, proposal params
-        def incorrect_undir_graph():
-            metro_sampler = metro.MetropolizedKnockoffSampler(
-                lf=lambda x: np.log(x).sum(),
-                X=X,
-                mu=np.zeros(p),
-                Sigma=V,
-                undir_graph=np.eye(p),
-                S=np.eye(p),
-            )
-
-        # Make sure the value error increases
-        self.assertRaisesRegex(
-            ValueError, "Precision matrix Q is not compatible", incorrect_undir_graph
-        )
-
-
 class TestMetroSample(unittest.TestCase):
     def test_ar1_sample(self):
 
@@ -174,7 +147,7 @@ class TestMetroSample(unittest.TestCase):
         p = 4
         dgprocess = dgp.DGP()
         X, _, _, Q, V = dgprocess.sample_data(
-            method="daibarber2016", rho=0.6, n=n, p=p, gamma=1, group_size=p
+            method="blockequi", rho=0.6, n=n, p=p, gamma=1, block_size=p
         )
         ksampler = knockpy.knockoffs.GaussianSampler(X=X, Sigma=V, method="mvr")
         S = ksampler.fetch_S()
@@ -183,8 +156,8 @@ class TestMetroSample(unittest.TestCase):
         Q_graph = np.abs(Q) > 1e-5
         Q_graph = Q_graph - np.eye(p)
         undir_graph = nx.Graph(Q_graph)
-        width, T = tree_processing.treewidth_decomp(undir_graph)
-        order, active_frontier = tree_processing.get_ordering(T)
+        width, T = treewidth.treewidth_decomp(undir_graph)
+        order, active_frontier = metro.get_ordering(T)
 
         # Metro sampler and likelihood
         mvn = stats.multivariate_normal(mean=np.zeros(p), cov=V)
@@ -388,7 +361,7 @@ class TestBlockT(unittest.TestCase):
         # Test that the likelihood --> gaussian as df_t --> infinity
         dgprocess = dgp.DGP()
         X1, _, _, Q, V = dgprocess.sample_data(
-            n=n, p=p, method="daibarber2016", gamma=0.3, rho=0.8, x_dist="blockt"
+            n=n, p=p, method="blockequi", gamma=0.3, rho=0.8, x_dist="blockt"
         )
         X2 = np.random.randn(n, p)
 
@@ -419,10 +392,10 @@ class TestBlockT(unittest.TestCase):
         X, _, _, Q, V = dgprocess.sample_data(
             n=n,
             p=p,
-            method="daibarber2016",
+            method="blockequi",
             rho=0.4,
             gamma=0,
-            group_size=3,
+            block_size=3,
             x_dist="blockt",
             df_t=df_t,
         )
@@ -467,7 +440,7 @@ class TestBlockT(unittest.TestCase):
         tsampler.check_xk_validity(X, Xk, testname="BLOCKT")
 
 
-class TestIsing(unittest.TestCase):
+class TestGibbsGraph(unittest.TestCase):
     def test_divconquer_likelihoods(self):
 
         # Test to make sure the way we split up
@@ -477,9 +450,10 @@ class TestIsing(unittest.TestCase):
         p = 625
         mu = np.zeros(p)
         dgprocess = dgp.DGP()
-        X, _, _, gibbs_graph, _ = dgprocess.sample_data(
+        X, _, _, _, _ = dgprocess.sample_data(
             n=n, p=p, method="ising", x_dist="gibbs",
         )
+        gibbs_graph = dgprocess.gibbs_graph
         np.fill_diagonal(gibbs_graph, 1)
 
         # Read V
@@ -535,9 +509,10 @@ class TestIsing(unittest.TestCase):
         p = 625
         mu = np.zeros(p)
         dgprocess = dgp.DGP()
-        X, _, _, gibbs_graph, _ = dgprocess.sample_data(
+        X, _, _, _, _ = dgprocess.sample_data(
             n=n, p=p, method="ising", x_dist="gibbs",
         )
+        gibbs_graph = dgprocess.gibbs_graph
         np.fill_diagonal(gibbs_graph, 1)
 
         # We load custom cov/q matrices for this
@@ -573,9 +548,10 @@ class TestIsing(unittest.TestCase):
         p = 9
         mu = np.zeros(p)
         dgprocess = dgp.DGP()
-        X, _, _, gibbs_graph, _ = dgprocess.sample_data(
+        X, _, _, _, _ = dgprocess.sample_data(
             n=n, p=p, method="ising", x_dist="gibbs",
         )
+        gibbs_graph = dgprocess.gibbs_graph
         np.fill_diagonal(gibbs_graph, 1)
 
         # We load custom cov/q matrices for this

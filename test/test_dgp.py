@@ -203,7 +203,7 @@ class TestSampleData(unittest.TestCase):
 
         # Test for non-iid sampling
         sparsity = 0.1
-        for method in ["daibarber2016", "ar1"]:
+        for method in ["blockequi", "ar1"]:
             for sign_prob in [0.1, 0.3, 0.5, 0.7, 0.9]:
                 dgprocess = dgp.DGP()
                 _, _, beta, _, _ = dgprocess.sample_data(
@@ -275,10 +275,10 @@ class TestSampleData(unittest.TestCase):
         )
         mineig = np.linalg.eigh(V)[0].min()
 
-    def test_daibarber2016_sample(self):
+    def test_blockequi_sample(self):
 
         # Check that defaults are correct - start w cov matrix
-        _, _, beta, _, V, _ = dgp.daibarber2016_graph()
+        _, _, beta, _, V, _ = dgp.block_equi_graph()
 
         # Construct expected cov matrix -  this is a different
         # construction than the actual function
@@ -298,7 +298,7 @@ class TestSampleData(unittest.TestCase):
 
         # Test equality with actual one
         np.testing.assert_array_almost_equal(
-            V, expected, err_msg="Default daibarber2016 cov matrix is incorrect"
+            V, expected, err_msg="Default blockequi cov matrix is incorrect"
         )
 
         # Check number of nonzero groups
@@ -307,14 +307,14 @@ class TestSampleData(unittest.TestCase):
         num_nonzero_groups = np.unique(nonzero_inds // 5).shape[0]
         self.assertTrue(
             num_nonzero_groups == 20,
-            msg=f"Default daibarber2016 beta has {num_nonzero_groups} nonzero groups, expected 20",
+            msg=f"Default blockequi beta has {num_nonzero_groups} nonzero groups, expected 20",
         )
 
         # Check number of nonzero features
         num_nonzero_features = (beta != 0).sum()
         self.assertTrue(
             num_nonzero_features == 100,
-            msg=f"Default daibarber2016 beta has {num_nonzero_features} nonzero features, expected 100",
+            msg=f"Default blockequi beta has {num_nonzero_features} nonzero features, expected 100",
         )
 
     def test_dsliu2020_sample(self):
@@ -329,7 +329,7 @@ class TestSampleData(unittest.TestCase):
             p=p,
             n=n,
             sparsity=0.1,
-            method="daibarber2016",
+            method="blockequi",
             coeff_dist="dsliu2020",
         )
         self.assertTrue(
@@ -344,7 +344,7 @@ class TestSampleData(unittest.TestCase):
             p=p,
             n=n,
             sparsity=0.025,
-            method="daibarber2016",
+            method="blockequi",
             coeff_dist="dsliu2020",
         )
         self.assertTrue(
@@ -364,7 +364,7 @@ class TestSampleData(unittest.TestCase):
             p=p,
             n=n,
             sparsity=0.06,
-            method="daibarber2016",
+            method="blockequi",
             coeff_dist="gmliu2019",
         )
         self.assertTrue(
@@ -544,10 +544,10 @@ class TestSampleData(unittest.TestCase):
         X, _, _, Q, V = dgprocess.sample_data(
             n=n,
             p=p,
-            method="daibarber2016",
+            method="blockequi",
             gamma=0,
             x_dist="blockt",
-            group_size=2,
+            block_size=2,
             df_t=df_t,
         )
         emp_corr = np.cov(X.T)

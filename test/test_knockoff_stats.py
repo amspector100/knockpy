@@ -10,7 +10,7 @@ from knockpy.knockoff_stats import data_dependent_threshhold
 
 DEFAULT_SAMPLE_KWARGS = {
     "coeff_size": 5,
-    "method": "daibarber2016",
+    "method": "blockequi",
     "gamma": 0,
     "sparsity": 0.5,
 }
@@ -39,7 +39,7 @@ class KStatVal(unittest.TestCase):
 
         # Add defaults to sample kwargs
         if "method" not in sample_kwargs:
-            sample_kwargs["method"] = "daibarber2016"
+            sample_kwargs["method"] = "blockequi"
         if "gamma" not in sample_kwargs:
             sample_kwargs["gamma"] = 1
         if "n" not in sample_kwargs:
@@ -464,7 +464,7 @@ class TestFeatureStatistics(KStatVal):
             y_dist="gaussian",
             coeff_size=100,
             sign_prob=0.5,
-            method="daibarber2016",
+            method="blockequi",
             rho=rho,
         )
         groups = np.arange(1, p + 1, 1)
@@ -613,7 +613,7 @@ class TestFeatureStatistics(KStatVal):
             sparsity=0.2,
             seed=110,
             gamma=0,
-            method="daibarber2016",
+            method="blockequi",
             min_power=0.5,
             group_features=False,
             cond_mean="pairint",
@@ -789,7 +789,7 @@ class TestBaseFeatureStatistic(KStatVal):
                 min_power=0.5,
                 max_l2norm=np.inf,
                 y_dist="binomial",
-                method="daibarber2016",
+                method="blockequi",
                 rho=0.2,
                 gamma=0,
             )
@@ -810,7 +810,7 @@ class TestBaseFeatureStatistic(KStatVal):
             min_power=0.5,
             max_l2norm=np.inf,
             y_dist="gaussian",
-            method="daibarber2016",
+            method="blockequi",
             rho=0.2,
             gamma=0,
         )

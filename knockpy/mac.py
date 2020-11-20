@@ -24,7 +24,6 @@ OBJECTIVE_OPTIONS = ["abs", "pnorm", "norm"]
 
 
 def TestIfCorrMatrix(Sigma):
-    """ Tests if a square matrix is a correlation matrix """
     p = Sigma.shape[0]
     diag = np.diag(Sigma)
     if np.sum(np.abs(diag - np.ones(p))) > p * 1e-2:
@@ -35,10 +34,7 @@ def calc_min_group_eigenvalue(Sigma, groups, tol=DEFAULT_TOL, verbose=False):
     """
     Calculates the minimum "group" eigenvalue of a covariance 
     matrix Sigma: see Dai and Barber 2016. This is useful for
-    constructing equicorrelated knockoffs.
-    :param Sigma: true precision matrix of X, of dimension p x p
-    :param groups: numpy array of length p, list of groups of variables
-    :param tol: Tolerance for error allowed in eigenvalues computations
+    constructing equicorrelated (group) knockoffs.
     """
 
     # Test corr matrix
@@ -82,11 +78,24 @@ def calc_min_group_eigenvalue(Sigma, groups, tol=DEFAULT_TOL, verbose=False):
 
 
 def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter=10):
-    """ Calculates the block diagonal matrix S using
-    the equicorrelated method described by Dai and Barber 2016.
-    :param Sigma: true precision matrix of X, of dimension p x p
-    :param groups: numpy array of length p, list of groups of variables
-    :param tol: Tolerance for error allowed in eigenvalues computations
+    """ Calculates the block diagonal matrix S using the 
+    equicorrelated method described by Dai and Barber 2016.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    groups : np.ndarray
+        For group knockoffs, a p-length array of integers from 1 to 
+        num_groups such that ``groups[j] == i`` indicates that variable `j`
+        is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
 
     # Get eigenvalues and decomposition
@@ -117,13 +126,29 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
     return S
 
 
-def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL, **kwargs):
+def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     """ 
-    Much faster solution to SDP without grouping
+    Solves ungrouped SDP to create S-matrix for MAC-minimizing knockoffs.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    verbose : bool
+        If True, prints updates during optimization.
+    num_iter : int
+        Number of iterations in a final binary search to account for
+        numerical errors and ensure 2Sigma - S is PSD.
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped diagonal S-matrix used to generate knockoffs
     """
 
-    # The code here does not make any intuitive sense,
-    # The DSDP solver is super fast but its input format is nonsensical.
+    # Note this DSDP solver is super fast but its input format is confusing.
     # This basically solves:
     # minimize c^T y s.t.
     # Ay <= b
@@ -215,34 +240,41 @@ def solve_group_SDP(
     tol=DEFAULT_TOL,
     **kwargs,
 ):
-    """ Solves the group SDP problem: extends the
-    formulation from Barber and Candes 2015/
-    Candes et al 2018 (MX Knockoffs). Note this will be 
-    much faster with equal-sized groups and objective="abs."
-    :param Sigma: true covariance (correlation) matrix, 
-    p by p numpy array.
-    :param groups: numpy array of length p with
-    integer values between 1 and m. 
-    :param verbose: if True, print progress of solver
-    :param objective: How to optimize the S matrix for 
-    group knockoffs. (For ungrouped knockoffs, using the 
-    objective = 'abs' is strongly recommended.)
-    There are several options:
+    """
+    Solves the MAC-minimizng SDP formulation for group knockoffs:
+    extends Barer and Candes 2015/ Candes et al 2018.
+
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    groups : np.ndarray
+        For group knockoffs, a p-length array of integers from 1 to 
+        num_groups such that ``groups[j] == i`` indicates that variable `j`
+        is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
+    verbose : bool
+        If True, prints updates during optimization.
+    objective : str
+        How to optimize the S matrix for group knockoffs. 
+        There are several options:
         - 'abs': minimize sum(abs(Sigma - S))
-        between groups and the group knockoffs.
         - 'pnorm': minimize Lp-th matrix norm.
-        Equivalent to abs when p = 1.
         - 'norm': minimize different type of matrix norm
         (see norm_type below).
-    :param norm_type: Means different things depending on objective.
-        - When objective == 'pnorm', i.e. objective is Lp-th matrix norm, 
-          which p to use. Can be any float >= 1. 
-        - When objective == 'norm', can be 'fro', 'nuc', np.inf, or 1
-          (i.e. which other norm to use).
-    Defaults to 2.
-    :param num_iter: We do a line search and scale S at the end to make 
-    absolutely sure there are no numerical errors. Defaults to 10.
-    :param tol: Minimum eigenvalue of S must be greater than this.
+    norm_type : str or int
+        - When objective == 'pnorm', a float specifying which Lp-th matrix norm
+        to use. Can be any float >= 1. 
+        - When objective == 'norm', can be 'fro', 'nuc', np.inf, or 1.
+    num_iter : int
+        Number of iterations in a final binary search to account for
+        numerical errors and ensure 2Sigma - S is PSD.
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    kwargs : dict
+        Keyword arguments to pass to the ``cvxpy.Problem.solve()`` method.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
 
     # By default we lower the convergence epsilon a bit for drastic speedup.
