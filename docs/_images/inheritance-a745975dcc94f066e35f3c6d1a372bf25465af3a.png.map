@@ -1,0 +1,5 @@
+<map id="inheritance0e16e768b3" name="inheritance0e16e768b3">
+<area shape="rect" id="node1" href="api/knockpy.knockoffs.FXSampler.html#knockpy.knockoffs.FXSampler" target="_top" title="Samples FX knockoffs. See the GaussianSampler documentation " alt="" coords="209,5,301,31"/>
+<area shape="rect" id="node2" href="api/knockpy.knockoffs.KnockoffSampler.html#knockpy.knockoffs.KnockoffSampler" target="_top" title="Base class for sampling knockoffs." alt="" coords="5,31,139,56"/>
+<area shape="rect" id="node3" href="api/knockpy.knockoffs.GaussianSampler.html#knockpy.knockoffs.GaussianSampler" target="_top" title="Samples MX Gaussian (group) knockoffs." alt="" coords="187,55,323,80"/>
+</map>
