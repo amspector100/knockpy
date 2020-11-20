@@ -1,6 +1,6 @@
 # Knockpy
 
-A python implementation of the knockoffs framework for variable selection.
+A python implementation of the knockoffs framework for variable selection. See https://amspector100.github.io/knockpy/ for detailed documentation and tutorials.
 
 ## Installation
 
