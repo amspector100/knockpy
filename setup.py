@@ -44,7 +44,7 @@ setuptools.setup(
         "scikit_learn>=0.22",
         "statsmodels>=0.10.1",
         "scikit-dsdp",
-        "networkx>=1.11",
+        "networkx>=2.4",
         "tqdm>=4.36.1",
         "group_lasso",
         "pyglmnet"

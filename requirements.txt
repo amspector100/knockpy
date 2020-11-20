@@ -10,7 +10,7 @@ pyglmnet==1.1
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch==1.4.0+cpu
 scikit-dsdp==0.0.1
-networkx==1.11
+networkx==2.4
 tqdm==4.36.1
 cython==0.29.14
 git+git://github.com/jcrudy/choldate.git
