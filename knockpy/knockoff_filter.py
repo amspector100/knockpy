@@ -89,21 +89,23 @@ class KnockoffFilter:
 
     Examples
     --------
-    # Fake data-generating process for Gaussian linear model
-    >>> import knockpy as kpy
-    >>> dgprocess = kpy.dgp.DGP()
-    >>> dgprocess.sample_data(n=500, p=500, sparsity=0.1)
+    Here we fit the KnockoffFilter on fake data from a Gaussian
+    linear model: ::
 
-    # LCD statistic with Gaussian MX knockoffs
-    # This uses LedoitWolf covariance estimation by default.
-    >>> from knockpy.knockoff_filter import KnockoffFilter 
-    >>> kfilter = KnockoffFilter( 
-        fstat='lcd', 
-        ksampler='gaussian', 
-        knockoff_kwargs={"method":"mvr"}, 
-    )
-    >>> rejections = kfilter.forward(X=dgprocess.X, y=dgprocess.y)
-    ```
+        # Fake data-generating process for Gaussian linear model
+        import knockpy as kpy
+        dgprocess = kpy.dgp.DGP()
+        dgprocess.sample_data(n=500, p=500, sparsity=0.1)
+
+        # LCD statistic with Gaussian MX knockoffs
+        # This uses LedoitWolf covariance estimation by default.
+        from knockpy.knockoff_filter import KnockoffFilter 
+        kfilter = KnockoffFilter( 
+            fstat='lcd', 
+            ksampler='gaussian', 
+            knockoff_kwargs={"method":"mvr"}, 
+        )
+        rejections = kfilter.forward(X=dgprocess.X, y=dgprocess.y)
     """
 
     def __init__(
