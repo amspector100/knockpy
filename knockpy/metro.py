@@ -673,7 +673,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
             self.active_frontier[j]
         )  # list(set(self.active_frontier[j]).union(set([j])))
         arr_key = x_flags[0, inds]
-        key = arr_key.tostring()
+        key = arr_key.tobytes()
         return key
 
     def _key2bool(self, key):
@@ -1101,13 +1101,6 @@ class ARTKSampler(MetropolizedKnockoffSampler):
         self.rhos = np.diag(V, 1)
         Q = utilities.chol2inv(V)
 
-        # Account for the fact there will likely be rejections
-        if "rec_prop" not in kwargs:
-            kwargs["rec_prop"] = 0.3
-            self.rej_rate = 0.3
-        else:
-            self.rej_rate = kwargs["rec_prop"]
-
         # Cliques and clique log-potentials - start
         # with initial clique. Note that a log-potential
         # for a clique of size k takes an array of size
@@ -1210,13 +1203,6 @@ class BlockTSampler(KnockoffSampler):
         # Dummy order / inv_order variables for consistency
         self.order = np.arange(self.p)
         self.inv_order = np.arange(self.p)
-
-        # Account for the fact there will likely be rejections
-        if "rec_prop" not in kwargs:
-            kwargs["rec_prop"] = 0.3
-            self.rej_rate = 0.3
-        else:
-            self.rej_rate = kwargs["rec_prop"]
 
         # Loop through blocks and initialize samplers
         self.samplers = []

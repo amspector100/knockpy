@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from . import constants
 from . import utilities
@@ -226,7 +227,7 @@ class KnockoffFilter:
             # Handle errors where Ginv is exactly low rank
             try:
                 self.Ginv = utilities.chol2inv(self.G)
-            except np.errors.LinAlgError:
+            except np.linalg.LinAlgError:
                 warnings.warn("The feature-knockoff covariance matrix is low rank.")
                 self.Ginv = None
         else:
@@ -355,6 +356,8 @@ class KnockoffFilter:
         self.score = self.fstat.score
         self.score_type = self.fstat.score_type
         self.rejections = self.make_selections(self.W, fdr)
+
+        print(self.W.sum())
 
         # Return
         return self.rejections

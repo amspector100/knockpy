@@ -303,50 +303,50 @@ class TestARTK(unittest.TestCase):
         X, _, _, Q, V = dgprocess.sample_data(
             n=n, p=p, method="AR1", rho=0.3, x_dist="ar1t", df_t=df_t
         )
-        S = np.eye(p)
+        for S in [None, np.eye(p)]:
 
-        # Sample t
-        tsampler = metro.ARTKSampler(X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True)
+            # Sample t
+            tsampler = metro.ARTKSampler(X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True)
 
-        # Correct junction tree
-        self.assertTrue(
-            tsampler.width == 1, f"tsampler should have width 1, not {tsampler.width}"
-        )
+            # Correct junction tree
+            self.assertTrue(
+                tsampler.width == 1, f"tsampler should have width 1, not {tsampler.width}"
+            )
 
-        # Sample
-        Xk = tsampler.sample_knockoffs()
+            # Sample
+            Xk = tsampler.sample_knockoffs()
 
-        # Check empirical means
-        # Check empirical covariance matrix
-        muk_hat = np.mean(Xk, axis=0)
-        np.testing.assert_almost_equal(
-            muk_hat,
-            np.zeros(p),
-            decimal=2,
-            err_msg=f"For ARTK sampler, empirical mean of Xk does not match mean of X",
-        )
+            # Check empirical means
+            # Check empirical covariance matrix
+            muk_hat = np.mean(Xk, axis=0)
+            np.testing.assert_almost_equal(
+                muk_hat,
+                np.zeros(p),
+                decimal=2,
+                err_msg=f"For ARTK sampler, empirical mean of Xk does not match mean of X",
+            )
 
-        # Check empirical covariance matrix
-        Vk_hat = np.corrcoef(Xk.T)
-        np.testing.assert_almost_equal(
-            V,
-            Vk_hat,
-            decimal=2,
-            err_msg=f"For ARTK sampler, empirical covariance of Xk does not match cov of X",
-        )
+            # Check empirical covariance matrix
+            Vk_hat = np.corrcoef(Xk.T)
+            np.testing.assert_almost_equal(
+                V,
+                Vk_hat,
+                decimal=2,
+                err_msg=f"For ARTK sampler, empirical covariance of Xk does not match cov of X",
+            )
 
-        # Check that marginal fourth moments match
-        X4th = np.mean(np.power(X, 4), axis=0)
-        Xk4th = np.mean(np.power(Xk, 4), axis=0)
-        np.testing.assert_almost_equal(
-            X4th / 10,
-            Xk4th / 10,
-            decimal=1,
-            err_msg=f"For ARTK sampler, fourth moment of Xk does not match theoretical fourth moment",
-        )
+            # Check that marginal fourth moments match
+            X4th = np.mean(np.power(X, 4), axis=0)
+            Xk4th = np.mean(np.power(Xk, 4), axis=0)
+            np.testing.assert_almost_equal(
+                X4th / 10,
+                Xk4th / 10,
+                decimal=1,
+                err_msg=f"For ARTK sampler, fourth moment of Xk does not match theoretical fourth moment",
+            )
 
-        # Run a ton of KS tests
-        tsampler.check_xk_validity(X, Xk, testname="ARTK")
+            # Run a ton of KS tests
+            tsampler.check_xk_validity(X, Xk, testname="ARTK")
 
 
 class TestBlockT(unittest.TestCase):
@@ -399,45 +399,45 @@ class TestBlockT(unittest.TestCase):
             x_dist="blockt",
             df_t=df_t,
         )
-        S = np.eye(p)
+        for S in [np.eye(p), None]:
 
-        # Sample t
-        tsampler = metro.BlockTSampler(X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True)
+            # Sample t
+            tsampler = metro.BlockTSampler(X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True)
 
-        # Sample
-        Xk = tsampler.sample_knockoffs()
+            # Sample
+            Xk = tsampler.sample_knockoffs()
 
-        # Check empirical means
-        # Check empirical covariance matrix
-        muk_hat = np.mean(Xk, axis=0)
-        np.testing.assert_almost_equal(
-            muk_hat,
-            np.zeros(p),
-            decimal=2,
-            err_msg=f"For block T sampler, empirical mean of Xk does not match mean of X",
-        )
+            # Check empirical means
+            # Check empirical covariance matrix
+            muk_hat = np.mean(Xk, axis=0)
+            np.testing.assert_almost_equal(
+                muk_hat,
+                np.zeros(p),
+                decimal=2,
+                err_msg=f"For block T sampler, empirical mean of Xk does not match mean of X",
+            )
 
-        # Check empirical covariance matrix
-        Vk_hat = np.cov(Xk.T)
-        np.testing.assert_almost_equal(
-            V,
-            Vk_hat,
-            decimal=2,
-            err_msg=f"For block T sampler, empirical covariance of Xk does not match cov of X",
-        )
+            # Check empirical covariance matrix
+            Vk_hat = np.cov(Xk.T)
+            np.testing.assert_almost_equal(
+                V,
+                Vk_hat,
+                decimal=2,
+                err_msg=f"For block T sampler, empirical covariance of Xk does not match cov of X",
+            )
 
-        # Check that marginal fourth moments match
-        X4th = np.mean(np.power(X, 4), axis=0)
-        Xk4th = np.mean(np.power(Xk, 4), axis=0)
-        np.testing.assert_almost_equal(
-            X4th / 10,
-            Xk4th / 10,
-            decimal=1,
-            err_msg=f"For block T sampler, fourth moment of Xk does not match theoretical fourth moment",
-        )
+            # Check that marginal fourth moments match
+            X4th = np.mean(np.power(X, 4), axis=0)
+            Xk4th = np.mean(np.power(Xk, 4), axis=0)
+            np.testing.assert_almost_equal(
+                X4th / 10,
+                Xk4th / 10,
+                decimal=1,
+                err_msg=f"For block T sampler, fourth moment of Xk does not match theoretical fourth moment",
+            )
 
-        # Run a ton of KS tests
-        tsampler.check_xk_validity(X, Xk, testname="BLOCKT")
+            # Run a ton of KS tests
+            tsampler.check_xk_validity(X, Xk, testname="BLOCKT")
 
 
 class TestGibbsGraph(unittest.TestCase):
