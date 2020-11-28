@@ -22,4 +22,4 @@ help:
 # Github flag --- I added this
 github:
 	@make html
-	@cp -a _build/html/. ../docs
+	@cp -a build/html/. ../docs

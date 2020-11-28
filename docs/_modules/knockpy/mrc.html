@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.mrc &mdash; knockpy 1.0.0dev documentation</title>
+  <title>knockpy.mrc &mdash; knockpy 1.0.2 documentation</title>
   
 
   
@@ -194,11 +194,10 @@
     <span class="k">return</span> <span class="n">trace_invG</span></div>
 
 
-<div class="viewcode-block" id="mmi_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mmi_loss">[docs]</a><span class="k">def</span> <span class="nf">mmi_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="maxent_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.maxent_loss">[docs]</a><span class="k">def</span> <span class="nf">maxent_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Computes the log determinant of the feature-knockoff covariance</span>
-<span class="sd">    matrix, which is inversely related to the mutual information</span>
-<span class="sd">    between X and XK.</span>
+<span class="sd">    Computes the log determinant of the feature-knockoff precision</span>
+<span class="sd">    matrix, which is proportional to the negative entropy of [X, tilde{X}].</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -220,6 +219,16 @@
     <span class="n">detG</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span> <span class="o">+</span> <span class="n">smoothing</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)))</span>
     <span class="n">detG</span> <span class="o">=</span> <span class="n">detG</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">detG</span></div>
+
+<div class="viewcode-block" id="mmi_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mmi_loss">[docs]</a><span class="k">def</span> <span class="nf">mmi_loss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the log determinant of the feature-knockoff precision</span>
+<span class="sd">    matrix, which is proportional mutual information between X and knockoffs.</span>
+
+<span class="sd">    This is identical to ``maxent_loss`` and exists only for backwards </span>
+<span class="sd">    compatability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">maxent_loss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="solve_mvr"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr">[docs]</a><span class="k">def</span> <span class="nf">solve_mvr</span><span class="p">(</span>
@@ -353,11 +362,11 @@
     <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">S</span></div>
 
-<div class="viewcode-block" id="solve_mmi"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mmi">[docs]</a><span class="k">def</span> <span class="nf">solve_mmi</span><span class="p">(</span>
+<div class="viewcode-block" id="solve_maxent"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_maxent">[docs]</a><span class="k">def</span> <span class="nf">solve_maxent</span><span class="p">(</span>
     <span class="n">Sigma</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Computes S-matrix used to generate minimum mutual information</span>
+<span class="sd">    Computes S-matrix used to generate maximum entropy</span>
 <span class="sd">    knockoffs using coordinate descent.</span>
 
 <span class="sd">    Parameters</span>
@@ -446,6 +455,14 @@
     <span class="n">S</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
     <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">S</span></div>
+
+<div class="viewcode-block" id="solve_mmi"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mmi">[docs]</a><span class="k">def</span> <span class="nf">solve_mmi</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes S-matrix used to generate minimum mutual information</span>
+<span class="sd">    knockoffs. This is identical to ``solve_maxent``</span>
+<span class="sd">    and exists only for backwards compatability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">solve_maxent</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="solve_ciknock"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_ciknock">[docs]</a><span class="k">def</span> <span class="nf">solve_ciknock</span><span class="p">(</span>
     <span class="n">Sigma</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorials &mdash; knockpy 1.0.0dev documentation</title>
+  <title>Tutorials &mdash; knockpy 1.0.2 documentation</title>
   
 
   
@@ -455,7 +455,7 @@ div.rendered_html tbody tr:hover {
 <p>There are two main types of knockoffs:</p>
 <ol class="arabic simple">
 <li><p><strong>Fixed-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as fixed and control the false discovery rate assuming <span class="math notranslate nohighlight">\(y \mid X\)</span> follows a homoskedastic gaussian linear response. In this case, it is possible to construct valid knockoffs <span class="math notranslate nohighlight">\(\tilde{X}\)</span> with no assumptions on <span class="math notranslate nohighlight">\(X\)</span>. Note also that when using fixed-X knockoffs, the feature statistic must satisfy a slightly more restrictive <em>sufficiency</em> condition (see <a class="reference external" href="https://arxiv.org/abs/1404.5609">Barber and Candes 2015</a>).</p></li>
-<li><p><strong>Model-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as random. Model-X knockoffs control the false discovery rate for any conditional distribution <span class="math notranslate nohighlight">\(y \mid X\)</span>, but they naturally assume that the distribution of <span class="math notranslate nohighlight">\(X\)</span> is known. Thus, to construct model-X knockoffs, one must know (or at least estimate) the distribution of <span class="math notranslate nohighlight">\(X\)</span>.</p></li>
+<li><p><strong>Model-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as random. Model-X knockoffs control the false discovery rate for any conditional distribution <span class="math notranslate nohighlight">\(y \mid X\)</span>, but they assume that the distribution of <span class="math notranslate nohighlight">\(X\)</span> is known. Thus, to construct model-X knockoffs, one must know (or estimate) the distribution of <span class="math notranslate nohighlight">\(X\)</span>.</p></li>
 </ol>
 </div>
 <div class="section" id="The-KnockoffFilter-class">
@@ -470,10 +470,11 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="c1"># Create a random covariance matrix for X</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">knockpy</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Knockpy version is: </span><span class="si">{</span><span class="n">knockpy</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">110</span><span class="p">)</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1"># number of data points</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">300</span> <span class="c1"># number of data points</span>
 <span class="n">p</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># number of features</span>
 <span class="n">Sigma</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># Stationary AR1 process with correlation 0.5</span>
 
@@ -491,7 +492,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Knockpy version is: 0.1.6
+Knockpy version is: 1.0.2
 </pre></div></div>
 </div>
 <p>Next, we instantiate the <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class. To do this, we need to specify (i) what type of knockoff sampler we will use and (ii) what feature statistic we are using. Since <span class="math notranslate nohighlight">\(X \sim \mathcal{N}(0, \Sigma)\)</span>, we will use Gaussian knockoffs, and we’ll use the Lasso as our feature statistic, since it’s a good all-around choice. We’ll explore more options for these arguments later.</p>
@@ -524,7 +525,7 @@ Knockpy version is: 0.1.6
 <span class="c1"># Check the number of discoveries we made</span>
 <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 <span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with an fdp of </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -533,7 +534,7 @@ Knockpy version is: 0.1.6
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-The knockoff filter has discovered 68.0% of the non-nulls with an fdp of 19.0476194024086%
+The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 13.793103396892548%
 </pre></div></div>
 </div>
 <p>Of course, in most real applications, we do not know <span class="math notranslate nohighlight">\(\Sigma\)</span>. In these cases, the knockoff filter will automatically infer <span class="math notranslate nohighlight">\(\Sigma\)</span> using LedoitWolf or GraphicalLasso covariance estimation. Although this invalidates the exact validty of model-X knockoffs, knockoffs have been shown to be fairly robust in this setting.</p>
@@ -548,7 +549,7 @@ The knockoff filter has discovered 68.0% of the non-nulls with an fdp of 19.0476
 <span class="c1"># Check the number of discoveries we made</span>
 <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 <span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with an FDR of </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -557,7 +558,7 @@ The knockoff filter has discovered 68.0% of the non-nulls with an fdp of 19.0476
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-The knockoff filter has discovered 64.0% of the non-nulls with an FDR of 3.030303120613098%
+The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 5.6603774428367615%
 </pre></div></div>
 </div>
 </div>
@@ -610,14 +611,14 @@ The knockoff filter has discovered 64.0% of the non-nulls with an FDR of 3.03030
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-For p=500, MVR took 1.9 sec, MMI took 3.8 sec, SDP took 5.0 sec
+For p=500, MVR took 2.1 sec, MMI took 4.1 sec, SDP took 4.4 sec
 </pre></div></div>
 </div>
 </div>
 <div class="section" id="Metropolized-knockoff-sampling">
 <h2>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> implements a fully general covariance-guided Metropolized Knockoff Sampler, which is capable of sampling model-X knockoffs for any <span class="math notranslate nohighlight">\(X\)</span> distribution given an (unnormalized) density function of <span class="math notranslate nohighlight">\(X\)</span>. This metropolized knockoff sampler uses a variety of computational tricks to make it orders of magnitude faster than a naive implementation.</p>
-<p>We review metro in more detail in the advanced usage section. For now, we give an example of the</p>
+<p>The API reference as well as the source for the metro module details more advanced usage of metro; however, for now, we simply demonstrate how to pass in an arbitrary log-likelihood function to the <code class="docutils literal notranslate"><span class="pre">MetropolizedKnockoffSampler</span></code> class and use it to sample knockoffs.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -644,7 +645,7 @@ For p=500, MVR took 1.9 sec, MMI took 3.8 sec, SDP took 5.0 sec
         <span class="n">ycoord</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">xcoord</span> <span class="o">+</span> <span class="n">offset</span><span class="p">),</span> <span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">U</span><span class="p">[</span><span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
-
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
 <span class="n">metrosampler</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">metro</span><span class="o">.</span><span class="n">MetropolizedKnockoffSampler</span><span class="p">(</span>
     <span class="n">log_likelihood</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">X_metro</span><span class="p">,</span> <span class="n">undir_graph</span><span class="o">=</span><span class="n">U</span>
 <span class="p">)</span>
@@ -672,7 +673,7 @@ For p=500, MVR took 1.9 sec, MMI took 3.8 sec, SDP took 5.0 sec
 </pre></div>
 </div>
 </div>
-<p>The metro module can also accept clique potentials from an undirected graphical model in place of the likelihood function to get a <span class="math notranslate nohighlight">\(O(p)\)</span> speedup, as discussed in advanced usage.</p>
+<p>The metro module can also accept clique potentials from an undirected graphical model in place of the likelihood function to get a <span class="math notranslate nohighlight">\(O(p)\)</span> speedup, as discussed in the API reference.</p>
 </div>
 <div class="section" id="Built-in-feature-statistics">
 <h2>Built-in feature statistics<a class="headerlink" href="#Built-in-feature-statistics" title="Permalink to this headline">¶</a></h2>
@@ -736,7 +737,7 @@ FeatureStatistic class temporarily replaces <span class="math notranslate nohigh
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Made 41.0 rejections!
+Made 35.0 rejections!
 </pre></div></div>
 </div>
 </div>
@@ -770,7 +771,7 @@ Made 41.0 rejections!
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Made 61.0 rejections!
+Made 56.0 rejections!
 </pre></div></div>
 </div>
 <p>Note, however, that our current implementations for group knockoffs are in beta and are substantially slower than the ungrouped sampling methods, and the MVR/MMI methods use a heuristic gradient based method which lacks formal convergence guarantees. We plan to add more support for group knockoffs over the next few releases.</p>

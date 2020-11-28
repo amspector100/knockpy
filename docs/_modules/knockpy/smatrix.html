@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.smatrix &mdash; knockpy 1.0.0dev documentation</title>
+  <title>knockpy.smatrix &mdash; knockpy 1.0.2 documentation</title>
   
 
   
@@ -278,7 +278,7 @@
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wraps a variety of S-matrix generation functions.</span>
-<span class="sd">    For mvr, mmi, and sdp methods, this uses a block-diagonal</span>
+<span class="sd">    For mvr, maxent, mmi, and sdp methods, this uses a block-diagonal</span>
 <span class="sd">    approximation of Sigma if the dimension of Sigma exceeds</span>
 <span class="sd">    max_block.</span>
 
@@ -291,7 +291,7 @@
 <span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
 <span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs). </span>
 <span class="sd">    method : str</span>
-<span class="sd">        Method for constructing S-matrix. One of mvr, mmi, sdp, equicorrelated, ci.</span>
+<span class="sd">        Method for constructing S-matrix. One of mvr, maxent, mmi, sdp, equicorrelated, ci.</span>
 <span class="sd">    solver : str</span>
 <span class="sd">        Method for solving mrc knockoffs. One of &#39;cd&#39; (coordinate descent) </span>
 <span class="sd">        or &#39;psgd&#39; (projected gradient descent). Coordinate descent is </span>
@@ -303,6 +303,11 @@
 <span class="sd">        a block-diagonal matrix. </span>
 <span class="sd">    kwargs : dict</span>
 <span class="sd">        kwargs to pass to one of the wrapped S-matrix solvers.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    mmi stands for minimum mutual information, which is the same as maximizing</span>
+<span class="sd">    entropy.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -323,6 +328,9 @@
     <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">method</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="n">method</span> <span class="o">=</span> <span class="n">parse_method</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="c1"># These two are the same</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mmi&#39;</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;maxent&#39;</span>
     <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
@@ -385,9 +393,9 @@
             <span class="n">smoothing</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;smoothing&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span><span class="p">:</span>
             <span class="n">obj</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">mvr_loss</span>
-        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mmi&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span>
-            <span class="n">obj</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">mmi_loss</span>
-        <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mvr&quot;</span><span class="p">,</span> <span class="s2">&quot;mmi&quot;</span><span class="p">,</span> <span class="s2">&quot;maxent&quot;</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">maxent_loss</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mvr&quot;</span><span class="p">,</span> <span class="s2">&quot;maxent&quot;</span><span class="p">]:</span>
             <span class="n">best_gamma</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="n">best_loss</span> <span class="o">=</span> <span class="n">obj</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">gamma</span> <span class="ow">in</span> <span class="n">constants</span><span class="o">.</span><span class="n">GAMMA_VALS</span><span class="p">:</span>
@@ -404,7 +412,7 @@
     <span class="c1"># (this is todo)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
         <span class="n">solver</span> <span class="o">=</span> <span class="s2">&quot;psgd&quot;</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mmi&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">solver</span> <span class="o">==</span> <span class="s2">&quot;psgd&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">solver</span> <span class="o">==</span> <span class="s2">&quot;psgd&quot;</span><span class="p">:</span>
         <span class="c1"># Check for imports</span>
         <span class="n">utilities</span><span class="o">.</span><span class="n">check_kpytorch_available</span><span class="p">(</span><span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;group MRC knockoffs OR PSGD solver&quot;</span><span class="p">)</span>
         <span class="kn">from</span> <span class="nn">.kpytorch</span> <span class="kn">import</span> <span class="n">mrcgrad</span>
@@ -412,8 +420,8 @@
         <span class="n">S</span> <span class="o">=</span> <span class="n">mrcgrad</span><span class="o">.</span><span class="n">solve_mrc_psgd</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">solve_mvr</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mmi&quot;</span><span class="p">:</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">solve_mmi</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">solve_maxent</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sdp&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;asdp&quot;</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">mac</span><span class="o">.</span><span class="n">solve_group_SDP</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ciknock&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ci&quot;</span><span class="p">:</span>

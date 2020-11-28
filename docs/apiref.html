@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; knockpy 1.0.0dev documentation</title>
+  <title>API Reference &mdash; knockpy 1.0.2 documentation</title>
   
 
   
@@ -2184,7 +2184,7 @@ up to normalizing constant.
 <dt id="knockpy.smatrix.compute_smatrix">
 <code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">compute_smatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">solver</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">max_block</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">num_processes</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#compute_smatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.compute_smatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wraps a variety of S-matrix generation functions.
-For mvr, mmi, and sdp methods, this uses a block-diagonal
+For mvr, maxent, mmi, and sdp methods, this uses a block-diagonal
 approximation of Sigma if the dimension of Sigma exceeds
 max_block.</p>
 <dl class="field-list simple">
@@ -2196,7 +2196,7 @@ max_block.</p>
 num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
 is a member of group <cite>i</cite>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (regular knockoffs).</p>
 </dd>
-<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>Method for constructing S-matrix. One of mvr, mmi, sdp, equicorrelated, ci.</p>
+<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>Method for constructing S-matrix. One of mvr, maxent, mmi, sdp, equicorrelated, ci.</p>
 </dd>
 <dt><strong>solver</strong><span class="classifier">str</span></dt><dd><p>Method for solving mrc knockoffs. One of ‘cd’ (coordinate descent) 
 or ‘psgd’ (projected gradient descent). Coordinate descent is 
@@ -2218,6 +2218,9 @@ a block-diagonal matrix.</p>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>mmi stands for minimum mutual information, which is the same as maximizing
+entropy.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -2242,11 +2245,10 @@ have size less than max_block.</p>
 
 <span class="target" id="module-knockpy.mrc"></span><p>Methods for minimum-reconstructability knockoffs.</p>
 <dl class="py function">
-<dt id="knockpy.mrc.mmi_loss">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">mmi_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#mmi_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.mmi_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the log determinant of the feature-knockoff covariance
-matrix, which is inversely related to the mutual information
-between X and XK.</p>
+<dt id="knockpy.mrc.maxent_loss">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">maxent_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#maxent_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.maxent_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the log determinant of the feature-knockoff precision
+matrix, which is proportional to the negative entropy of [X, tilde{X}].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -2267,6 +2269,15 @@ to avoid numerical instability. Defaults to 0.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mrc.mmi_loss">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">mmi_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#mmi_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.mmi_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the log determinant of the feature-knockoff precision
+matrix, which is proportional mutual information between X and knockoffs.</p>
+<p>This is identical to <code class="docutils literal notranslate"><span class="pre">maxent_loss</span></code> and exists only for backwards 
+compatability.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -2328,9 +2339,9 @@ search to find the maximum gamma such that gamma * S is feasible.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="knockpy.mrc.solve_mmi">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mmi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mmi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mmi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes S-matrix used to generate minimum mutual information
+<dt id="knockpy.mrc.solve_maxent">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_maxent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_maxent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_maxent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes S-matrix used to generate maximum entropy
 knockoffs using coordinate descent.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2358,6 +2369,14 @@ instability. Defaults to 0.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mrc.solve_mmi">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mmi</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mmi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mmi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes S-matrix used to generate minimum mutual information
+knockoffs. This is identical to <code class="docutils literal notranslate"><span class="pre">solve_maxent</span></code>
+and exists only for backwards compatability.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -2691,7 +2710,7 @@ recycled.
 as opposed to sum 1/eigs. This is helpful if fitting lasso 
 statistics on extremely degenerate covariance matrices. Over the 
 course of optimization, this smoothing parameter will go to 0.
-:param method: One of mvr or mmi.</p>
+:param method: One of mvr or maxent (mmi for backwards compatability).</p>
 <p class="rubric">Methods</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -2919,7 +2938,7 @@ See <a class="reference external" href="https://github.com/pytorch/pytorch/issue
 <dd><p>Wraps the PSGDSolver class.
 :param Sigma: Covariance matrix
 :param groups: groups for group knockoffs
-:param method: MRC loss (mvr or mmi)
+:param method: MRC loss (mvr or maxent)
 :param init_kwargs: kwargs to pass to 
 PSGDSolver.
 :param optimize_kwargs: kwargs to pass 

@@ -39,7 +39,9 @@
 
     
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Knockoff Feature Statistics API Reference" href="kstats.html" />
+    <link rel="prev" title="Knockoff Filter API Reference" href="kfilter.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,10 +87,15 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kfilter.html">Knockoff Filter API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Knockoff Sampler API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kstats.html">Knockoff Feature Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="smatrix.html">Knockoff S-Matrix Generation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dgp.html">Utilities API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpytorch.html">Kpytorch API Reference</a></li>
 </ul>
 
             
@@ -198,13 +205,13 @@ for description of the arguments.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code>(X, Xk[, testname, alpha])</p></td>
 <td><p>Runs a variety of KS tests on X and Xk to (informally) check that Xk are valid knockoffs for X.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.FXSampler.fetch_S" title="knockpy.knockoffs.FXSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoffs.FXSampler.fetch_S" title="knockpy.knockoffs.FXSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
 <td><p>Rescales S to the same scale as the initial X input</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code>(sample1s, sample2s)</p></td>
 <td><p>Samples1s, Sample2s = list of arrays Gets p values by running ks tests and then does a multiple testing correction.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.FXSampler.sample_knockoffs" title="knockpy.knockoffs.FXSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoffs.FXSampler.sample_knockoffs" title="knockpy.knockoffs.FXSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
 <td><p>Samples knockoffs.</p></td>
 </tr>
 </tbody>
@@ -304,13 +311,13 @@ takes this into account and should increase the power of recycled knockoffs.    
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code>(X, Xk[, testname, alpha])</p></td>
 <td><p>Runs a variety of KS tests on X and Xk to (informally) check that Xk are valid knockoffs for X.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.GaussianSampler.fetch_S" title="knockpy.knockoffs.GaussianSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoffs.GaussianSampler.fetch_S" title="knockpy.knockoffs.GaussianSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
 <td><p>Fetches knockoff S-matrix.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code>(sample1s, sample2s)</p></td>
 <td><p>Samples1s, Sample2s = list of arrays Gets p values by running ks tests and then does a multiple testing correction.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.GaussianSampler.sample_knockoffs" title="knockpy.knockoffs.GaussianSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoffs.GaussianSampler.sample_knockoffs" title="knockpy.knockoffs.GaussianSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
 <td><p>Samples knockoffs.</p></td>
 </tr>
 </tbody>
@@ -340,16 +347,16 @@ takes this into account and should increase the power of recycled knockoffs.    
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.KnockoffSampler.check_PSD_condition" title="knockpy.knockoffs.KnockoffSampler.check_PSD_condition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_PSD_condition</span></code></a>(Sigma, S)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoffs.KnockoffSampler.check_PSD_condition" title="knockpy.knockoffs.KnockoffSampler.check_PSD_condition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_PSD_condition</span></code></a>(Sigma, S)</p></td>
 <td><p>Checks that the feature-knockoff cov matrix is PSD.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.KnockoffSampler.check_xk_validity" title="knockpy.knockoffs.KnockoffSampler.check_xk_validity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code></a>(X, Xk[, testname, alpha])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoffs.KnockoffSampler.check_xk_validity" title="knockpy.knockoffs.KnockoffSampler.check_xk_validity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code></a>(X, Xk[, testname, alpha])</p></td>
 <td><p>Runs a variety of KS tests on X and Xk to (informally) check that Xk are valid knockoffs for X.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.KnockoffSampler.fetch_S" title="knockpy.knockoffs.KnockoffSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoffs.KnockoffSampler.fetch_S" title="knockpy.knockoffs.KnockoffSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
 <td><p>Fetches knockoff S-matrix.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoffs.KnockoffSampler.many_ks_tests" title="knockpy.knockoffs.KnockoffSampler.many_ks_tests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code></a>(sample1s, sample2s)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoffs.KnockoffSampler.many_ks_tests" title="knockpy.knockoffs.KnockoffSampler.many_ks_tests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code></a>(sample1s, sample2s)</p></td>
 <td><p>Samples1s, Sample2s = list of arrays Gets p values by running ks tests and then does a multiple testing correction.</p></td>
 </tr>
 </tbody>
@@ -539,13 +546,13 @@ Markov chain.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code>(X, Xk[, testname, alpha])</p></td>
 <td><p>Runs a variety of KS tests on X and Xk to (informally) check that Xk are valid knockoffs for X.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.BlockTSampler.fetch_S" title="knockpy.metro.BlockTSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.BlockTSampler.fetch_S" title="knockpy.metro.BlockTSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
 <td><p>Fetches knockoff S-matrix.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code>(sample1s, sample2s)</p></td>
 <td><p>Samples1s, Sample2s = list of arrays Gets p values by running ks tests and then does a multiple testing correction.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.BlockTSampler.sample_knockoffs" title="knockpy.metro.BlockTSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>(**kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.BlockTSampler.sample_knockoffs" title="knockpy.metro.BlockTSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>(**kwargs)</p></td>
 <td><p>Actually samples knockoffs sequentially for each block.</p></td>
 </tr>
 </tbody>
@@ -621,13 +628,13 @@ corresponds with <code class="docutils literal notranslate"><span class="pre">se
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code>(X, Xk[, testname, alpha])</p></td>
 <td><p>Runs a variety of KS tests on X and Xk to (informally) check that Xk are valid knockoffs for X.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.GibbsGridSampler.fetch_S" title="knockpy.metro.GibbsGridSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.GibbsGridSampler.fetch_S" title="knockpy.metro.GibbsGridSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
 <td><p>Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> because the divide-and-conquer approach means there is no one S-matrix.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code>(sample1s, sample2s)</p></td>
 <td><p>Samples1s, Sample2s = list of arrays Gets p values by running ks tests and then does a multiple testing correction.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.GibbsGridSampler.sample_knockoffs" title="knockpy.metro.GibbsGridSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>(**kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.GibbsGridSampler.sample_knockoffs" title="knockpy.metro.GibbsGridSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>(**kwargs)</p></td>
 <td><p>Samples knockoffs using divide-and-conquer approach.</p></td>
 </tr>
 </tbody>
@@ -778,10 +785,10 @@ covariance-guided proposals.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.cache_conditional_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.cache_conditional_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cache_conditional_proposal_params</span></code></a>([verbose, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.cache_conditional_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.cache_conditional_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cache_conditional_proposal_params</span></code></a>([verbose, …])</p></td>
 <td><p>Caches some of the conditional means for Xjstar | Xtemp.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.center" title="knockpy.metro.MetropolizedKnockoffSampler.center"><code class="xref py py-obj docutils literal notranslate"><span class="pre">center</span></code></a>(M[, active_inds])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.center" title="knockpy.metro.MetropolizedKnockoffSampler.center"><code class="xref py py-obj docutils literal notranslate"><span class="pre">center</span></code></a>(M[, active_inds])</p></td>
 <td><p>Centers an n x j matrix M.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_PSD_condition</span></code>(Sigma, S)</p></td>
@@ -790,43 +797,43 @@ covariance-guided proposals.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code>(X, Xk[, testname, alpha])</p></td>
 <td><p>Runs a variety of KS tests on X and Xk to (informally) check that Xk are valid knockoffs for X.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.compute_F" title="knockpy.metro.MetropolizedKnockoffSampler.compute_F"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_F</span></code></a>(x_flags, j)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.compute_F" title="knockpy.metro.MetropolizedKnockoffSampler.compute_F"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_F</span></code></a>(x_flags, j)</p></td>
 <td><p>Computes the F function from Page 33 pf the paper:  Pr(tildeXj=tildexj, Xjstar=xjstar | Xtemp, tildeX_{1:j-1}, Xjstar_{1:j-1}) Note that tildexj and xjstar are NOT inputs because they do NOT change during the junction tree DP process.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.compute_acc_prob" title="knockpy.metro.MetropolizedKnockoffSampler.compute_acc_prob"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_acc_prob</span></code></a>(x_flags, j[, log_q1, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.compute_acc_prob" title="knockpy.metro.MetropolizedKnockoffSampler.compute_acc_prob"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_acc_prob</span></code></a>(x_flags, j[, log_q1, …])</p></td>
 <td><p>Computes acceptance probability for variable <code class="docutils literal notranslate"><span class="pre">j</span></code> given a particular rejection pattern <code class="docutils literal notranslate"><span class="pre">x_flags</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.create_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.create_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_proposal_params</span></code></a>(**kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.create_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.create_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_proposal_params</span></code></a>(**kwargs)</p></td>
 <td><p>Constructs the covariance-guided proposal.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.fetch_S" title="knockpy.metro.MetropolizedKnockoffSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.fetch_S" title="knockpy.metro.MetropolizedKnockoffSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
 <td><p>Fetches knockoff S-matrix.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.fetch_cached_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.fetch_cached_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_cached_proposal_params</span></code></a>(Xtemp, x_flags, j)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.fetch_cached_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.fetch_cached_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_cached_proposal_params</span></code></a>(Xtemp, x_flags, j)</p></td>
 <td><p>Same as above, but uses caching to speed up computation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.fetch_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.fetch_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_proposal_params</span></code></a>(X, prev_proposals)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.fetch_proposal_params" title="knockpy.metro.MetropolizedKnockoffSampler.fetch_proposal_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_proposal_params</span></code></a>(X, prev_proposals)</p></td>
 <td><p>Returns mean and variance of proposal j given X and previous proposals.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.lf" title="knockpy.metro.MetropolizedKnockoffSampler.lf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lf</span></code></a>(X)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.lf" title="knockpy.metro.MetropolizedKnockoffSampler.lf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lf</span></code></a>(X)</p></td>
 <td><p>Reordered likelihood function</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.lf_ratio" title="knockpy.metro.MetropolizedKnockoffSampler.lf_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lf_ratio</span></code></a>(X, Xjstar, j)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.lf_ratio" title="knockpy.metro.MetropolizedKnockoffSampler.lf_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lf_ratio</span></code></a>(X, Xjstar, j)</p></td>
 <td><p>Calculates the log of the likelihood ratio between two observations: X where X[:,j]  is replaced with Xjstar, divided by the likelihood of X.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.log_q12" title="knockpy.metro.MetropolizedKnockoffSampler.log_q12"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_q12</span></code></a>(x_flags, j)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.log_q12" title="knockpy.metro.MetropolizedKnockoffSampler.log_q12"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_q12</span></code></a>(x_flags, j)</p></td>
 <td><p>Computes q1 and q2 as specified by page 33 of the paper.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code>(sample1s, sample2s)</p></td>
 <td><p>Samples1s, Sample2s = list of arrays Gets p values by running ks tests and then does a multiple testing correction.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.q_ll" title="knockpy.metro.MetropolizedKnockoffSampler.q_ll"><code class="xref py py-obj docutils literal notranslate"><span class="pre">q_ll</span></code></a>(Xjstar, X, prev_proposals[, cond_mean, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.q_ll" title="knockpy.metro.MetropolizedKnockoffSampler.q_ll"><code class="xref py py-obj docutils literal notranslate"><span class="pre">q_ll</span></code></a>(Xjstar, X, prev_proposals[, cond_mean, …])</p></td>
 <td><p>Calculates the log-likelihood of a proposal Xjstar given X  and the previous proposals. Xjstar : np.ndarray     <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped numpy array of values to evaluate the proposal     likelihood at. X : np.ndarray     <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped array of observed data, in the order used to     sample knockoff variables. prev_proposals : np.ndarray     <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">j-1)</span></code>-shaped array of previous proposals, in the order     used to sample knockoff variables. If None, assumes j = 0.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.sample_knockoffs" title="knockpy.metro.MetropolizedKnockoffSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>([clip, cache])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.sample_knockoffs" title="knockpy.metro.MetropolizedKnockoffSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>([clip, cache])</p></td>
 <td><p>Samples knockoffs using the metropolized knockoff sampler.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler.sample_proposals" title="knockpy.metro.MetropolizedKnockoffSampler.sample_proposals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_proposals</span></code></a>(X, prev_proposals[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.metro.MetropolizedKnockoffSampler.sample_proposals" title="knockpy.metro.MetropolizedKnockoffSampler.sample_proposals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_proposals</span></code></a>(X, prev_proposals[, …])</p></td>
 <td><p>Samples a continuous or discrete proposal given the design matrix and the previous proposals.</p></td>
 </tr>
 </tbody>
@@ -1053,6 +1060,15 @@ up to normalizing constant.
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="kstats.html" class="btn btn-neutral float-right" title="Knockoff Feature Statistics API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="kfilter.html" class="btn btn-neutral float-left" title="Knockoff Filter API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

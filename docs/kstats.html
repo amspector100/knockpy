@@ -39,7 +39,9 @@
 
     
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Knockoff S-Matrix Generation API Reference" href="smatrix.html" />
+    <link rel="prev" title="Knockoff Sampler API Reference" href="ksamplers.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,10 +87,15 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kfilter.html">Knockoff Filter API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ksamplers.html">Knockoff Sampler API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Knockoff Feature Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="smatrix.html">Knockoff S-Matrix Generation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dgp.html">Utilities API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpytorch.html">Kpytorch API Reference</a></li>
 </ul>
 
             
@@ -193,7 +200,7 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.DeepPinkStatistic.fit" title="knockpy.knockoff_stats.DeepPinkStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.DeepPinkStatistic.fit" title="knockpy.knockoff_stats.DeepPinkStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
 <td><p>Wraps the FeatureStatistic class using DeepPINK to generate variable importances.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
@@ -327,19 +334,19 @@ is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.FeatureStatistic.cv_score_model" title="knockpy.knockoff_stats.FeatureStatistic.cv_score_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code></a>(features, y, cv_score[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.cv_score_model" title="knockpy.knockoff_stats.FeatureStatistic.cv_score_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code></a>(features, y, cv_score[, …])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.FeatureStatistic.fit" title="knockpy.knockoff_stats.FeatureStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.fit" title="knockpy.knockoff_stats.FeatureStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
 <td><p>Trains the model and creates feature importances.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.FeatureStatistic.score_model" title="knockpy.knockoff_stats.FeatureStatistic.score_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code></a>(features, y[, y_dist])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.score_model" title="knockpy.knockoff_stats.FeatureStatistic.score_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code></a>(features, y[, y_dist])</p></td>
 <td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances" title="knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code></a>(features, y)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances" title="knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code></a>(features, y)</p></td>
 <td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances" title="knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code></a>(features, y[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances" title="knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code></a>(features, y[, …])</p></td>
 <td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
 </tr>
 </tbody>
@@ -475,7 +482,7 @@ Z_swap is in the same permuted as <code class="docutils literal notranslate"><sp
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.LassoStatistic.fit" title="knockpy.knockoff_stats.LassoStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, zstat, use_pyglm, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.LassoStatistic.fit" title="knockpy.knockoff_stats.LassoStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, zstat, use_pyglm, …])</p></td>
 <td><p>Wraps the FeatureStatistic class but uses cross-validated Lasso coefficients or Lasso path statistics as variable importances.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
@@ -570,7 +577,7 @@ group knockoffs.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.MargCorrStatistic.fit" title="knockpy.knockoff_stats.MargCorrStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.MargCorrStatistic.fit" title="knockpy.knockoff_stats.MargCorrStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups])</p></td>
 <td><p>Wraps the FeatureStatistic class using marginal correlations  between X, Xk and y as variable importances.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
@@ -633,7 +640,7 @@ group knockoffs.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.OLSStatistic.fit" title="knockpy.knockoff_stats.OLSStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, cv_score])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.OLSStatistic.fit" title="knockpy.knockoff_stats.OLSStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, cv_score])</p></td>
 <td><p>Wraps the FeatureStatistic class with OLS coefs as variable importances.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
@@ -697,7 +704,7 @@ group knockoffs.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.RandomForestStatistic.fit" title="knockpy.knockoff_stats.RandomForestStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.RandomForestStatistic.fit" title="knockpy.knockoff_stats.RandomForestStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
 <td><p>Wraps the FeatureStatistic class using a Random Forest to  generate variable importances.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
@@ -791,7 +798,7 @@ group knockoffs.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.RidgeStatistic.fit" title="knockpy.knockoff_stats.RidgeStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, antisym, group_agg, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.RidgeStatistic.fit" title="knockpy.knockoff_stats.RidgeStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, antisym, group_agg, …])</p></td>
 <td><p>Wraps the FeatureStatistic class but uses cross-validated Ridge coefficients as variable importances.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
@@ -1100,6 +1107,15 @@ M is any <code class="docutils literal notranslate"><span class="pre">(n,</span>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="smatrix.html" class="btn btn-neutral float-right" title="Knockoff S-Matrix Generation API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ksamplers.html" class="btn btn-neutral float-left" title="Knockoff Sampler API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

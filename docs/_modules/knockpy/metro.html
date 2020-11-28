@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.metro &mdash; knockpy 1.0.0dev documentation</title>
+  <title>knockpy.metro &mdash; knockpy 1.0.2 documentation</title>
   
 
   
@@ -828,7 +828,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">active_frontier</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
         <span class="p">)</span>  <span class="c1"># list(set(self.active_frontier[j]).union(set([j])))</span>
         <span class="n">arr_key</span> <span class="o">=</span> <span class="n">x_flags</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inds</span><span class="p">]</span>
-        <span class="n">key</span> <span class="o">=</span> <span class="n">arr_key</span><span class="o">.</span><span class="n">tostring</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">arr_key</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">key</span>
 
     <span class="k">def</span> <span class="nf">_key2bool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
@@ -1256,13 +1256,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">Q</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">chol2inv</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
 
-        <span class="c1"># Account for the fact there will likely be rejections</span>
-        <span class="k">if</span> <span class="s2">&quot;rec_prop&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rec_prop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.3</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rej_rate</span> <span class="o">=</span> <span class="mf">0.3</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rej_rate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rec_prop&quot;</span><span class="p">]</span>
-
         <span class="c1"># Cliques and clique log-potentials - start</span>
         <span class="c1"># with initial clique. Note that a log-potential</span>
         <span class="c1"># for a clique of size k takes an array of size</span>
@@ -1365,13 +1358,6 @@
         <span class="c1"># Dummy order / inv_order variables for consistency</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inv_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
-
-        <span class="c1"># Account for the fact there will likely be rejections</span>
-        <span class="k">if</span> <span class="s2">&quot;rec_prop&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rec_prop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.3</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rej_rate</span> <span class="o">=</span> <span class="mf">0.3</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rej_rate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rec_prop&quot;</span><span class="p">]</span>
 
         <span class="c1"># Loop through blocks and initialize samplers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">samplers</span> <span class="o">=</span> <span class="p">[]</span>
