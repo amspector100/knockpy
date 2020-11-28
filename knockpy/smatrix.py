@@ -123,7 +123,7 @@ def compute_smatrix(
 ):
     """
     Wraps a variety of S-matrix generation functions.
-    For mvr, mmi, and sdp methods, this uses a block-diagonal
+    For mvr, maxent, mmi, and sdp methods, this uses a block-diagonal
     approximation of Sigma if the dimension of Sigma exceeds
     max_block.
 
@@ -136,7 +136,7 @@ def compute_smatrix(
         num_groups such that ``groups[j] == i`` indicates that variable `j`
         is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
     method : str
-        Method for constructing S-matrix. One of mvr, mmi, sdp, equicorrelated, ci.
+        Method for constructing S-matrix. One of mvr, maxent, mmi, sdp, equicorrelated, ci.
     solver : str
         Method for solving mrc knockoffs. One of 'cd' (coordinate descent) 
         or 'psgd' (projected gradient descent). Coordinate descent is 
@@ -148,6 +148,11 @@ def compute_smatrix(
         a block-diagonal matrix. 
     kwargs : dict
         kwargs to pass to one of the wrapped S-matrix solvers.
+
+    Notes
+    -----
+    mmi stands for minimum mutual information, which is the same as maximizing
+    entropy.
 
     Returns
     -------
@@ -168,6 +173,9 @@ def compute_smatrix(
     if method is not None:
         method = str(method).lower()
     method = parse_method(method, groups, p)
+    # These two are the same
+    if method == 'mmi':
+        method = 'maxent'
     if groups is None:
         groups = np.arange(1, p + 1, 1)
 
@@ -230,9 +238,9 @@ def compute_smatrix(
             smoothing = kwargs["smoothing"]
         if method == "mvr":
             obj = mrc.mvr_loss
-        elif method == "mmi" or method == "maxent":
-            obj = mrc.mmi_loss
-        if method in ["mvr", "mmi", "maxent"]:
+        elif method == "maxent":
+            obj = mrc.maxent_loss
+        if method in ["mvr", "maxent"]:
             best_gamma = 1
             best_loss = obj(Sigma=Sigma, S=S, smoothing=smoothing)
             for gamma in constants.GAMMA_VALS:
@@ -249,7 +257,7 @@ def compute_smatrix(
     # (this is todo)
     if not np.all(groups == np.arange(1, p + 1, 1)):
         solver = "psgd"
-    if (method == "mvr" or method == "mmi") and solver == "psgd":
+    if (method == "mvr" or method == "maxent") and solver == "psgd":
         # Check for imports
         utilities.check_kpytorch_available(purpose="group MRC knockoffs OR PSGD solver")
         from .kpytorch import mrcgrad
@@ -257,8 +265,8 @@ def compute_smatrix(
         S = mrcgrad.solve_mrc_psgd(Sigma=Sigma, groups=groups, method=method, **kwargs)
     elif method == "mvr":
         S = mrc.solve_mvr(Sigma=Sigma, **kwargs)
-    elif method == "mmi":
-        S = mrc.solve_mmi(Sigma=Sigma, **kwargs)
+    elif method == "maxent":
+        S = mrc.solve_maxent(Sigma=Sigma, **kwargs)
     elif method == "sdp" or method == "asdp":
         S = mac.solve_group_SDP(Sigma, groups, **kwargs,)
     elif method == "ciknock" or method == "ci":

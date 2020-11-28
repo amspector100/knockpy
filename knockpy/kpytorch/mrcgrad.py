@@ -70,7 +70,7 @@ class MVRLoss(nn.Module):
     as opposed to sum 1/eigs. This is helpful if fitting lasso 
     statistics on extremely degenerate covariance matrices. Over the 
     course of optimization, this smoothing parameter will go to 0.
-    :param method: One of mvr or mmi.
+    :param method: One of mvr or maxent (mmi for backwards compatability).
     """
 
     def __init__(
@@ -130,7 +130,7 @@ class MVRLoss(nn.Module):
         if method == "mvr":
             objective = mrc.mvr_loss
         else:
-            objective = mrc.mmi_loss
+            objective = mrc.maxent_loss
         for gamma in GAMMA_VALS:
             loss = objective(Sigma=Sigma, S=(1 - self.rec_prop) * gamma * init_S,)
             if loss >= 0 and loss < best_loss:
@@ -185,7 +185,7 @@ class MVRLoss(nn.Module):
         eigvals = eigvals[0]
         if self.method == "mvr":
             inv_eigs = 1 / (smoothing + eigvals)
-        elif self.method == "mmi":
+        elif self.method == "maxent":
             inv_eigs = torch.log(
                 1 / torch.max((smoothing + eigvals), torch.tensor(smoothing).float()),
             )
@@ -390,7 +390,7 @@ def solve_mrc_psgd(
     Wraps the PSGDSolver class.
     :param Sigma: Covariance matrix
     :param groups: groups for group knockoffs
-    :param method: MRC loss (mvr or mmi)
+    :param method: MRC loss (mvr or maxent)
     :param init_kwargs: kwargs to pass to 
     PSGDSolver.
     :param optimize_kwargs: kwargs to pass 

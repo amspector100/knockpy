@@ -357,7 +357,5 @@ class KnockoffFilter:
         self.score_type = self.fstat.score_type
         self.rejections = self.make_selections(self.W, fdr)
 
-        print(self.W.sum())
-
         # Return
         return self.rejections

@@ -320,8 +320,8 @@ class TestMRCSolvers(CheckSMatrix):
         )
 
     def test_group_sorting_error(self):
-        """ Tests PSGD class raieses error if the cov 
-		matrix/groups are improperly sorted"""
+        """ Tests PSGD class raises error if the cov 
+        matrix/groups are improperly sorted"""
 
         if not TORCH_AVAILABLE:
             return None
@@ -344,17 +344,14 @@ class TestMRCSolvers(CheckSMatrix):
 
     def test_smoothing(self):
         """
-		Tests that one small eigenvalue of the cov matrix doesn't ruin the performance of the methods.
-		It turns out smoothing is not required for this, but this is a nice check
-		anyway.
-		"""
+        Smoothing is not required for this, but this is a nice check anyway.
+        """
         p = 50
         smoothing = 0.1
         dgprocess = dgp.DGP()
         _, _, _, _, V = dgprocess.sample_data(method="partialcorr", rho=0.1,)
         S_MVR = mrc.solve_mvr(Sigma=V, smoothing=smoothing)
         # Not implemented yet
-        # S_ENT = mrc.solve_mmi(Sigma=V, smoothing=smoothing)
         S_SDP = mac.solve_SDP(Sigma=V, tol=1e-5)
         mvr_mean = np.diag(S_MVR).mean()
         sdp_mean = np.diag(S_SDP).mean()
@@ -365,7 +362,7 @@ class TestMRCSolvers(CheckSMatrix):
 
     def test_equicorrelated_soln(self):
         """ Tests that solvers yield expected
-		solution for equicorrelated matrices """
+        solution for equicorrelated matrices """
 
         if not TORCH_AVAILABLE:
             return None
@@ -380,7 +377,7 @@ class TestMRCSolvers(CheckSMatrix):
         rhos = [0.1, 0.3, 0.5, 0.7, 0.9]
         for rho in rhos:
             for smoothing in smoothings:
-                for method in ["mvr", "mmi"]:
+                for method in ["mvr", "mmi", "maxent"]:
                     # Construct Sigma
                     Sigma = np.zeros((p, p)) + rho
                     Sigma += (1 - rho) * np.eye(p)
@@ -432,6 +429,38 @@ class TestMRCSolvers(CheckSMatrix):
                         decimal=2,
                         err_msg=f"For equicorrelated cov rho={rho}, mmi_solver yields unexpected solution",
                     )
+
+    def test_maxent(self):
+        """ Both maxent/mmi work properly """
+        # Sample data
+        dgprocess = dgp.DGP()
+        dgprocess.sample_data(p=50, method='ar1', a=3)
+
+        # Check solve_maxent/solve_mmi
+        np.random.seed(110)
+        S_ME = smatrix.compute_smatrix(dgprocess.Sigma, method='maxent')
+        np.random.seed(110)
+        S_MMI = smatrix.compute_smatrix(dgprocess.Sigma, method='mmi')
+        np.testing.assert_array_almost_equal(
+            S_ME, S_MMI, decimal=3, err_msg=f"compute_smatrix yields diff answers for mmi, maxent"
+        )
+
+        # Check solve_maxent/solve_mmi
+        np.random.seed(110)
+        S_ME = mrc.solve_maxent(dgprocess.Sigma)
+        np.random.seed(110)
+        S_MMI = mrc.solve_mmi(dgprocess.Sigma)
+        np.testing.assert_array_almost_equal(
+            S_ME, S_MMI, decimal=3, err_msg=f"solve_maxent and solve_mmi yield different answers"
+        )
+
+        # Check maxent_loss/mmi_loss
+        L_ME = mrc.maxent_loss(dgprocess.Sigma, S_ME)
+        L_MMI = mrc.mmi_loss(dgprocess.Sigma, S_MMI)
+        np.testing.assert_almost_equal(
+            L_ME, L_MMI, decimal=3, err_msg=f"maxent_loss and mmi_loss yield different answers"
+        )
+
 
     def test_equicorrelated_soln_recycled(self):
         """ Correct solutions on equicorrelated matrix with recycling """
@@ -493,9 +522,9 @@ class TestMRCSolvers(CheckSMatrix):
 
     def test_complex_solns(self):
         """
-		Check the solution of the various solvers
-		for non-grouped knockoffs.
-		"""
+        Check the solution of the various solvers
+        for non-grouped knockoffs.
+        """
 
         # Check availability
         if not TORCH_AVAILABLE:
@@ -554,9 +583,9 @@ class TestMRCSolvers(CheckSMatrix):
 
     def test_complex_group_solns(self):
         """
-		Check the solutions of the PSGD solver
-		for group knockoffs.
-		"""
+        Check the solutions of the PSGD solver
+        for group knockoffs.
+        """
 
         if not TORCH_AVAILABLE:
             return None
@@ -595,8 +624,8 @@ class TestMRCSolvers(CheckSMatrix):
 
     def test_equi_ciknock_solution(self):
         """
-		Check ciknockoff solution
-		"""
+        Check ciknockoff solution
+        """
         p = 500
         rho = 0.6
         # 1. Block equicorrelated
@@ -625,7 +654,7 @@ class TestMRCSolvers(CheckSMatrix):
 class TestBlockdiagApprx(CheckSMatrix):
     def test_divide_comp(self):
         """ Check that when we divide computation, our
-		final blocks do not exceed the specified block size."""
+        final blocks do not exceed the specified block size."""
 
         p = 120
         for method in ["blockequi", "ar1", "ver", "qer"]:
@@ -652,7 +681,7 @@ class TestBlockdiagApprx(CheckSMatrix):
             p=p, method="blockequi", gamma=gamma, rho=rho
         )
 
-        for method in ["mvr", "mmi", "sdp"]:
+        for method in ["mvr", "maxent", "sdp"]:
             # Check that S_approx is valid
             S_approx = smatrix.compute_smatrix(V, method=method, max_block=10)
             self.check_S_properties(V, S_approx, groups)
@@ -681,7 +710,7 @@ class TestBlockdiagApprx(CheckSMatrix):
         dgprocess = dgp.DGP()
         _, _, _, _, V = dgprocess.sample_data(p=p, method="ar1", a=a, b=b)
         for groups in [triv_groups, nontriv_groups]:
-            for method in ["mvr", "mmi", "sdp"]:
+            for method in ["mvr", "maxent", "mmi", "sdp"]:
 
                 # Check that S_approx is valid
                 S_approx = smatrix.compute_smatrix(
@@ -814,10 +843,10 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
     def test_consistency_of_inferring_sigma(self):
         """ Checks that the same knockoffs are produced
-		whether you infer the covariance matrix first and
-		pass it to the gaussian_knockoffs generator, or
-		you let the generator do the work for you
-		"""
+        whether you infer the covariance matrix first and
+        pass it to the gaussian_knockoffs generator, or
+        you let the generator do the work for you
+        """
 
         n = 25
         p = 300
@@ -928,10 +957,10 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
     def test_scaling_consistency(self):
         """
-		Checks whether if we first calculate S
-		and then pass it back into the knockoff
-		generator, we'll get the same answer back.
-		"""
+        Checks whether if we first calculate S
+        and then pass it back into the knockoff
+        generator, we'll get the same answer back.
+        """
 
         p = 100
         n = 300

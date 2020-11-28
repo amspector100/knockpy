@@ -39,11 +39,10 @@ def mvr_loss(Sigma, S, smoothing=0):
     return trace_invG
 
 
-def mmi_loss(Sigma, S, smoothing=0):
+def maxent_loss(Sigma, S, smoothing=0):
     """
-    Computes the log determinant of the feature-knockoff covariance
-    matrix, which is inversely related to the mutual information
-    between X and XK.
+    Computes the log determinant of the feature-knockoff precision
+    matrix, which is proportional to the negative entropy of [X, tilde{X}].
 
     Parameters
     ----------
@@ -65,6 +64,16 @@ def mmi_loss(Sigma, S, smoothing=0):
     detG = np.log(np.linalg.det(2 * Sigma - S + smoothing * np.eye(p)))
     detG = detG + np.log(np.diag(S + smoothing)).sum()
     return -1 * detG
+
+def mmi_loss(*args, **kwargs):
+    """
+    Computes the log determinant of the feature-knockoff precision
+    matrix, which is proportional mutual information between X and knockoffs.
+
+    This is identical to ``maxent_loss`` and exists only for backwards 
+    compatability.
+    """
+    return maxent_loss(*args, **kwargs)
 
 
 def solve_mvr(
@@ -198,11 +207,11 @@ def solve_mvr(
     S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
     return S
 
-def solve_mmi(
+def solve_maxent(
     Sigma, tol=1e-5, verbose=False, num_iter=10, smoothing=0, converge_tol=1e-4
 ):
     """
-    Computes S-matrix used to generate minimum mutual information
+    Computes S-matrix used to generate maximum entropy
     knockoffs using coordinate descent.
 
     Parameters
@@ -291,6 +300,14 @@ def solve_mmi(
     S = utilities.shift_until_PSD(S, tol=tol)
     S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
     return S
+
+def solve_mmi(*args, **kwargs):
+    """
+    Computes S-matrix used to generate minimum mutual information
+    knockoffs. This is identical to ``solve_maxent``
+    and exists only for backwards compatability.
+    """
+    return solve_maxent(*args, **kwargs)
 
 def solve_ciknock(
     Sigma, tol=1e-5, num_iter=10,
