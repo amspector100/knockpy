@@ -8,13 +8,11 @@ To install knockpy, first install choldate using the following command:
 
 ``pip install git+git://github.com/jcrudy/choldate.git``
 
-Note that installing choldate does require installing cython, which requires access to a C compiler. This can be challenging on Windows, and if you have difficulty on any OS, please carefully follow the instructions [here](https://cython.readthedocs.io/en/latest/src/quickstart/install.html).
-
 Then, install knockpy using pip:
 
 ``pip install knockpy``
 
-If the installation fails on your system, please reach out to me and I'll try to help.
+Note that both choldate and knockpy require cython, and installing cython requires access to a C compiler. This can be challenging on Windows, and if you have difficulty on any OS, please carefully follow the instructions [here](https://cython.readthedocs.io/en/latest/src/quickstart/install.html). Alternatively, if the installation fails on your system, please reach out to me and I'll try to help.
 
 To use the (optional) kpytorch submodule, you will need to install [pytorch](https://pytorch.org/).
 

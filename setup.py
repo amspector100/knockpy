@@ -40,7 +40,6 @@ setuptools.setup(
         "numpy>=1.17.4",
         "scipy>=1.5.2",
         "cvxpy>=1.0.25",
-        "matplotlib>=3.1.0",
         "scikit_learn>=0.22",
         "statsmodels>=0.10.1",
         "scikit-dsdp",

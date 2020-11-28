@@ -2,10 +2,15 @@
 
 # Don't save data
 data/*
-# DOn't save test profiling
+# Don't save test profiling
 prof/*
 proftest/*
 profile
+
+# Docs/todo
+makedocs.sh
+TODO.md
+
 
 # _____ R Defaults _______
 # History files
