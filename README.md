@@ -4,9 +4,11 @@ A python implementation of the knockoffs framework for variable selection. See h
 
 ## Installation
 
-To install knockpy, first install choldate:
+To install knockpy, first install choldate using the following command:
 
 ``pip install git+git://github.com/jcrudy/choldate.git``
+
+Note that installing choldate does require installing cython, which requires access to a C compiler. This can be challenging on Windows, and if you have difficulty on any OS, please carefully follow the instructions [here](https://cython.readthedocs.io/en/latest/src/quickstart/install.html).
 
 Then, install knockpy using pip:
 
