@@ -100,6 +100,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#Group-knockoffs">Group knockoffs</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#To-dos">To-dos</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
@@ -455,7 +456,7 @@ div.rendered_html tbody tr:hover {
 <p>There are two main types of knockoffs:</p>
 <ol class="arabic simple">
 <li><p><strong>Fixed-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as fixed and control the false discovery rate assuming <span class="math notranslate nohighlight">\(y \mid X\)</span> follows a homoskedastic gaussian linear response. In this case, it is possible to construct valid knockoffs <span class="math notranslate nohighlight">\(\tilde{X}\)</span> with no assumptions on <span class="math notranslate nohighlight">\(X\)</span>. Note also that when using fixed-X knockoffs, the feature statistic must satisfy a slightly more restrictive <em>sufficiency</em> condition (see <a class="reference external" href="https://arxiv.org/abs/1404.5609">Barber and Candes 2015</a>).</p></li>
-<li><p><strong>Model-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as random. Model-X knockoffs control the false discovery rate for any conditional distribution <span class="math notranslate nohighlight">\(y \mid X\)</span>, but they assume that the distribution of <span class="math notranslate nohighlight">\(X\)</span> is known. Thus, to construct model-X knockoffs, one must know (or estimate) the distribution of <span class="math notranslate nohighlight">\(X\)</span>.</p></li>
+<li><p><strong>Model-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as random. Model-X knockoffs control the false discovery rate for any conditional distribution <span class="math notranslate nohighlight">\(y \mid X\)</span>, but they assume that the distribution of <span class="math notranslate nohighlight">\(X\)</span> is known. Thus, to construct model-X knockoffs, one must know (or estimate) the distribution of <span class="math notranslate nohighlight">\(X\)</span>. See <a class="reference external" href="https://arxiv.org/abs/1610.02351">Candes et al. (2018)</a> for details.</p></li>
 </ol>
 </div>
 <div class="section" id="The-KnockoffFilter-class">
@@ -564,14 +565,23 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 5.66037
 </div>
 <div class="section" id="Gaussian-knockoffs-galore">
 <h2>Gaussian knockoffs galore<a class="headerlink" href="#Gaussian-knockoffs-galore" title="Permalink to this headline">¶</a></h2>
-<p>There are many ways to generate Gaussian knockoffs, including “MAC-minimizing” or “SDP” knockoffs, “MVR” knockoffs, “MMI” knockoffs, and “conditional independence” (CI) knockoffs. <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> supports all of these knockoff generation methods for “gaussian” and “fx” knockoff types. Naturally, it is also possible to use any of these types of knockoffs as proposals for the metropolized knockoff sampler.</p>
+<p>There are many ways to generate Gaussian knockoffs. The default option is to generate MVR knockoffs, which (informally) maximize <span class="math notranslate nohighlight">\(\text{Var}(X_j \mid X_{-j}, \tilde{X})\)</span> for each feature <span class="math notranslate nohighlight">\(X_j\)</span>, where <span class="math notranslate nohighlight">\(X_{-j}\)</span> denotes all of the features except the <span class="math notranslate nohighlight">\(j\)</span>th feature. Intuitively, this <em>minimizes the varianced-based reconstructability (MVR)</em> between the features and their knockoffs, preventing a feature statistic like a lasso or a randomforest from using the other features
+and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference external" href="https://arxiv.org/abs/2011.14625">Spector and Janson (2020)</a> for more details.</p>
+<p>There are a variety of other options to choose from, including:</p>
+<ul class="simple">
+<li><p>MAXENT knockoffs maximize the entropy of <span class="math notranslate nohighlight">\([X, \tilde{X}]\)</span>, which is equivalent to minimizing the mutual information between <span class="math notranslate nohighlight">\(X\)</span> and <span class="math notranslate nohighlight">\(\tilde{X}\)</span>. See <a class="reference external" href="https://arxiv.org/abs/1810.11378">Gimenez and Zou (2019)</a> or <a class="reference external" href="https://arxiv.org/abs/2011.14625">Spector and Janson (2020)</a> for more details.</p></li>
+<li><p>SDP knockoffs minimize the mean absolute covariance (MAC) between features and their knockoffs. These are often referred to as <em>SDP knockoffs</em>. These are currently the default choice for group knockoffs, although that might change!</p></li>
+<li><p>Equicorrelated knockoffs also minimize the MAC, but with a constraint that increases computational efficiency and (usually) reduces statistical power. See <a class="reference external" href="https://arxiv.org/abs/1404.5609">Barber and Candes 2015</a> for a discussion.</p></li>
+<li><p>Conditional Independence (CI) knockoffs guarantee that each feature <span class="math notranslate nohighlight">\(X_j\)</span> and its knockoff <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> are conditionally independent given all of the other features <span class="math notranslate nohighlight">\(X_{-j}\)</span>; however, CI knockoffs do not always exist, so we use a heuristic defined in <a class="reference external" href="https://arxiv.org/abs/2010.08132">Ke et al. (2020)</a> in general.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> supports all of these knockoff generation methods for “gaussian” and “fx” knockoff types. Naturally, it is also possible to use any of these types of knockoffs as proposals for the Metropolized knockoff sampler.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># This uses gaussian MMI knockoffs</span>
-<span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;mmi&#39;</span><span class="p">})</span>
+<span></span><span class="c1"># This uses gaussian maxent knockoffs</span>
+<span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;maxent&#39;</span><span class="p">})</span>
 
 <span class="c1"># This uses fixed-X SDP knockoffs</span>
 <span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;fx&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;sdp&#39;</span><span class="p">})</span>
@@ -579,7 +589,7 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 5.66037
 <span class="c1"># Metropolized sampler for heavy-tailed t markov chain using MVR-guided proposals</span>
 <span class="n">kfilter3</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;artk&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;mvr&#39;</span><span class="p">})</span>
 
-<span class="c1"># The &#39;method&#39; options include: equicorrelated, sdp, mvr, mmi, and ci.</span>
+<span class="c1"># The &#39;method&#39; options include: equicorrelated, sdp, mvr, maxent, and ci.</span>
 </pre></div>
 </div>
 </div>
@@ -591,18 +601,18 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 5.66037
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">time</span>
 
-<span class="c1"># Solve MVR, MMI, and SDP optimization problems for p = 500</span>
+<span class="c1"># Solve MVR, maxent, and SDP optimization problems for p = 500</span>
 <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">S_MVR</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">mrc</span><span class="o">.</span><span class="n">solve_mvr</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
 <span class="n">time1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">mvr_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time1</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">S_MMI</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">mrc</span><span class="o">.</span><span class="n">solve_mmi</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+<span class="n">S_MAXENT</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">mrc</span><span class="o">.</span><span class="n">solve_maxent</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
 <span class="n">time2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-<span class="n">mmi_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time2</span> <span class="o">-</span> <span class="n">time1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">maxent_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time2</span> <span class="o">-</span> <span class="n">time1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">S_SDP</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">mac</span><span class="o">.</span><span class="n">solve_SDP</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
 <span class="n">time3</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">sdp_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time3</span> <span class="o">-</span> <span class="n">time2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;For p=</span><span class="si">{</span><span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, MVR took </span><span class="si">{</span><span class="n">mvr_time</span><span class="si">}</span><span class="s2"> sec, MMI took </span><span class="si">{</span><span class="n">mmi_time</span><span class="si">}</span><span class="s2"> sec, SDP took </span><span class="si">{</span><span class="n">sdp_time</span><span class="si">}</span><span class="s2"> sec&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;For p=</span><span class="si">{</span><span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, MVR took </span><span class="si">{</span><span class="n">mvr_time</span><span class="si">}</span><span class="s2"> sec, Maxent took </span><span class="si">{</span><span class="n">maxent_time</span><span class="si">}</span><span class="s2"> sec, SDP took </span><span class="si">{</span><span class="n">sdp_time</span><span class="si">}</span><span class="s2"> sec&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -611,13 +621,14 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 5.66037
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-For p=500, MVR took 2.1 sec, MMI took 4.1 sec, SDP took 4.4 sec
+For p=500, MVR took 2.1 sec, Maxent took 4.5 sec, SDP took 5.3 sec
 </pre></div></div>
 </div>
 </div>
 <div class="section" id="Metropolized-knockoff-sampling">
 <h2>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> implements a fully general covariance-guided Metropolized Knockoff Sampler, which is capable of sampling model-X knockoffs for any <span class="math notranslate nohighlight">\(X\)</span> distribution given an (unnormalized) density function of <span class="math notranslate nohighlight">\(X\)</span>. This metropolized knockoff sampler uses a variety of computational tricks to make it orders of magnitude faster than a naive implementation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> implements a fully general covariance-guided Metropolized knockoff sampler, which is capable of sampling model-X knockoffs for any <span class="math notranslate nohighlight">\(X\)</span> distribution given an (unnormalized) density function of <span class="math notranslate nohighlight">\(X\)</span>. This Metropolized knockoff sampler uses a variety of computational tricks to make it orders of magnitude faster than a naive implementation, although these tricks only work when the distribution of <span class="math notranslate nohighlight">\(X\)</span> has conditional independence properties, as specified by an undirected
+graphical model. See <a class="reference external" href="https://arxiv.org/abs/1903.00434">Bates et al. (2020)</a> for more details.</p>
 <p>The API reference as well as the source for the metro module details more advanced usage of metro; however, for now, we simply demonstrate how to pass in an arbitrary log-likelihood function to the <code class="docutils literal notranslate"><span class="pre">MetropolizedKnockoffSampler</span></code> class and use it to sample knockoffs.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -633,7 +644,7 @@ For p=500, MVR took 2.1 sec, MMI took 4.1 sec, SDP took 4.4 sec
 <span class="n">beta</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">create_sparse_coefficients</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 <span class="n">y_metro</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X_metro</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 
-<span class="c1"># An arbitrary log-likelihood function</span>
+<span class="c1"># An arbitrary (unnormalized) log-likelihood function</span>
 <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">rhos</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]))</span>
@@ -653,6 +664,7 @@ For p=500, MVR took 2.1 sec, MMI took 4.1 sec, SDP took 4.4 sec
 </pre></div>
 </div>
 </div>
+<p>It is possible to generate Metropolized knockoffs for discrete data via the <code class="docutils literal notranslate"><span class="pre">buckets</span></code> argument, which specifies the support of the discrete data.</p>
 <p>If you want to build a custom knockoff sampler class, as long as it inherets from the base class <code class="docutils literal notranslate"><span class="pre">knockpy.knockoffs.KnockoffSampler</span></code>, you can still pass it to the KnockoffFilter constructor to run the knockoff filter. For example, we pass the customized metropolized knockoff sampler to a KnockoffFilter below:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -774,8 +786,12 @@ Made 35.0 rejections!
 Made 56.0 rejections!
 </pre></div></div>
 </div>
-<p>Note, however, that our current implementations for group knockoffs are in beta and are substantially slower than the ungrouped sampling methods, and the MVR/MMI methods use a heuristic gradient based method which lacks formal convergence guarantees. We plan to add more support for group knockoffs over the next few releases.</p>
+<p>Note, however, that our current implementations for group knockoffs are in beta and are substantially slower than the ungrouped sampling methods, and the MVR/MAXENT methods use a heuristic gradient based method which lacks formal convergence guarantees. We plan to add more support for group knockoffs over the next few releases.</p>
 </div>
+</div>
+<div class="section" id="To-dos">
+<h2>To-dos<a class="headerlink" href="#To-dos" title="Permalink to this headline">¶</a></h2>
+<p>We plan to release additional functionality for <a class="reference external" href="https://dmhuang.github.io/tutorials/cknockoff/index.html">conditional knockoffs</a>, more flavors of Metropolized knockoff samplers, and more — stay tuned!</p>
 </div>
 </div>
 
