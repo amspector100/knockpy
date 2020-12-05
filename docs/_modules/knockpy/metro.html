@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.metro &mdash; knockpy 1.0.2 documentation</title>
+  <title>knockpy.metro &mdash; knockpy 1.0.3 documentation</title>
   
 
   
@@ -179,7 +179,7 @@
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">networkx.algorithms.approximation</span> <span class="kn">import</span> <span class="n">treewidth</span>
 <span class="kn">from</span> <span class="nn">.knockoffs</span> <span class="kn">import</span> <span class="n">KnockoffSampler</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">knockoffs</span><span class="p">,</span> <span class="n">smatrix</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">knockoffs</span><span class="p">,</span> <span class="n">smatrix</span><span class="p">,</span> <span class="n">constants</span>
 
 <span class="c1"># Logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -563,7 +563,13 @@
 
         <span class="c1"># Find the optimal S matrix. In general, we should set a</span>
         <span class="c1"># fairly high tolerance to avoid numerical errors.</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;tol&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;tol&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+            <span class="s2">&quot;tol&quot;</span><span class="p">,</span>
+            <span class="nb">min</span><span class="p">(</span>
+                <span class="n">constants</span><span class="o">.</span><span class="n">METRO_TOL</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">/</span><span class="mi">10</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
             <span class="p">[</span>
@@ -640,14 +646,14 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="n">new_row</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
             <span class="c1"># Check for numerical instabilities</span>
-            <span class="n">diff</span> <span class="o">=</span> <span class="n">Gprej</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-            <span class="n">max_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">max_error</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">initial_error</span><span class="p">:</span>
-                <span class="c1"># Correct</span>
-                <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Maximum error is </span><span class="si">{</span><span class="n">max_error</span><span class="si">}</span><span class="s2"> &gt; 10x init error, recomputing L for p=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="si">}</span><span class="s2">, j=</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">Gprej</span><span class="p">)</span>
+            <span class="c1"># diff = Gprej - np.dot(self.L, self.L.T)</span>
+            <span class="c1"># max_error = np.max(np.abs(diff))</span>
+            <span class="c1"># if max_error &gt; 10 * initial_error:</span>
+            <span class="c1">#     # Correct</span>
+            <span class="c1">#     print(</span>
+            <span class="c1">#         f&quot;Maximum error is {max_error} &gt; 10x init error, recomputing L for p={self.p}, j={j}&quot;</span>
+            <span class="c1">#     )</span>
+            <span class="c1">#     self.L = np.linalg.cholesky(Gprej)</span>
 
             <span class="c1"># 2. Compute conditional variance</span>
             <span class="c1"># This subset of G includes knockoff j</span>

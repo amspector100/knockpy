@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.knockoffs &mdash; knockpy 1.0.2 documentation</title>
+  <title>knockpy.knockoffs &mdash; knockpy 1.0.3 documentation</title>
   
 
   
@@ -158,7 +158,6 @@
 <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
-<span class="kn">import</span> <span class="nn">statsmodels.stats.multitest</span>
 
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">calc_group_sizes</span><span class="p">,</span> <span class="n">preprocess_groups</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">shift_until_PSD</span><span class="p">,</span> <span class="n">scale_until_PSD</span>
@@ -224,11 +223,8 @@
             <span class="n">pvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">pvalue</span><span class="p">)</span>
         <span class="n">pvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pvals</span><span class="p">)</span>
 
-        <span class="c1"># BH multiple correction</span>
-        <span class="n">adj_pvals</span> <span class="o">=</span> <span class="n">statsmodels</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">multitest</span><span class="o">.</span><span class="n">multipletests</span><span class="p">(</span>
-            <span class="n">pvals</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">adj_pvals</span> <span class="o">=</span> <span class="n">adj_pvals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Naive Bonferroni correction</span>
+        <span class="n">adj_pvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">pvals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">pvals</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pvals</span><span class="p">,</span> <span class="n">adj_pvals</span></div>
 
 <div class="viewcode-block" id="KnockoffSampler.check_xk_validity"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoffs.KnockoffSampler.check_xk_validity">[docs]</a>    <span class="k">def</span> <span class="nf">check_xk_validity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">testname</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.001</span><span class="p">):</span>

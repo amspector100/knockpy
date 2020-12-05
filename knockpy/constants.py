@@ -19,7 +19,8 @@ DSDP_WARNING = f"""
 	solving an SDP without it will be roughly
 	10-100x slower. For installation instructions, see
 	https://amspector100.github.io/knockpy/installation.html.
-	To disable this warning, set dsdp_warning=False.
+	To disable this warning, set dsdp_warning=False as an 
+	argument or a knockoff_kwarg.
 	----------------------------------------------------------
 	----------------------------------------------------------
 """
@@ -29,9 +30,10 @@ CHOLDATE_WARNING = f"""
 	---------------------------------------------------------
 	The choldate package is not installed:
 	solving for MVR or maxent knockoffs without it will be 
-	~10x slower. For instructions on how to install choldate,
+	~5x slower. For instructions on how to install choldate,
 	see https://amspector100.github.io/knockpy/installation.html.
-	To disable this warning, set choldate_warning=False.
+	To disable this warning, set choldate_warning=False as an 
+	argument or a knockoff_kwarg.
 	----------------------------------------------------------
 	----------------------------------------------------------
 """

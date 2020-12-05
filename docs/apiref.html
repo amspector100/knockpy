@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; knockpy 1.0.2 documentation</title>
+  <title>API Reference &mdash; knockpy 1.0.3 documentation</title>
   
 
   
@@ -2245,6 +2245,39 @@ have size less than max_block.</p>
 
 <span class="target" id="module-knockpy.mrc"></span><p>Methods for minimum-reconstructability knockoffs.</p>
 <dl class="py function">
+<dt id="knockpy.mrc.cholupdate">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">cholupdate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">R</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">add</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#cholupdate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.cholupdate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs rank one updates to a cholesky factor <cite>R</cite> in place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>R</strong><span class="classifier">np.ndarray</span></dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">(p,p)</span></code>-shaped upper-triangular matrix.</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">np.ndarray</span></dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-shaped vector.</p>
+</dd>
+<dt><strong>add</strong><span class="classifier">bool</span></dt><dd><p>If True, performs a rank one update; else performs a
+rank one downdate.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>R</strong><span class="classifier">np.ndarray</span></dt><dd><p>Suppose the parameter R was a cholesky factor of a matrix V.
+Upon return, R is the cholesky factor of 
+<code class="docutils literal notranslate"><span class="pre">V</span> <span class="pre">+/-</span> <span class="pre">np.outer(x,</span> <span class="pre">x)</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function modifies both <code class="docutils literal notranslate"><span class="pre">R</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span></code> in place.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">choldate</span></code> package is a much faster and more</p></li>
+</ul>
+<p>numerically stable alternative.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="knockpy.mrc.maxent_loss">
 <code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">maxent_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#maxent_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.maxent_loss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the log determinant of the feature-knockoff precision
@@ -2340,7 +2373,7 @@ search to find the maximum gamma such that gamma * S is feasible.</p>
 
 <dl class="py function">
 <dt id="knockpy.mrc.solve_maxent">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_maxent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_maxent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_maxent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_maxent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">choldate_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_maxent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_maxent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes S-matrix used to generate maximum entropy
 knockoffs using coordinate descent.</p>
 <dl class="field-list simple">
@@ -2352,13 +2385,12 @@ knockoffs using coordinate descent.</p>
 </dd>
 <dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True, prints updates during optimization.</p>
 </dd>
-<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>The number of coordinate descent iterations. Defaults to 10.</p>
-</dd>
-<dt><strong>smoothing</strong><span class="classifier">float</span></dt><dd><p>Add <code class="docutils literal notranslate"><span class="pre">smoothing</span></code> to all eigenvalues of the feature-knockoff
-precision matrix before inverting to avoid numerical
-instability. Defaults to 0.</p>
+<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>The number of coordinate descent iterations. Defaults to 50.</p>
 </dd>
 <dt><strong>converge_tol</strong><span class="classifier">float</span></dt><dd><p>A parameter specifying the criteria for convergence.</p>
+</dd>
+<dt><strong>choldate_warning</strong><span class="classifier">bool</span></dt><dd><p>If True, will warn the user if choldate is not installed. 
+Defaults to True</p>
 </dd>
 </dl>
 </dd>
@@ -2381,7 +2413,7 @@ and exists only for backwards compatability.</p>
 
 <dl class="py function">
 <dt id="knockpy.mrc.solve_mvr">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mvr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rej_rate</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mvr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mvr" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mvr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rej_rate</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">choldate_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mvr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mvr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes S-matrix used to generate minimum variance-based
 reconstructability knockoffs using coordinate descent.</p>
 <dl class="field-list simple">
@@ -2393,13 +2425,16 @@ reconstructability knockoffs using coordinate descent.</p>
 </dd>
 <dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True, prints updates during optimization.</p>
 </dd>
-<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>The number of coordinate descent iterations. Defaults to 10.</p>
+<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>The number of coordinate descent iterations. Defaults to 50.</p>
 </dd>
 <dt><strong>smoothing</strong><span class="classifier">float</span></dt><dd><p>Add <code class="docutils literal notranslate"><span class="pre">smoothing</span></code> to all eigenvalues of the feature-knockoff
 precision matrix before inverting to avoid numerical
 instability. Defaults to 0.</p>
 </dd>
 <dt><strong>converge_tol</strong><span class="classifier">float</span></dt><dd><p>A parameter specifying the criteria for convergence.</p>
+</dd>
+<dt><strong>choldate_warning</strong><span class="classifier">bool</span></dt><dd><p>If True, will warn the user if choldate is not installed. 
+Defaults to True.</p>
 </dd>
 </dl>
 </dd>
@@ -2476,7 +2511,7 @@ is a member of group <cite>i</cite>. Defaults to <code class="docutils literal n
 
 <dl class="py function">
 <dt id="knockpy.mac.solve_group_SDP">
-<code class="sig-prename descclassname">knockpy.mac.</code><code class="sig-name descname">solve_group_SDP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">objective</span><span class="o">=</span><span class="default_value">'abs'</span></em>, <em class="sig-param"><span class="n">norm_type</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mac.html#solve_group_SDP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mac.solve_group_SDP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.mac.</code><code class="sig-name descname">solve_group_SDP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">objective</span><span class="o">=</span><span class="default_value">'abs'</span></em>, <em class="sig-param"><span class="n">norm_type</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">dsdp_warning</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mac.html#solve_group_SDP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mac.solve_group_SDP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solves the MAC-minimizng SDP formulation for group knockoffs:
 extends Barer and Candes 2015/ Candes et al 2018.</p>
 <dl>

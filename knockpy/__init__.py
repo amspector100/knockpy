@@ -12,7 +12,7 @@ all = [
     "utilities",
 ]
 
-__version__ = "1.0.3dev"
+__version__ = "1.0.3"
 
 from . import constants
 from . import dgp
