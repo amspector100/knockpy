@@ -287,6 +287,55 @@ class TestSDP(CheckSMatrix):
             ValueError, "Sigma is not a correlation matrix", SDP_solver
         )
 
+class TestCholupdate(CheckSMatrix):
+    """
+    Checks that the cholupdate function works correctly.
+    """
+
+    def test_cholupdate(self):
+
+        # Generate complex covariance matrix and vector
+        p = 500
+        dgprocess = knockpy.dgp.DGP()
+        dgprocess.sample_data(p=p, method='qer', delta=0.8)
+        V = dgprocess.Sigma + np.eye(p)
+        L = np.linalg.cholesky(V)
+        np.testing.assert_array_almost_equal(
+            V, 
+            np.dot(L, L.T), 
+            decimal=6,
+            err_msg="numpy cholesky decomposition failed"
+        )
+        x = np.random.uniform(size=(p))
+
+        # Test dense update
+        V = V + np.outer(x, x)
+        knockpy.mrc.cholupdate(L.T, x, add=True)
+        np.testing.assert_array_almost_equal(
+            V, 
+            np.dot(L, L.T),
+            decimal=6,
+            err_msg="mrc.cholupdate with add=True failed"
+        )
+
+        # Test sparse downdate
+        x = np.zeros(p)
+        x[5] = 0.2
+        V = V - np.outer(x, x)
+        knockpy.mrc.cholupdate(L.T, x, add=False)
+        np.testing.assert_array_almost_equal(
+            V, 
+            np.dot(L, L.T),
+            decimal=6,
+            err_msg="mrc.cholupdate with add=False failed"
+        )
+
+
+
+
+
+
+
 
 class TestMRCSolvers(CheckSMatrix):
     """ Tests the various MRC solvers / classes"""

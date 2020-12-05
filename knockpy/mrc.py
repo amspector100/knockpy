@@ -4,10 +4,58 @@ import warnings
 import time
 import numpy as np
 import scipy as sp
-import choldate
 from scipy import stats
 from . import utilities
 from .utilities import calc_group_sizes, preprocess_groups
+try:
+    import choldate
+    CHOLDATE_AVAILABLE = True
+except:
+    CHOLDATE_AVAILABLE = False
+
+def cholupdate(R, x, add=True):
+    """
+    Performs rank one updates to a cholesky factor `R` in place.
+    
+    Parameters
+    ----------
+    R : np.ndarray
+        A ``(p,p)``-shaped upper-triangular matrix.
+    x : np.ndarray
+        A ``(p,)``-shaped vector.
+    add : bool
+        If True, performs a rank one update; else performs a
+        rank one downdate.
+
+    Returns
+    -------
+    R : np.ndarray
+        Suppose the parameter R was a cholesky factor of a matrix V.
+        Upon return, R is the cholesky factor of 
+        ``V +/- np.outer(x, x)``.
+
+    Notes
+    -----
+    - This function modifies both ``R`` and ``x`` in place. 
+    - The ``choldate`` package is a much faster alternative.
+
+    """
+    p = np.size(x)
+    x = x.T
+    for k in range(p):
+        if add:
+              r = np.sqrt(R[k,k]**2 + x[k]**2)
+        else:
+              r = np.sqrt(R[k,k]**2 - x[k]**2)
+        c = r/R[k,k]
+        s = x[k]/R[k,k]
+        R[k,k] = r
+        if add:
+            R[k,k+1:p] = (R[k,k+1:p] + s*x[k+1:p])/c
+        else:
+            R[k,k+1:p] = (R[k,k+1:p] - s*x[k+1:p])/c
+        x[k+1:p]= c*x[k+1:p] - s*R[k, k+1:p]
+    return R
 
 ### Coordinate Descent Solvers
 def mvr_loss(Sigma, S, smoothing=0):
@@ -39,7 +87,7 @@ def mvr_loss(Sigma, S, smoothing=0):
     return trace_invG
 
 
-def maxent_loss(Sigma, S, smoothing=0):
+def maxent_loss(Sigma, S, smoothing=0, choldate_warning=True):
     """
     Computes the log determinant of the feature-knockoff precision
     matrix, which is proportional to the negative entropy of [X, tilde{X}].
@@ -77,7 +125,14 @@ def mmi_loss(*args, **kwargs):
 
 
 def solve_mvr(
-    Sigma, tol=1e-5, verbose=False, num_iter=10, smoothing=0, rej_rate=0, converge_tol=1
+    Sigma,
+    tol=1e-5,
+    verbose=False,
+    num_iter=10,
+    smoothing=0,
+    rej_rate=0,
+    converge_tol=1,
+    choldate_warning=True,
 ):
     """
     Computes S-matrix used to generate minimum variance-based
@@ -99,12 +154,19 @@ def solve_mvr(
         instability. Defaults to 0.
     converge_tol : float
         A parameter specifying the criteria for convergence.
+    choldate_warning : bool
+        If True, will warn the user if choldate is not installed. 
+        Defaults to True.
 
     Returns
     -------
     S : np.ndarray
         ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
+
+    # Warning if choldate not available
+    if not CHOLDATE_AVAILABLE and choldate_warning:
+        warnings.warn(CHOLDATE_WARNING)
 
     # Initial constants
     time0 = time.time()
@@ -208,7 +270,12 @@ def solve_mvr(
     return S
 
 def solve_maxent(
-    Sigma, tol=1e-5, verbose=False, num_iter=10, smoothing=0, converge_tol=1e-4
+    Sigma, 
+    tol=1e-5,
+    verbose=False,
+    num_iter=10,
+    converge_tol=1e-4,
+    choldate_warning=True,
 ):
     """
     Computes S-matrix used to generate maximum entropy
@@ -224,12 +291,11 @@ def solve_maxent(
         If True, prints updates during optimization.
     num_iter : int
         The number of coordinate descent iterations. Defaults to 10.
-    smoothing : float
-        Add ``smoothing`` to all eigenvalues of the feature-knockoff
-        precision matrix before inverting to avoid numerical
-        instability. Defaults to 0.
     converge_tol : float
         A parameter specifying the criteria for convergence.
+    choldate_warning : bool
+        If True, will warn the user if choldate is not installed. 
+        Defaults to True
 
     Returns
     -------
@@ -237,8 +303,9 @@ def solve_maxent(
         ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
 
-    if smoothing > 0:
-        raise NotImplementedError(f"Smoothing is not implemented yet")
+    # Warning if choldate not available
+    if not CHOLDATE_AVAILABLE and choldate_warning:
+        warnings.warn(CHOLDATE_WARNING)
 
     # Initial constants
     time0 = time.time()
@@ -284,7 +351,7 @@ def solve_maxent(
 
         # Check for convergence
         prev_loss = loss
-        loss = mmi_loss(V, S, smoothing=smoothing)
+        loss = mmi_loss(V, S)
         if i != 0:
             decayed_improvement = decayed_improvement / 10 + 9 * (prev_loss - loss) / 10
         if verbose:
