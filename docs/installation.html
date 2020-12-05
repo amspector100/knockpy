@@ -199,15 +199,15 @@
 <h2>What if installation fails?<a class="headerlink" href="#what-if-installation-fails" title="Permalink to this headline">¶</a></h2>
 <p>knockpy relies on heavy-duty linear algebra routines which sometimes fail on non-Linux environments.</p>
 <p>1. To start, install a lightweight version of knockpy using
-<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">knockpy</span></code>. This should install correctly on all devices, and contains nearly all of the functionality of the prior installation. However, the algorithms for computing optimal distributions for Gaussian knockoffs, such as minimum reconstructability <a href="#id1"><span class="problematic" id="id2">knockoffs_</span></a> or SDP <a href="#id3"><span class="problematic" id="id4">knockoffs_</span></a>, may be an order of magnitude slower.</p>
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">knockpy</span></code>. This should install correctly on all devices, and contains nearly all of the functionality of the prior installation. However, the algorithms for computing optimal distributions for Gaussian knockoffs, such as <a class="reference external" href="https://arxiv.org/abs/2011.14625">minimum reconstructability knockoffs</a> or <a class="reference external" href="https://arxiv.org/abs/1610.02351">SDP knockoffs</a>, may be an order of magnitude slower.</p>
 <ol class="arabic simple" start="2">
 <li><dl class="simple">
 <dt>[Optional] To speed up computation for minimum reconstructability knockoffs (the default knockoff type), follow these instructions.</dt><dd><ol class="loweralpha simple">
 <li><p>Run
 <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">cython&gt;=0.29.14</span></code>
-If the installation fails, likely due to the incorrect configuration of a C compiler, you have three options. First, the <a href="#id5"><span class="problematic" id="id6">`conda`_</span></a> package manager includes a compiler, so the command
+If the installation fails, likely due to the incorrect configuration of a C compiler, you have three options. First, the <a class="reference external" href="https://docs.anaconda.com/anaconda/user-guide/tasks/install-packages/">conda</a> package manager includes a compiler, so the command
 <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">cython</span></code>
-should work on all platforms. Second, on Windows, you can install precompiled <a href="#id7"><span class="problematic" id="id8">`binaries for cython`_</span></a>. Lastly, on all platforms, the documentation <a class="reference external" href="https://cython.readthedocs.io/en/latest/src/quickstart/install.html">here</a> describes how to properly configure a C compiler during installation.</p></li>
+should work on all platforms. Second, on Windows, you can install precompiled <a class="reference external" href="https://www.lfd.uci.edu/~gohlke/pythonlibs/">binaries for cython</a>. Lastly, on all platforms, the <a class="reference external" href="https://cython.readthedocs.io/en/latest/src/quickstart/install.html">documentation here</a> describes how to properly configure a C compiler during installation.</p></li>
 <li><p>Run
 <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+git://github.com/jcrudy/choldate.git</span></code></p></li>
 </ol>

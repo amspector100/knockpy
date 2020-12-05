@@ -493,7 +493,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Knockpy version is: 1.0.2
+Knockpy version is: 1.0.3
 </pre></div></div>
 </div>
 <p>Next, we instantiate the <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class. To do this, we need to specify (i) what type of knockoff sampler we will use and (ii) what feature statistic we are using. Since <span class="math notranslate nohighlight">\(X \sim \mathcal{N}(0, \Sigma)\)</span>, we will use Gaussian knockoffs, and we’ll use the Lasso as our feature statistic, since it’s a good all-around choice. We’ll explore more options for these arguments later.</p>
@@ -595,7 +595,7 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 </div>
 <p>Knockpy provides this functionality by offering very fast solvers for generating the knockoff <span class="math notranslate nohighlight">\(S\)</span>-matrix, as detailed below:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -603,13 +603,13 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 
 <span class="c1"># Solve MVR, maxent, and SDP optimization problems for p = 500</span>
 <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-<span class="n">S_MVR</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">mrc</span><span class="o">.</span><span class="n">solve_mvr</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+<span class="n">S_MVR</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mvr&#39;</span><span class="p">)</span>
 <span class="n">time1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">mvr_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time1</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">S_MAXENT</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">mrc</span><span class="o">.</span><span class="n">solve_maxent</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+<span class="n">S_MAXENT</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;maxent&#39;</span><span class="p">)</span>
 <span class="n">time2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">maxent_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time2</span> <span class="o">-</span> <span class="n">time1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">S_SDP</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">mac</span><span class="o">.</span><span class="n">solve_SDP</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+<span class="n">S_SDP</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;sdp&#39;</span><span class="p">)</span>
 <span class="n">time3</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">sdp_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time3</span> <span class="o">-</span> <span class="n">time2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;For p=</span><span class="si">{</span><span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, MVR took </span><span class="si">{</span><span class="n">mvr_time</span><span class="si">}</span><span class="s2"> sec, Maxent took </span><span class="si">{</span><span class="n">maxent_time</span><span class="si">}</span><span class="s2"> sec, SDP took </span><span class="si">{</span><span class="n">sdp_time</span><span class="si">}</span><span class="s2"> sec&quot;</span><span class="p">)</span>
@@ -621,7 +621,7 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-For p=500, MVR took 2.1 sec, Maxent took 4.5 sec, SDP took 5.3 sec
+For p=500, MVR took 1.8 sec, Maxent took 3.6 sec, SDP took 4.3 sec
 </pre></div></div>
 </div>
 </div>
