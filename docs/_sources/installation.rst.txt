@@ -29,12 +29,12 @@ knockpy relies on heavy-duty linear algebra routines which sometimes fail on non
 
 2. [Optional] To speed up computation for minimum reconstructability knockoffs (the default knockoff type), follow these instructions.
     (a) Run
-        ``pip install cython>=0.29.14``
+        ``pip install cython>=0.29.14``.
         If the installation fails, likely due to the incorrect configuration of a C compiler, you have three options. First, the conda_ package manager includes a compiler, so the command
         ``conda install cython``
         should work on all platforms. Second, on Windows, you can install precompiled `binaries for cython`_. Lastly, on all platforms, the `documentation here`_ describes how to properly configure a C compiler during installation.
     (b) Run
-        ``pip install git+git://github.com/jcrudy/choldate.git``
+        ``pip install git+git://github.com/jcrudy/choldate.git``.
 
 .. _conda: https://docs.anaconda.com/anaconda/user-guide/tasks/install-packages/
 .. _binaries for cython: https://www.lfd.uci.edu/~gohlke/pythonlibs/
