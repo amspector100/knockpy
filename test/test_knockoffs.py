@@ -1,4 +1,5 @@
 """ Tests knockpy.knockoffs and knockpy.smatrix modules"""
+import warnings
 import numpy as np
 import scipy as sp
 import unittest
@@ -15,6 +16,11 @@ try:
     CHOLDATE_AVAILABLE = True
 except:
     CHOLDATE_AVAILABLE = False
+try:
+    import pydsdp
+    DSDP_AVAILABLE = True
+except:
+    DSDP_AVAILABLE = False
 
 
 class CheckSMatrix(unittest.TestCase):
@@ -333,11 +339,40 @@ class TestCholupdate(CheckSMatrix):
             err_msg="mrc.cholupdate with add=False failed"
         )
 
+class TestDependencyWarnings(CheckSMatrix):
+    """ Tests DSDP_warning / choldate_warning """
+
+    def test_warnings_raised(self):
+
+        print(f"torch={TORCH_AVAILABLE}, dsdp={DSDP_AVAILABLE}, choldate={CHOLDATE_AVAILABLE}")
 
 
+        # Sigma
+        p = 50
+        rho = 0.8
+        Sigma = rho*np.ones((p,p)) + (1-rho)*np.eye(p)
 
-
-
+        for method, dependency_flag, dependency_name, suppress_kwargs in zip(
+            ['mvr', 'maxent', 'sdp'],
+            [CHOLDATE_AVAILABLE, CHOLDATE_AVAILABLE, DSDP_AVAILABLE],
+            ["choldate", "choldate", "dsdp"],
+            [{"choldate_warning":False}, {"choldate_warning":False}, {"dsdp_warning":False}]
+        ):
+            # Check default setting
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                smatrix.compute_smatrix(Sigma, method=method)
+                if not dependency_flag:
+                    self.assertTrue(
+                        dependency_name in str(w[-1].message)
+                    )
+                else:
+                    self.assertTrue(len(w) == 0)
+            # Check that it does not trigger with correct flag
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                smatrix.compute_smatrix(Sigma, method=method, **suppress_kwargs)
+                self.assertTrue(len(w) == 0, "warning still triggers with choldate_warning=False")
 
 
 class TestMRCSolvers(CheckSMatrix):
@@ -625,7 +660,11 @@ class TestMRCSolvers(CheckSMatrix):
             )
 
             # mmi solver outperforms PSGD
+            print(Sigma)
+            print(np.linalg.eigh(Sigma)[0].min())
             opt_S_mmi = mrc.solve_mmi(Sigma=Sigma)
+            print(opt_S_mmi)
+            print(opt_S)
             self.check_S_properties(Sigma, opt_S_mmi, groups)
             cd_mmi_loss = mrc.mmi_loss(Sigma, opt_S_mmi)
             psgd_mmi_loss = mrc.mmi_loss(Sigma, opt_S)

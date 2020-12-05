@@ -128,7 +128,7 @@ def solve_mvr(
     Sigma,
     tol=1e-5,
     verbose=False,
-    num_iter=50,
+    num_iter=10,
     smoothing=0,
     rej_rate=0,
     converge_tol=1,
@@ -170,7 +170,7 @@ def solve_mvr(
 
     # Initial constants
     time0 = time.time()
-    V = Sigma  # I'm too lazy to write Sigma out over and over
+    V = Sigma  # Shorthand prevents lines from spilling over
     p = V.shape[0]
     inds = np.arange(p)
     loss = np.inf
@@ -279,7 +279,7 @@ def solve_maxent(
     Sigma, 
     tol=1e-5,
     verbose=False,
-    num_iter=50,
+    num_iter=10,
     converge_tol=1e-4,
     choldate_warning=True,
 ):
@@ -315,7 +315,7 @@ def solve_maxent(
 
     # Initial constants
     time0 = time.time()
-    V = Sigma  # I'm too lazy to write Sigma out over and over
+    V = Sigma  # Shorthand prevents lines from spilling over
     p = V.shape[0]
     inds = np.arange(p)
     loss = np.inf
@@ -349,12 +349,12 @@ def solve_maxent(
             x[j] = np.sqrt(np.abs(delta))
             if delta > 0:
                 if CHOLDATE_AVAILABLE:
-                    choldate.choldowndate(L.T, x)
+                    choldate.cholupdate(L.T, x)
                 else:
                     cholupdate(L.T, x, add=False)
             else:
                 if CHOLDATE_AVAILABLE:
-                    choldate.cholupdate(L.T, x)
+                    choldate.choldowndate(L.T, x)
                 else:
                     cholupdate(L.T, x, add=True)
 
