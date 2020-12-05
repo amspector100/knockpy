@@ -9,10 +9,9 @@ from knockpy import utilities
 from knockpy import dgp
 from knockpy.knockoff_filter import KnockoffFilter
 
-NUM_REPS = 15
+NUM_REPS = 2
 try:
     import torch
-
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False

@@ -3,15 +3,18 @@ import numpy as np
 import scipy as sp
 import unittest
 from .context import knockpy
-from statsmodels.stats.moment_helpers import cov2corr
 from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
 
 try:
     import torch
-
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
+try:
+    import choldate
+    CHOLDATE_AVAILABLE = True
+except:
+    CHOLDATE_AVAILABLE = False
 
 
 class CheckSMatrix(unittest.TestCase):
@@ -92,7 +95,7 @@ class TestEquicorrelated(CheckSMatrix):
         # Test non equicorrelated version
         V = np.random.randn(p, p)
         V = np.dot(V.T, V) + 0.1 * np.eye(p)
-        V = cov2corr(V)
+        V = utilities.cov2corr(V)
         expected_gamma = min(1, 2 * np.linalg.eigh(V)[0].min())
         gamma = mac.calc_min_group_eigenvalue(Sigma=V, groups=groups)
         np.testing.assert_almost_equal(
@@ -109,7 +112,7 @@ class TestEquicorrelated(CheckSMatrix):
         groups = np.arange(0, p, 1) + 1
         V = np.random.randn(p, p)
         V = np.dot(V.T, V) + 0.1 * np.eye(p)
-        V = cov2corr(V)
+        V = utilities.cov2corr(V)
 
         # Expected construction
         expected_gamma = min(1, 2 * np.linalg.eigh(V)[0].min())
@@ -132,7 +135,7 @@ class TestEquicorrelated(CheckSMatrix):
         p = 100
         V = np.random.randn(p, p)
         V = np.dot(V.T, V) + 0.1 * np.eye(p)
-        V = cov2corr(V)
+        V = utilities.cov2corr(V)
 
         # Create random groups
         groups = np.random.randint(1, p, size=(p))
@@ -246,7 +249,7 @@ class TestSDP(CheckSMatrix):
         # Get graph
         np.random.seed(110)
         Q = dgp.ErdosRenyi(p=50, tol=1e-1)
-        V = cov2corr(utilities.chol2inv(Q))
+        V = utilities.cov2corr(utilities.chol2inv(Q))
         groups = np.concatenate([np.zeros(10) + j for j in range(5)]) + 1
         groups = groups.astype("int32")
 
@@ -429,7 +432,7 @@ class TestMRCSolvers(CheckSMatrix):
                 for method in ["mvr", "mmi", "maxent"]:
                     # Construct Sigma
                     Sigma = np.zeros((p, p)) + rho
-                    Sigma += (1 - rho) * np.eye(p)
+                    Sigma = Sigma + (1 - rho) * np.eye(p)
 
                     # Expected solution
                     opt_prop_rec = min(rho, 0.5)
@@ -469,7 +472,7 @@ class TestMRCSolvers(CheckSMatrix):
                 # Test maximum entropy coordinate descent optimizer
                 if smoothing == 0:
                     opt_S = mrc.solve_mmi(
-                        Sigma=Sigma, smoothing=smoothing, verbose=True
+                        Sigma=Sigma, verbose=True
                     )
                     self.check_S_properties(Sigma, opt_S, groups)
                     np.testing.assert_almost_equal(
@@ -529,7 +532,7 @@ class TestMRCSolvers(CheckSMatrix):
 
             # Construct Sigma
             Sigma = np.zeros((p, p)) + rho
-            Sigma += (1 - rho) * np.eye(p)
+            Sigma = Sigma + (1 - rho) * np.eye(p)
 
             # Expected solution
             opt_prop_rec = min(rho, 0.5)
@@ -558,6 +561,7 @@ class TestMRCSolvers(CheckSMatrix):
                 )
 
             # Coord descent solver
+            print("I made it here!")
             opt_S = mrc.solve_mvr(
                 Sigma=Sigma, rej_rate=true_rec_prop, tol=1e-5, verbose=True,
             )
@@ -740,7 +744,7 @@ class TestBlockdiagApprx(CheckSMatrix):
             np.testing.assert_array_almost_equal(
                 S_approx,
                 S_exact,
-                3,
+                2,
                 err_msg="Blockdiag approximation yields incorrect answer for blockdiag Sigma",
             )
 
@@ -761,6 +765,12 @@ class TestBlockdiagApprx(CheckSMatrix):
         for groups in [triv_groups, nontriv_groups]:
             for method in ["mvr", "maxent", "mmi", "sdp"]:
 
+
+                # Note we can't fit group mvr/maxent without pytorch
+                nontriv_group_flag = np.all(groups == nontriv_groups)
+                if not TORCH_AVAILABLE and nontriv_group_flag:
+                    continue
+
                 # Check that S_approx is valid
                 S_approx = smatrix.compute_smatrix(
                     V, method=method, groups=groups, max_block=50
@@ -770,16 +780,16 @@ class TestBlockdiagApprx(CheckSMatrix):
                 # For exponentially decaying offdiags, should be quite similar
                 # This seems to not be true for groups, so skip that for now...
                 # For now, skip grouped mvr/mmi
-                if np.all(groups == nontriv_groups):
+                if nontriv_group_flag:
                     continue
                 S_exact = smatrix.compute_smatrix(V, method=method, groups=groups)
                 diff = np.abs(S_approx - S_exact)
                 mean_diff = diff[S_exact != 0].mean()
-                expected = 1e-2
+                expected = 1e-2 if CHOLDATE_AVAILABLE else 5e-2
                 identifier = f"for method={method}, groups={groups}"
                 self.assertTrue(
                     mean_diff < expected,
-                    msg=f"Blockdiag apprx - exact soln {diff} is {mean_diff} > {expected} on avg. away from exact soln {identifier}",
+                    msg=f"Blockdiag apprx is {mean_diff} > {expected} on avg. away from exact soln {identifier}",
                 )
 
 
@@ -907,13 +917,13 @@ class TestKnockoffGen(CheckValidKnockoffs):
         V, _ = utilities.estimate_covariance(X, tol=1e-2)
         np.random.seed(110)
         Xk1 = knockoffs.GaussianSampler(
-            X=X, Sigma=V, method="sdp", max_epochs=1
+            X=X, Sigma=V, method="sdp"
         ).sample_knockoffs()
 
         # Method 2: Infer during
         np.random.seed(110)
         Xk2 = knockoffs.GaussianSampler(
-            X=X, method="sdp", max_epochs=1
+            X=X, method="sdp"
         ).sample_knockoffs()
         np.testing.assert_array_almost_equal(
             Xk1, Xk2, 5, err_msg="Knockoff gen is inconsistent"

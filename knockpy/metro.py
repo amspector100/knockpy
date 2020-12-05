@@ -24,7 +24,7 @@ from . import utilities, knockoffs, dgp
 import networkx as nx
 from networkx.algorithms.approximation import treewidth
 from .knockoffs import KnockoffSampler
-from . import knockoffs, smatrix
+from . import knockoffs, smatrix, constants
 
 # Logging
 import warnings
@@ -408,7 +408,13 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 
         # Find the optimal S matrix. In general, we should set a
         # fairly high tolerance to avoid numerical errors.
-        kwargs["tol"] = kwargs.pop("tol", 1e-2)
+        kwargs["tol"] = kwargs.pop(
+            "tol",
+            min(
+                constants.METRO_TOL,
+                np.linalg.eigh(self.V)[0].min()/10
+            )
+        )
         self.S = smatrix.compute_smatrix(Sigma=self.V, **kwargs)
         self.G = np.concatenate(
             [
@@ -485,14 +491,14 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
                 self.L = np.concatenate([self.L, new_row], axis=0)
 
             # Check for numerical instabilities
-            diff = Gprej - np.dot(self.L, self.L.T)
-            max_error = np.max(np.abs(diff))
-            if max_error > 10 * initial_error:
-                # Correct
-                print(
-                    f"Maximum error is {max_error} > 10x init error, recomputing L for p={self.p}, j={j}"
-                )
-                self.L = np.linalg.cholesky(Gprej)
+            # diff = Gprej - np.dot(self.L, self.L.T)
+            # max_error = np.max(np.abs(diff))
+            # if max_error > 10 * initial_error:
+            #     # Correct
+            #     print(
+            #         f"Maximum error is {max_error} > 10x init error, recomputing L for p={self.p}, j={j}"
+            #     )
+            #     self.L = np.linalg.cholesky(Gprej)
 
             # 2. Compute conditional variance
             # This subset of G includes knockoff j

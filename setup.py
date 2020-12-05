@@ -35,14 +35,10 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     install_requires=[
-        "choldate",
-        "cython>=0.29.14",
         "numpy>=1.17.4",
         "scipy>=1.5.2",
-        "cvxpy>=1.0.25",
+        "cvxpy>=1.0.25", 
         "scikit_learn>=0.22",
-        "statsmodels>=0.10.1",
-        "scikit-dsdp",
         "networkx>=2.4",
         "tqdm>=4.36.1",
         "group_lasso",
@@ -50,5 +46,6 @@ setuptools.setup(
     ],
     extras_require={
         "kpytorch":["torch>=1.4.0"],
+        "default":["cython>=0.29.14", "choldate", "scikit-dsdp"]
     }
 )

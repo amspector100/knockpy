@@ -5,8 +5,7 @@ import time
 import numpy as np
 import scipy as sp
 from scipy import stats
-from . import utilities
-from .utilities import calc_group_sizes, preprocess_groups
+from . import utilities, constants
 try:
     import choldate
     CHOLDATE_AVAILABLE = True
@@ -37,7 +36,8 @@ def cholupdate(R, x, add=True):
     Notes
     -----
     - This function modifies both ``R`` and ``x`` in place. 
-    - The ``choldate`` package is a much faster alternative.
+    - The ``choldate`` package is a much faster and more 
+    numerically stable alternative.
 
     """
     p = np.size(x)
@@ -87,7 +87,7 @@ def mvr_loss(Sigma, S, smoothing=0):
     return trace_invG
 
 
-def maxent_loss(Sigma, S, smoothing=0, choldate_warning=True):
+def maxent_loss(Sigma, S, smoothing=0):
     """
     Computes the log determinant of the feature-knockoff precision
     matrix, which is proportional to the negative entropy of [X, tilde{X}].
@@ -128,7 +128,7 @@ def solve_mvr(
     Sigma,
     tol=1e-5,
     verbose=False,
-    num_iter=10,
+    num_iter=50,
     smoothing=0,
     rej_rate=0,
     converge_tol=1,
@@ -147,7 +147,7 @@ def solve_mvr(
     verbose : bool
         If True, prints updates during optimization.
     num_iter : int
-        The number of coordinate descent iterations. Defaults to 10.
+        The number of coordinate descent iterations. Defaults to 50.
     smoothing : float
         Add ``smoothing`` to all eigenvalues of the feature-knockoff
         precision matrix before inverting to avoid numerical
@@ -166,7 +166,7 @@ def solve_mvr(
 
     # Warning if choldate not available
     if not CHOLDATE_AVAILABLE and choldate_warning:
-        warnings.warn(CHOLDATE_WARNING)
+        warnings.warn(constants.CHOLDATE_WARNING)
 
     # Initial constants
     time0 = time.time()
@@ -244,9 +244,15 @@ def solve_mvr(
             x = np.zeros(p)
             x[j] = np.sqrt(np.abs(delta))
             if delta > 0:
-                choldate.choldowndate(L.T, x)
+                if CHOLDATE_AVAILABLE:
+                    choldate.choldowndate(L.T, x)
+                else:
+                    cholupdate(L.T, x, add=False)
             else:
-                choldate.cholupdate(L.T, x)
+                if CHOLDATE_AVAILABLE:
+                    choldate.cholupdate(L.T, x)
+                else:
+                    cholupdate(L.T, x, add=True)
 
             # Set new value for S
             S[j, j] += delta
@@ -273,7 +279,7 @@ def solve_maxent(
     Sigma, 
     tol=1e-5,
     verbose=False,
-    num_iter=10,
+    num_iter=50,
     converge_tol=1e-4,
     choldate_warning=True,
 ):
@@ -290,7 +296,7 @@ def solve_maxent(
     verbose : bool
         If True, prints updates during optimization.
     num_iter : int
-        The number of coordinate descent iterations. Defaults to 10.
+        The number of coordinate descent iterations. Defaults to 50.
     converge_tol : float
         A parameter specifying the criteria for convergence.
     choldate_warning : bool
@@ -305,7 +311,7 @@ def solve_maxent(
 
     # Warning if choldate not available
     if not CHOLDATE_AVAILABLE and choldate_warning:
-        warnings.warn(CHOLDATE_WARNING)
+        warnings.warn(constants.CHOLDATE_WARNING)
 
     # Initial constants
     time0 = time.time()
@@ -342,9 +348,15 @@ def solve_maxent(
             x = np.zeros(p)
             x[j] = np.sqrt(np.abs(delta))
             if delta > 0:
-                choldate.cholupdate(L.T, x)
+                if CHOLDATE_AVAILABLE:
+                    choldate.choldowndate(L.T, x)
+                else:
+                    cholupdate(L.T, x, add=False)
             else:
-                choldate.choldowndate(L.T, x)
+                if CHOLDATE_AVAILABLE:
+                    choldate.cholupdate(L.T, x)
+                else:
+                    cholupdate(L.T, x, add=True)
 
             # Set new value for S
             S[j, j] = sjstar

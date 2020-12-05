@@ -1,5 +1,6 @@
 name = "knockpy"
 all = [
+	"constants",
     "dgp",
     "knockoff_stats",
     "knockoff_filter",
@@ -13,6 +14,7 @@ all = [
 
 __version__ = "1.0.3dev"
 
+from . import constants
 from . import dgp
 from . import knockoffs
 from . import knockoff_filter

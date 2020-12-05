@@ -5,21 +5,18 @@ from scipy import stats
 import scipy.linalg
 
 from .constants import DEFAULT_TOL
-from .utilities import calc_group_sizes, preprocess_groups
-from .utilities import shift_until_PSD, scale_until_PSD
-from . import utilities
-from . import mrc
-
-# Multiprocessing tools
-from functools import partial
-from multiprocessing import Pool
+from . import utilities, mrc, constants
 
 # For SDP
 import time
 import cvxpy as cp
-from pydsdp.dsdp5 import dsdp
+try:
+    from pydsdp.dsdp5 import dsdp
+    DSDP_AVAILABLE = True
+except:
+    DSDP_AVAILABLE = False
 
-# Options for SDP solver
+# Options for group SDP solver
 OBJECTIVE_OPTIONS = ["abs", "pnorm", "norm"]
 
 
@@ -121,7 +118,7 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
             S[full_inds] = gamma * group_sigma
 
     # Scale to make this PSD using binary search
-    S, _ = scale_until_PSD(Sigma, S, tol, num_iter)
+    S, _ = utilities.scale_until_PSD(Sigma, S, tol, num_iter)
 
     return S
 
@@ -148,8 +145,8 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
         ``(p, p)``-shaped diagonal S-matrix used to generate knockoffs
     """
 
-    # Note this DSDP solver is super fast but its input format is confusing.
-    # This basically solves:
+    # Note this DSDP solver is fast but its input format is confusing.
+    # This solves:
     # minimize c^T y s.t.
     # Ay <= b
     # F0 + y1 F1 + ... + yp Fp > 0 where F0,...Fp are PSD matrices
@@ -164,7 +161,18 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     # be larger than the corresponding off-diagonal elements of Sigma
     # (I.e. make the linear constraints larger...)
 
+    # This function requires DSDP.
+    # The group_SDP formulation does not.
+    if not DSDP_AVAILABLE:
+        return solve_group_SDP(
+            Sigma=Sigma,
+            verbose=verbose,
+            num_iter=num_iter,
+            tol=tol,
+        )
+
     # Constants
+    TestIfCorrMatrix(Sigma)
     p = Sigma.shape[0]
     maxtol = np.linalg.eigh(Sigma)[0].min() / 10
     if tol > maxtol and verbose:
@@ -220,7 +228,7 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     S = np.diag(result["y"])
 
     # Scale to make this PSD using binary search
-    S, gamma = scale_until_PSD(Sigma, S, tol, num_iter)
+    S, gamma = utilities.scale_until_PSD(Sigma, S, tol, num_iter)
     if verbose:
         mineig = np.linalg.eigh(2 * Sigma - S)[0].min()
         print(
@@ -238,6 +246,7 @@ def solve_group_SDP(
     norm_type=2,
     num_iter=10,
     tol=DEFAULT_TOL,
+    dsdp_warning=True,
     **kwargs,
 ):
     """
@@ -312,7 +321,10 @@ def solve_group_SDP(
 
     # Possibly solve non-grouped SDP
     if m == p:
-        return solve_SDP(Sigma=Sigma, verbose=verbose, num_iter=num_iter, tol=tol,)
+        if DSDP_AVAILABLE:
+            return solve_SDP(Sigma=Sigma, verbose=verbose, num_iter=num_iter, tol=tol,)
+        elif dsdp_warning:
+            warnings.warn(constants.DSDP_WARNING)
 
     # Sort the covariance matrix according to the groups
     inds, inv_inds = utilities.permute_matrix_by_groups(groups)
@@ -390,7 +402,7 @@ def solve_group_SDP(
         S[i, i] = max(tol, min(1 - tol, S[i, i]))
 
     # Scale to make this PSD using binary search
-    S, gamma = scale_until_PSD(Sigma, S, tol, num_iter)
+    S, gamma = utilities.scale_until_PSD(Sigma, S, tol, num_iter)
     if verbose:
         mineig = np.linalg.eigh(2 * Sigma - S)[0].min()
         print(

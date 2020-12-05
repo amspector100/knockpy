@@ -3,7 +3,6 @@ import numpy as np
 import scipy as sp
 from scipy import stats
 import scipy.linalg
-import statsmodels.stats.multitest
 
 from .utilities import calc_group_sizes, preprocess_groups
 from .utilities import shift_until_PSD, scale_until_PSD
@@ -69,11 +68,8 @@ class KnockoffSampler:
             pvals.append(result.pvalue)
         pvals = np.array(pvals)
 
-        # BH multiple correction
-        adj_pvals = statsmodels.stats.multitest.multipletests(
-            pvals, method="fdr_bh", alpha=0.01,
-        )
-        adj_pvals = adj_pvals[1]
+        # Naive Bonferroni correction
+        adj_pvals = np.minimum(pvals.shape[0]*pvals, 1)
         return pvals, adj_pvals
 
     def check_xk_validity(self, X, Xk, testname="", alpha=0.001):
