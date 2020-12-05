@@ -21,13 +21,21 @@ knockpy relies on heavy-duty linear algebra routines which sometimes fail on non
 1. To start, install a lightweight version of knockpy using
 ``pip install knockpy``. This should install correctly on all devices, and contains nearly all of the functionality of the prior installation. However, the algorithms for computing optimal distributions for Gaussian knockoffs, such as [minimum reconstructability knockoffs](https://arxiv.org/abs/2011.14625) and [SDP knockoffs](https://arxiv.org/abs/1610.02351), may be an order of magnitude slower.
 2. [Optional] To speed up computation for minimum reconstructability knockoffs (the default knockoff type):
+
     (a) Run
-        ``pip install cython>=0.29.14``
+
+        ``pip install cython>=0.29.14``  
+
         If the installation fails, likely due to the incorrect configuration of a C compiler, you have three options. First, the [Anaconda](https://docs.anaconda.com/anaconda/user-guide/tasks/install-packages/) package manager includes a compiler, so the command
-        ``conda install cython``
+
+        ``conda install cython``  
+
         should work on all platforms. Second, on Windows, you can install precompiled binaries for cython [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/). Lastly, on all platforms, the documentation [here](https://cython.readthedocs.io/en/latest/src/quickstart/install.html) describes how to properly configure a C compiler during installation.
+    
     (b) Run
+
         ``pip install git+git://github.com/jcrudy/choldate.git``
+
 3. [Optional] To speed up computation for (non-default) SDP knockoffs, you will need to install ``scikit-dsdp``. This can be challenging on non-Linux environments. We hope to provide more explicit instructions for installation of this package in the future.
  
 ## Quickstart
