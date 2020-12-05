@@ -46,6 +46,6 @@ setuptools.setup(
     ],
     extras_require={
         "kpytorch":["torch>=1.4.0"],
-        "default":["cython>=0.29.14", "choldate", "scikit-dsdp"]
+        "fast":["cython>=0.29.14", "choldate", "scikit-dsdp"]
     }
 )

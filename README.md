@@ -10,12 +10,23 @@ To install knockpy, first install choldate using the following command:
 
 Then, install knockpy using pip:
 
-``pip install knockpy``
+``pip install knockpy[fast]``
 
-Note that both choldate and knockpy require cython, and installing cython requires access to a C compiler. This can be challenging on Windows, and if you have difficulty on any OS, please carefully follow the instructions [here](https://cython.readthedocs.io/en/latest/src/quickstart/install.html). Alternatively, if the installation fails on your system, please reach out to me and I'll try to help.
+To use the (optional) kpytorch submodule, you will need to install [pytorch](https://pytorch.org/). On non-windows systems, it may also be possible to 
 
-To use the (optional) kpytorch submodule, you will need to install [pytorch](https://pytorch.org/).
+### What to do if installation fails?
 
+knockpy relies on heavy-duty linear algebra routines which sometimes fail on non-Linux environments. 
+
+1. To start, install a lightweight version of knockpy using
+``pip3 install knockpy``. This should install correctly on all devices, and contains nearly all of the functionality of the prior installation. However, the algorithms for computing optimal distributions for Gaussian knockoffs ([minimum reconstructability knockoffs](https://arxiv.org/abs/2011.14625) and [SDP knockoffs](https://arxiv.org/abs/1610.02351)) may be an order of magnitude slower.
+2. [Optional] To speed up computation for minimum reconstructability knockoffs (the default knockoff type):
+    (a) Run
+    ``pip3 install cython>=0.29.14``
+    If the installation fails, likely due to the incorrect configuration of a C compiler, please follow the instructions [here](https://cython.readthedocs.io/en/latest/src/quickstart/install.html).
+    (b) Run
+    ``pip install git+git://github.com/jcrudy/choldate.git``
+3. [Optional] To speed up computation for SDP knockoffs, 
 ## Quickstart
 
 Given a data-matrix `X` and a response vector `y`, knockpy makes it easy to use knockoffs to perform variable selection using a wide variety of machine learning algorithms (also known as "feature statistic") and types of knockoffs. One quick example is shown below, where we use the cross-validated lasso to assign variable importances to the features and knockoffs.  
