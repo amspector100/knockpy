@@ -1,8 +1,8 @@
 import warnings
 import numpy as np
 import scipy as sp
+from scipy.sparse.linalg import eigsh
 import sklearn.covariance
-
 import itertools
 from multiprocessing import Pool
 from functools import partial
@@ -207,9 +207,48 @@ def random_permutation_inds(length):
     return inds, rev_inds
 
 
-### Helper for MX knockoffs when we infer Sigma, and also when
-### X comes from the gibbs model
-def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf"):
+### Helper for MX knockoffs when we infer Sigma
+def estimate_factor(Sigma, num_factors=20, num_iter=10):
+    """
+    Approximates ``Sigma = np.diag(D) + np.dot(U, U.T)``.
+    See https://arxiv.org/pdf/2006.08790.pdf.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    num_factors : int
+        Dimensionality of ``U``.
+
+    Notes
+    -----
+    TODO: allow X as an input when Sigma does not
+    fit in memory.
+
+    Returns
+    -------
+    D : np.ndarray
+        ``(p,)``-shaped array of diagonal elements.
+    U : np.ndarray
+        ``(p, num_factors)``-shaped array. 
+    """
+    p = Sigma.shape[0]
+    # Problem is trivial in this case 
+    if num_factors >= p:
+        return np.zeros((p, p)), sp.linalg.sqrtm(Sigma)
+
+    # Coordinate ascent
+    D = np.zeros(p)
+    for i in range(num_iter):
+        evals, evecs = eigsh(Sigma-np.diag(D), num_factors, which='LM')
+        U = np.dot(evecs, np.diag(np.maximum(0, np.sqrt(evals))))
+        D = np.diag(Sigma - np.power(U, 2).sum(axis=1))
+        loss = np.power(Sigma - np.diag(D) - np.dot(U, U.T), 2).sum()
+
+    return D, U
+
+
+def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
     """ Estimates covariance matrix of X. 
 
     Parameters
@@ -222,6 +261,8 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf"):
     tol : float
         If shrinkage is None but the minimum eigenvalue of the MLE
         is below tol, apply LedoitWolf shrinkage anyway.
+    kwargs : dict
+        kwargs to pass to the shrinkage estimator.
 
     Returns
     -------
@@ -241,9 +282,10 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf"):
     if mineig < tol or shrinkage is not None:
         # Which shrinkage to use
         if str(shrinkage).lower() == "ledoitwolf" or shrinkage is None:
-            ShrinkEst = sklearn.covariance.LedoitWolf()
+            ShrinkEst = sklearn.covariance.LedoitWolf(**kwargs)
         elif str(shrinkage).lower() == "graphicallasso":
-            ShrinkEst = sklearn.covariance.GraphicalLasso(alpha=0.1)
+            kwargs['alpha'] = kwargs.get('alpha', 0.1) # Default regularization
+            ShrinkEst = sklearn.covariance.GraphicalLasso(**kwargs)
         else:
             raise ValueError(
                 f"Shrinkage arg must be one of None, 'ledoitwolf', 'graphicallasso', not {shrinkage}"
