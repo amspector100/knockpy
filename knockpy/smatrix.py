@@ -13,12 +13,14 @@ def parse_method(method, groups, p=None):
     """ Decides which method to use to create the knockoff S matrix """
     if method is not None:
         return method
+    if groups is None:
+        return "mvr"
     if p is None:
         p = groups.shape[0]
     if np.all(groups == np.arange(1, p + 1, 1)):
-        method = "mvr"
+        return "mvr"
     else:
-        method = "sdp"
+        return "sdp"
     return method
 
 
