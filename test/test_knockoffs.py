@@ -831,6 +831,36 @@ class TestBlockdiagApprx(CheckSMatrix):
                     msg=f"Blockdiag apprx is {mean_diff} > {expected} on avg. away from exact soln {identifier}",
                 )
 
+class TestFactorApprx(CheckSMatrix):
+
+    def test_agreement_on_factor_models(self):
+
+        # Random factor models
+        np.random.seed(110)
+        ks = [1, 10, 20, 50]
+        p = 150
+        for k in ks:
+            for method in ['mvr', 'maxent']:   
+                D = np.random.uniform(low=0.01, high=1, size=(p,))
+                U = np.random.randn(p, k) / np.sqrt(k)
+                # Rescale to correlation matrix
+                diag_Sigma = D + (np.power(U, 2)).sum(axis=1)
+                D = D / diag_Sigma
+                U = U / np.sqrt(diag_Sigma).reshape(-1, 1)
+                Sigma = np.diag(D) + np.dot(U, U.T)
+                # Check the factor method agrees with reg. method
+                S1 = smatrix.compute_smatrix(
+                    Sigma=None, D=D, U=U, method=method, how_approx='factor'
+                )
+                S2 = smatrix.compute_smatrix(
+                   Sigma=Sigma, method=method, tol=0
+                )
+                np.testing.assert_array_almost_equal(
+                    S1, S2, decimal=2,
+                    err_msg=f"factored/non-factored versions for method={method}, k={k} do not agree"
+                )
+
+
 
 class CheckValidKnockoffs(unittest.TestCase):
     def check_valid_mxknockoffs(self, X, mu=None, Sigma=None, msg="", **kwargs):

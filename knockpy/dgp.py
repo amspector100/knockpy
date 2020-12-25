@@ -159,7 +159,7 @@ def FactorModel(
     Generates random correlation matrix from a factor model 
     with dimension `p` and rank `rank`.
     """
-    diag_entries = np.random.uniform(0, 1, size=p)
+    diag_entries = np.random.uniform(low=0.01, high=1, size=p)
     noise = np.random.randn(p, rank) / np.sqrt(rank)
     V = np.diag(diag_entries) + np.dot(noise, noise.T)
     V = utilities.cov2corr(V)

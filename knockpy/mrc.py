@@ -78,12 +78,16 @@ def mvr_loss(Sigma, S, smoothing=0):
     Returns
     -------
     loss : float
-        The MVR loss for Sigma and S.
+        The MVR loss for Sigma and S. This is infinite if S is not feasible.
     """
+    # Check for negative eigenvalues
+    eigs_S = np.diag(S)
+    eigs_diff = np.linalg.eigh(2 * Sigma - S)[0]
+    if np.min(eigs_S) < 0 or np.min(eigs_diff) < 0:
+        return np.inf
 
     # Inverse of eigenvalues
-    trace_invG = (1 / (np.linalg.eigh(2 * Sigma - S)[0] + smoothing)).sum()
-    trace_invG = trace_invG + (1 / (np.diag(S) + smoothing)).sum()
+    trace_invG = (1 / (eigs_diff + smoothing)).sum() + (1 / (eigs_S + smoothing)).sum()
     return trace_invG
 
 
@@ -106,12 +110,17 @@ def maxent_loss(Sigma, S, smoothing=0):
     Returns
     -------
     loss : float
-        The MMI loss for Sigma and S.
+        The maxent loss for Sigma and S. This is infinite if S is not feasible.
     """
     p = Sigma.shape[0]
-    detG = np.log(np.linalg.det(2 * Sigma - S + smoothing * np.eye(p)))
-    detG = detG + np.log(np.diag(S + smoothing)).sum()
-    return -1 * detG
+    eigs_S = np.diag(S)
+    eigs_diff = np.linalg.eigh(2 * Sigma - S)[0]
+    if np.min(eigs_S) < 0 or np.min(eigs_diff) < 0:
+        return np.inf
+
+    det_invG = np.log(1/(eigs_diff + smoothing)).sum()
+    det_invG = det_invG + np.log(1/(eigs_S + smoothing)).sum()
+    return det_invG
 
 def mmi_loss(*args, **kwargs):
     """
@@ -122,6 +131,147 @@ def mmi_loss(*args, **kwargs):
     compatability.
     """
     return maxent_loss(*args, **kwargs)
+
+def solve_mvr_quadratic(cn, cd, sj, acc_rate=1, smoothing=0):
+    """
+    Solves a quadratic equation to find
+    the optimal updates for the MVR S-matrix
+    based off of cn and cd.
+    See https://arxiv.org/pdf/2011.14625.pdf
+    """
+
+    # 1. Construct quadratic equation
+    # We want to minimize 1/(sj + delta) - (delta * cn)/(1 - delta * cd)
+    coef2 = -1 * cn - np.power(cd, 2)
+    coef1 = 2 * (-1 * cn * (sj + smoothing) + cd)
+    coef0 = -1 * cn * (sj + smoothing) ** 2 - 1
+    orig_options = np.roots(np.array([coef2, coef1, coef0]))
+
+    # 2. Eliminate complex solutions
+    options = np.array([delta for delta in orig_options if np.imag(delta) == 0])
+    # Eliminate solutions which violate PSD-ness
+    upper_bound = 1 / cd
+    lower_bound = -1 * sj
+    options = np.array(
+        [
+            delta
+            for delta in options
+            if delta < upper_bound and delta > lower_bound
+        ]
+    )
+    if options.shape[0] == 0:
+        raise RuntimeError(
+            f"All quadratic solutions ({orig_options}) were infeasible or imaginary"
+        )
+        
+    # 3. If multiple solutions left (unlikely), pick the smaller one
+    losses = 1 / (sj + options) - (options * cn) / (1 - options * cd)
+    if losses[0] == losses.min():
+        delta = options[0]
+    else:
+        delta = options[1]
+        
+    # 4. Account for rejections
+    if acc_rate < 1:
+        extra_space = min(min_eig, 0.02) / (i + 2)  # Helps deal with coord desc
+        opt_postrej_value = sj + delta
+        opt_prerej_value = opt_postrej_value / (acc_rate)
+        opt_prerej_value = min(
+            sj + upper_bound - extra_space,
+            max(opt_prerej_value, extra_space),
+        )
+        delta = opt_prerej_value - sj
+        
+    return delta
+
+def solve_mvr_factored(
+    D,
+    U,
+    tol=1e-5,
+    verbose=False,
+    num_iter=15,
+    converge_tol=1e-4,
+):
+    """
+    Computes S-matrix used to generate mvr knockoffs
+    using coordinate descent assuming that
+    the covariance matrix follows a factor model.
+    This means Sigma = D + UU^T for a p x p diagonal matrix
+    D and a p x k matrix U. 
+
+    Parameters
+    ----------
+    D : np.ndarray
+        ``p``-shaped array of diagonal elements.
+    U : np.ndarray
+        ``(p, k)``-shaped matrix. Usually k << p.
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    verbose : bool
+        If True, prints updates during optimization.
+    num_iter : int
+        The number of coordinate descent iterations. Defaults to 50.
+    converge_tol : float
+        A parameter specifying the criteria for convergence.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
+    """
+
+    # Initial constants
+    p = D.shape[0]
+    k = U.shape[1]
+    inds = np.arange(p)
+    loss = np.inf
+
+    # TODO: this is Omega(p^3).
+    # Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062
+    Sigma = np.diag(D) + np.dot(U, U.T)
+    diag_Sigma = np.diag(Sigma)
+    mineig = np.linalg.eigh(Sigma)[0].min()
+    if mineig < 0:
+        raise ValueError("D + UU^T is not PSD")
+
+    # Initialize values
+    time0 = time.time()
+    decayed_improvement = 1
+    Sdiag = np.zeros(p) + mineig
+    # These are k x k matrices
+    Q, R = sp.linalg.qr(np.eye(k) + 2*np.dot(U.T / (2*D - Sdiag), U))
+
+    quadtime = 0
+    solvetime = 0
+    for i in range(num_iter):
+        np.random.shuffle(inds)
+        for j in inds:
+
+            # 1. Calculate parameters cd/cn
+            # (see https://arxiv.org/pdf/2011.14625.pdf)
+            b = np.dot(Q.T, U[j].T/(2*D[j] - Sdiag[j]))
+            x = sp.linalg.solve_triangular(R, b, lower=False)
+            diff_inv_ej =  -2*np.dot(U, x)/(2*D - Sdiag)
+            diff_inv_ej[j] = diff_inv_ej[j] + 1/(2*D[j] - Sdiag[j])
+            cd = diff_inv_ej[j]
+            cn = -1 * np.power(diff_inv_ej, 2).sum()
+
+            # 2. Find optimal update
+            delta = solve_mvr_quadratic(cn=cn, cd=cd, sj=Sdiag[j])
+            
+            # 3. Rank one update to QR decomp
+            muj = U[j].T / (2*D[j] - Sdiag[j])
+            c = -delta/(1 - delta/(2*D[j] - Sdiag[j]))
+            Q, R = sp.linalg.qr_update(
+                Q=Q,
+                R=R,
+                u=-2*c*muj,
+                v=muj,
+            )
+            # 4. Update S
+            Sdiag[j] = Sdiag[j] + delta
+            
+    return np.diag(Sdiag)
 
 
 def solve_mvr(
@@ -198,49 +348,12 @@ def solve_mvr(
             vn = sp.linalg.solve_triangular(a=L.T, b=vd, lower=False)
             cn = -1 * np.power(vn, 2).sum()
 
-            # 2. Construct quadratic equation
-            # We want to minimize 1/(sj + delta) - (delta * cn)/(1 - delta * cd)
-            coef2 = -1 * cn - np.power(cd, 2)
-            coef1 = 2 * (-1 * cn * (S[j, j] + smoothing) + cd)
-            coef0 = -1 * cn * (S[j, j] + smoothing) ** 2 - 1
-            orig_options = np.roots(np.array([coef2, coef1, coef0]))
-
-            # 3. Eliminate complex solutions
-            options = np.array([delta for delta in orig_options if np.imag(delta) == 0])
-            # Eliminate solutions which violate PSD-ness
-            upper_bound = 1 / cd
-            lower_bound = -1 * S[j, j]
-            options = np.array(
-                [
-                    delta
-                    for delta in options
-                    if delta < upper_bound and delta > lower_bound
-                ]
+            # 2. Construct/solve quadratic equation
+            delta = solve_mvr_quadratic(
+                cn=cn, cd=cd, sj=S[j,j], smoothing=smoothing, acc_rate=acc_rate
             )
-            if options.shape[0] == 0:
-                raise RuntimeError(
-                    f"All quadratic solutions ({orig_options}) were infeasible or imaginary"
-                )
 
-            # 4. If multiple solutions left (unlikely), pick the smaller one
-            losses = 1 / (S[j, j] + options) - (options * cn) / (1 - options * cd)
-            if losses[0] == losses.min():
-                delta = options[0]
-            else:
-                delta = options[1]
-
-            # 5. Account for rejections
-            if acc_rate < 1:
-                extra_space = min(min_eig, 0.02) / (i + 2)  # Helps deal with coord desc
-                opt_postrej_value = S[j, j] + delta
-                opt_prerej_value = opt_postrej_value / (acc_rate)
-                opt_prerej_value = min(
-                    S[j, j] + upper_bound - extra_space,
-                    max(opt_prerej_value, extra_space),
-                )
-                delta = opt_prerej_value - S[j, j]
-
-            # Update S and L
+            # 3. Update S and L
             x = np.zeros(p)
             x[j] = np.sqrt(np.abs(delta))
             if delta > 0:
@@ -274,6 +387,105 @@ def solve_mvr(
     S = utilities.shift_until_PSD(S, tol=tol)
     S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
     return S
+
+def solve_maxent_factored(
+    D,
+    U,
+    tol=1e-5,
+    verbose=False,
+    num_iter=10,
+    converge_tol=1e-4,
+):
+    """
+    Computes S-matrix used to generate maximum entropy
+    knockoffs using coordinate descent assuming that
+    the covariance matrix follows a factor model.
+    This means Sigma = D + UU^T for a p x p diagonal matrix
+    D and a p x k matrix U. 
+
+    Parameters
+    ----------
+    D : np.ndarray
+        ``p``-shaped array of diagonal elements.
+    U : np.ndarray
+        ``(p, k)``-shaped matrix. Usually k << p.
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    verbose : bool
+        If True, prints updates during optimization.
+    num_iter : int
+        The number of coordinate descent iterations. Defaults to 50.
+    converge_tol : float
+        A parameter specifying the criteria for convergence.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
+    """
+
+    # Initial constants
+    p = D.shape[0]
+    k = U.shape[1]
+    inds = np.arange(p)
+    loss = np.inf
+
+    # TODO: this is Omega(p^3).
+    # Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062
+    Sigma = np.diag(D) + np.dot(U, U.T)
+    diag_Sigma = np.diag(Sigma)
+    mineig = np.linalg.eigh(Sigma)[0].min()
+    if mineig < 0:
+        raise ValueError("D + UU^T is not PSD")
+
+    # Initialize values
+    time0 = time.time()
+    decayed_improvement = 1
+    Sdiag = np.zeros(p) + mineig
+    # These are all k x k matrices
+    Q, R = sp.linalg.qr(np.eye(k) + 2*np.dot(U.T / (2*D - Sdiag), U))
+
+    for i in range(num_iter):
+        np.random.shuffle(inds)
+        for j in inds:
+            # Qprime, Rprime are rank-one updates of Q, R
+            # to help solve for the optimal Sj
+            Qprime, Rprime = sp.linalg.qr_update(
+                Q=Q,
+                R=R,
+                u=U[j].T/(2*D[j] - Sdiag[j]),
+                v=-2*U[j].T,
+                overwrite_qruv=False
+            )
+
+            # Calculate update for S---for notation, see
+            # https://arxiv.org/pdf/2006.08790.pdf
+            MjUjT = np.dot(np.dot(Qprime, Rprime) - np.eye(k), U[j].T)/2
+            x = sp.linalg.solve_triangular(
+                a=Rprime,
+                b=np.dot(Qprime.T, MjUjT),
+                lower=False
+            )
+            sub_term = 4*np.dot(U[j], MjUjT) - 8*np.dot(MjUjT, x)
+            Sjstar = (2*diag_Sigma[j] - sub_term)/2
+            
+            # Rank one update to QR decomp
+            delta = Sdiag[j] - Sjstar 
+            muj = U[j].T / (2*D[j] - Sdiag[j])
+            c = delta/(1 + delta/(2*D[j] - Sdiag[j]))
+            Q, R = sp.linalg.qr_update(
+                Q=Q,
+                R=R,
+                u=-2*c*muj,
+                v=muj,
+            )
+            # Update S
+            Sdiag[j] = Sjstar
+            
+    # S = utilities.shift_until_PSD(S, tol=tol)
+    # S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
+    return np.diag(Sdiag)
+
 
 def solve_maxent(
     Sigma, 
@@ -363,7 +575,7 @@ def solve_maxent(
 
         # Check for convergence
         prev_loss = loss
-        loss = mmi_loss(V, S)
+        loss = maxent_loss(V, S)
         if i != 0:
             decayed_improvement = decayed_improvement / 10 + 9 * (prev_loss - loss) / 10
         if verbose:
