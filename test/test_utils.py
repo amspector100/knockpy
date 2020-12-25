@@ -157,6 +157,16 @@ class TestUtils(unittest.TestCase):
             frobenius < 0.2, f"High-dimension covariance estimation is horrible"
         )
 
+        # Test factor approximation, should be quite good
+        D, U = utilities.estimate_factor(Vest, num_factors=5)
+        V_factor = np.diag(D) + np.dot(U, U.T)
+        frobenius = np.sqrt(np.power(V_factor - Vest, 2).mean())
+        target = 0.1
+        self.assertTrue(
+            frobenius < target, f"Factor approximation is very poor (frob error={frobenius} > {target})"
+        )
+
+
     def test_apply_pool(self):
 
         # Apply_pool for num_processes = 1
