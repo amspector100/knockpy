@@ -173,7 +173,7 @@ def solve_mvr_quadratic(cn, cd, sj, i=None, min_eig=None, acc_rate=1, smoothing=
         
     # 4. Account for rejections
     if acc_rate < 1:
-        extra_space = min(min_eig, 0.02) / (i + 2)  # Helps deal with coord desc
+        extra_space = min(min_eig, 0.05) / (i + 2)  # Helps deal with coord desc
         opt_postrej_value = sj + delta
         opt_prerej_value = opt_postrej_value / (acc_rate)
         opt_prerej_value = min(

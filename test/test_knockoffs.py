@@ -596,6 +596,7 @@ class TestMRCSolvers(CheckSMatrix):
                 )
 
             # Coord descent solver
+            np.random.seed(110)
             opt_S = mrc.solve_mvr(
                 Sigma=Sigma, rej_rate=true_rec_prop, tol=1e-5, verbose=True,
             )
