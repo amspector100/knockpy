@@ -1,3 +1,4 @@
+import time
 import pytest
 import numpy as np
 from scipy import stats
@@ -31,12 +32,14 @@ class TestFdrControl(unittest.TestCase):
 
     def check_fdr_control(
         self,
-        reps=50,
+        reps=NUM_REPS,
         q=0.2,
         alpha=0.05,
         filter_kwargs={},
         S=None,
         infer_sigma=False,
+        test_grouped=True,
+        S_method="sdp",
         **kwargs,
     ):
 
@@ -75,10 +78,13 @@ class TestFdrControl(unittest.TestCase):
 
         for name, groups in zip([name1, name2], [groups1, groups2]):
 
+            if not test_grouped and np.all(groups==groups2):
+                continue
+
             # Solve SDP
             if S is None and not fixedX and not infer_sigma:
                 ksampler = knockpy.knockoffs.GaussianSampler(
-                    X=X0, Sigma=Sigma, groups=groups, method="sdp",
+                    X=X0, Sigma=Sigma, groups=groups, method=S_method,
                 )
             if not fixedX:
                 invSigma = utilities.chol2inv(Sigma)
@@ -190,7 +196,7 @@ class TestKnockoffFilter(TestFdrControl):
             filter_kwargs={"fstat": "ridge"},
         )
 
-        # Scenario 3: Dai Barber
+        # Scenario 3: Blockequi
         self.check_fdr_control(
             method="blockequi",
             rho=0.6,
@@ -219,7 +225,7 @@ class TestKnockoffFilter(TestFdrControl):
             filter_kwargs={"fstat_kwargs": {"debias": True}},
         )
 
-        # Scenario 3: Dai Barber
+        # Scenario 3: Blockequi
         self.check_fdr_control(
             method="blockequi",
             rho=0.8,
@@ -242,7 +248,7 @@ class TestKnockoffFilter(TestFdrControl):
             n=100, p=50, method="ver", sparsity=0.5, y_dist="binomial", reps=NUM_REPS
         )
 
-        # Scenario 3: Dai Barber
+        # Scenario 3: Blockequi
         self.check_fdr_control(
             method="blockequi",
             rho=0.4,
@@ -427,7 +433,7 @@ class TestKnockoffFilter(TestFdrControl):
         rho = 0.3
         S = (1 - rho) * np.eye(p)
         self.check_fdr_control(
-            reps=10,
+            reps=NUM_REPS,
             n=1000,
             p=p,
             S=S,
@@ -440,6 +446,49 @@ class TestKnockoffFilter(TestFdrControl):
             coeff_size=5,
             filter_kwargs={"fstat_kwargs": {"use_lars": True}},
         )
+
+    @pytest.mark.slow
+    def test_factor_model(self):
+
+        p = 1000
+        n = 300
+        gamma = 1
+        rho = 0.5
+        time0 = time.time()
+        self.check_fdr_control(
+            n=n,
+            p=p,
+            method='blockequi',
+            gamma=gamma,
+            rho=rho,
+            infer_sigma=True,
+            S_method="mvr",
+            filter_kwargs={"num_factors":2},
+            test_grouped=False,
+        )
+        time_factored = time.time() - time0
+        print(f"Factored time is {time_factored}")
+
+        time0 = time.time()
+        self.check_fdr_control(
+            n=n,
+            p=p,
+            method='blockequi',
+            gamma=gamma,
+            rho=rho,
+            infer_sigma=True,
+            S_method="mvr",
+            filter_kwargs={"num_factors":None},
+            test_grouped=False,
+        )
+        time_unfactored = time.time() - time0
+        print(f"Unfactored time is {time_unfactored}")
+        self.assertTrue(
+            1.2*time_factored < time_unfactored,
+            msg=f"time for factor apprx ({time_factored}) > 1.2*time for no apprx ({time_unfactored})"
+        )
+
+
 
     @pytest.mark.quick
     def test_selection_procedure(self):

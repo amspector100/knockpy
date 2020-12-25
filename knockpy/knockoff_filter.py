@@ -255,7 +255,7 @@ class KnockoffFilter:
         fstat_kwargs={},
         knockoff_kwargs={},
         shrinkage="ledoitwolf",
-        factor_rank=None,
+        num_factors=None,
         recycle_up_to=None,
     ):
         """

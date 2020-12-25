@@ -243,7 +243,7 @@ def estimate_factor(Sigma, num_factors=20, num_iter=10):
         evals, evecs = eigsh(Sigma-np.diag(D), num_factors, which='LM')
         U = np.dot(evecs, np.diag(np.maximum(0, np.sqrt(evals))))
         D = np.diag(Sigma - np.power(U, 2).sum(axis=1))
-        loss = np.power(Sigma - np.diag(D) - np.dot(U, U.T), 2).sum()
+        #loss = np.power(Sigma - np.diag(D) - np.dot(U, U.T), 2).sum()
 
     return D, U
 
