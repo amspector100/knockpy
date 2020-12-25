@@ -6,11 +6,15 @@ from . import dgp
 from . import utilities
 from . import constants
 
+# These methods don't require approximation
+NON_APPROX_METHODS = ["equicorrelated", "eq", "ci", "ciknock"]
 
-def parse_method(method, groups, p):
+def parse_method(method, groups, p=None):
     """ Decides which method to use to create the knockoff S matrix """
     if method is not None:
         return method
+    if p is None:
+        p = groups.shape[0]
     if np.all(groups == np.arange(1, p + 1, 1)):
         method = "mvr"
     else:
@@ -111,21 +115,86 @@ def merge_groups(groups, max_block):
 
     return new_groups
 
+def compute_smatrix_factored(
+    Sigma,
+    D=None,
+    U=None,
+    method='mvr',
+    num_factors=20,
+    **kwargs
+):
+    """
+    Wraps S-matrix generation functions which approximate
+    ``Sigma = np.diag(D) + np.dot(U, U.T)``.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+    ``(p, p)``-shaped covariance matrix of X
+    D : np.ndarray
+        ``p``-shaped array of diagonal elements for factor model. Only used 
+        if how_approx='factor'. This is optional if Sigma is not None.
+    U : np.ndarray
+        ``(p, k)``-shaped matrix for factor model. Usually k << p. Only used 
+        if how_approx='factor'. This is optional if Sigma is not None.
+    method : str
+        Method for constructing S-matrix. One of mvr, maxent, mmi.
+    num_factors : int
+        The number of factors if how_approx='factor'. Defaults to 20.
+    kwargs : dict
+        kwargs to pass to one of the wrapped S-matrix solvers.
+
+    Notes
+    -----
+    mmi stands for minimum mutual information, which is the same as maximizing
+    entropy.
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
+    """
+
+    # Compute factor model if not inputted
+    if D is None or U is None:
+        raise NotImplementedError("TODO")
+    p = D.shape[0]
+    k = U.shape[1]
+    
+    # Solve using specialized methods
+    if method == 'mvr':
+        S = mrc.solve_mvr_factored(D=D, U=U, **kwargs)
+    elif method == 'maxent' or method == 'mmi':
+        S = mrc.solve_maxent_factored(D=D, U=U, **kwargs)
+    else: 
+        raise NotImplementedError(f"Factor model solver is not implemented for method={method}")
+
+    # If Sigma is provided, ensure exact validity
+    tol = kwargs.get('tol', constants.DEFAULT_TOL)
+    S = utilities.shift_until_PSD(S, tol=tol)
+    if Sigma is not None:
+        S, _ = utilities.scale_until_PSD(Sigma, S, tol=tol, num_iter=10)
+
+    return S
 
 def compute_smatrix(
     Sigma,
     groups=None,
     method=None,
     solver="cd",
+    how_approx='blockdiag',
     max_block=1000,
+    num_factors=20,
     num_processes=1,
+    D=None,
+    U=None,
     **kwargs,
 ):
     """
     Wraps a variety of S-matrix generation functions.
-    For mvr, maxent, mmi, and sdp methods, this uses a block-diagonal
-    approximation of Sigma if the dimension of Sigma exceeds
-    max_block.
+    For mvr, maxent, mmi, and sdp methods, this can use
+    a block-diagonal approximation of Sigma if the dimension
+    of Sigma exceeds max_block or a factor approximation.
 
     Parameters
     ----------
@@ -141,11 +210,24 @@ def compute_smatrix(
         Method for solving mrc knockoffs. One of 'cd' (coordinate descent) 
         or 'psgd' (projected gradient descent). Coordinate descent is 
         highly recommended.
+    how_approx : str
+        How to approximate the covariance matrix to speed up computation. 
+        - If 'blockdiag', approximates Sigma as a block-diagonal matrix.
+        - If 'factor', approximates ``Sigma = np.diag(D) + np.dot(U, U.T)``,
+        a factor model.
     max_block : int
-        The maximum size of a block in a block-diagonal approximation of Sigma.
+        The maximum size of a block if how_approx='blockdiag'. Defaults to 1000.
+    num_factors : int
+        The number of factors if how_approx='factor'. Defaults to 20.
     num_processes : int
         Number of parallel process to use if Sigma is approximated as
         a block-diagonal matrix. 
+    D : np.ndarray
+        ``p``-shaped array of diagonal elements for factor model. Only used 
+        if how_approx='factor'. This is optional if Sigma is not None.
+    U : np.ndarray
+        ``(p, k)``-shaped matrix for factor model. Usually k << p. Only used 
+        if how_approx='factor'. This is optional if Sigma is not None.
     kwargs : dict
         kwargs to pass to one of the wrapped S-matrix solvers.
 
@@ -168,14 +250,25 @@ def compute_smatrix(
         else:
             kwargs.pop("S")
 
-    # Initial params
-    p = Sigma.shape[0]
+    # Parse method
     if method is not None:
         method = str(method).lower()
-    method = parse_method(method, groups, p)
+    method = parse_method(method, groups, None)
     # These two are the same
     if method == 'mmi':
         method = 'maxent'
+    
+    # Factor-models go to a specialized helper
+    if how_approx == 'factor':
+        if method in NON_APPROX_METHODS:
+            pass
+        else:
+            return compute_smatrix_factored(
+                Sigma=Sigma, D=D, U=U, method=method, num_factors=num_factors, **kwargs
+            )
+
+    # Initial params
+    p = Sigma.shape[0]
     if groups is None:
         groups = np.arange(1, p + 1, 1)
 
@@ -187,7 +280,7 @@ def compute_smatrix(
     # Possibly use block-diagonal approximation, either using
     # hierarchical clustering for non-grouped knockoffs or
     # randomly merging groups for group knockoffs.
-    if p > max_block and method not in ["equicorrelated", "eq", "ci", "ciknock"]:
+    if p > max_block and method not in NON_APPROX_METHODS:
         if np.all(groups == np.arange(1, p + 1, 1)):
             blocks = divide_computation(Sigma, max_block)
         else:
@@ -233,25 +326,23 @@ def compute_smatrix(
             num_iter=kwargs.get("num_iter", 10),
         )
         # Line search for MRC methods
-        smoothing = 1
+        smoothing = 0
         if "smoothing" in kwargs:
             smoothing = kwargs["smoothing"]
         if method == "mvr":
-            obj = mrc.mvr_loss
+            loss_fn = mrc.mvr_loss
         elif method == "maxent":
-            obj = mrc.maxent_loss
+            loss_fn = mrc.maxent_loss
+        best_gamma = 1
         if method in ["mvr", "maxent"]:
-            best_gamma = 1
-            best_loss = obj(Sigma=Sigma, S=S, smoothing=smoothing)
-            for gamma in constants.GAMMA_VALS:
-                loss = obj(Sigma=Sigma, S=gamma * S, smoothing=smoothing)
+            best_loss = loss_fn(Sigma=Sigma, S=S, smoothing=smoothing)
+            for gamma in np.arange(20)/10:
+                loss = loss_fn(Sigma=Sigma, S=gamma * S, smoothing=smoothing)
                 if loss < best_loss:
                     best_gamma = gamma
                     best_loss = loss
-        else:
-            gamma = 1
 
-        return S * gamma * scale_matrix
+        return S * best_gamma * scale_matrix
 
     # Currently cd solvers cannot handle group knockoffs
     # (this is todo)
