@@ -513,52 +513,6 @@ class TestKnockoffFilter(TestFdrControl):
             f"selection procedure makes {num_selections2} discoveries, expected {expected2}",
         )
 
-    # @pytest.mark.quick
-    # def test_sdp_degen(self):
-
-    # 	mxfilter = KnockoffFilter()
-    # 	p=50
-    # 	n=100
-    # 	rho=0.8
-    # 	S = min(1, 2-2*rho)*np.eye(p)
-    # 	dgprocess = dgp.DGP()
-    # 	X, y, _, _, Sigma = dgprocess.sample_data(
-    # 		rho=rho,
-    # 		gamma=1,
-    # 		method='blockequi',
-    # 		p=p,
-    # 		n=n,
-    # 	)
-
-    # 	# Baseline, no degeneracy
-    # 	mxfilter.forward(
-    # 		X=X,
-    # 		y=y,
-    # 		Sigma=Sigma,
-    # 		knockoff_kwargs={'S':0.9999*S, 'verbose':False},
-    # 	)
-    # 	colsum = X + mxfilter.knockoffs
-    # 	colsum_nunique = np.unique(colsum).shape[0]
-    # 	self.assertTrue(
-    # 		colsum_nunique == n*p,
-    # 		f'Expected {n*p} unique values for _sdp_degen False, got {colsum_nunique}'
-    # 	)
-
-    # 	# Try again with degeneracy
-    # 	mxfilter = KnockoffFilter()
-    # 	mxfilter.forward(
-    # 		X=X,
-    # 		y=y,
-    # 		Sigma=Sigma,
-    # 		knockoff_kwargs={'S':S, 'verbose':False, '_sdp_degen':True},
-    # 	)
-    # 	colsum = np.around(X + mxfilter.knockoffs, 12) # rounding to prevent floating-pt errors
-    # 	colsum_nunique = np.unique(colsum).shape[0]
-    # 	self.assertTrue(
-    # 		colsum_nunique == n,
-    # 		f'Expected {n} unique values for _sdp_degen True, got {colsum_nunique}'
-    # 	)
-
 
 if __name__ == "__main__":
     unittest.main()
