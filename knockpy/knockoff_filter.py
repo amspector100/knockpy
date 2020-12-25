@@ -255,6 +255,7 @@ class KnockoffFilter:
         fstat_kwargs={},
         knockoff_kwargs={},
         shrinkage="ledoitwolf",
+        factor_rank=None,
         recycle_up_to=None,
     ):
         """
@@ -294,6 +295,10 @@ class KnockoffFilter:
         shrinkage : str
             Shrinkage method if estimating the covariance matrix. Defaults to 
             "LedoitWolf." Other options are "MLE" and "glasso" (graphical lasso).
+        num_factors : int
+            If num_factors is not ``None`` and Sigma is estimated,
+            assumes that the ground-truth Sigma is a factor model 
+            with rank ``num_factors`` to speed up computation.
         recycle_up_to : int or float
             Three options:
                 - if ``None``, does nothing.
@@ -307,8 +312,21 @@ class KnockoffFilter:
         # Preliminaries - infer covariance matrix for MX
         if Sigma is None and self._mx:
             Sigma, _ = utilities.estimate_covariance(X, 1e-2, shrinkage)
+            # Possible factor model approximation
+            if num_factors is not None and Sigma is not None:
+                self.D, self.U = utilities.estimate_factor(
+                    Sigma, num_factors=num_factors
+                )
+                Sigma = np.diag(self.D) + np.dot(self.U, self.U.T)
+                self.knockoff_kwargs['how_approx'] = 'factor'
+                self.knockoff_kwargs['D'] = self.D
+                self.knockoff_kwargs['U'] = self.U
+            else:
+                self.D = None
+                self.U = None
         if not self._mx:
             Sigma = None
+
 
         # Save objects
         self.X = X

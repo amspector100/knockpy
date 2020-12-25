@@ -132,7 +132,7 @@ def mmi_loss(*args, **kwargs):
     """
     return maxent_loss(*args, **kwargs)
 
-def solve_mvr_quadratic(cn, cd, sj, acc_rate=1, smoothing=0):
+def solve_mvr_quadratic(cn, cd, sj, i=None, min_eig=None, acc_rate=1, smoothing=0):
     """
     Solves a quadratic equation to find
     the optimal updates for the MVR S-matrix
@@ -350,7 +350,13 @@ def solve_mvr(
 
             # 2. Construct/solve quadratic equation
             delta = solve_mvr_quadratic(
-                cn=cn, cd=cd, sj=S[j,j], smoothing=smoothing, acc_rate=acc_rate
+                cn=cn,
+                cd=cd,
+                sj=S[j,j],
+                min_eig=min_eig,
+                i=i,
+                smoothing=smoothing,
+                acc_rate=acc_rate,
             )
 
             # 3. Update S and L

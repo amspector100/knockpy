@@ -326,9 +326,7 @@ def compute_smatrix(
             num_iter=kwargs.get("num_iter", 10),
         )
         # Line search for MRC methods
-        smoothing = 0
-        if "smoothing" in kwargs:
-            smoothing = kwargs["smoothing"]
+        smoothing = kwargs.get("smoothing", 0)
         if method == "mvr":
             loss_fn = mrc.mvr_loss
         elif method == "maxent":
