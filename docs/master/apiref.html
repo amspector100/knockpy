@@ -2307,6 +2307,23 @@ entropy.</p>
 <code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">divide_computation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">max_block</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#divide_computation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.divide_computation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Approximates a correlation matrix Sigma as a block-diagonal matrix
 using hierarchical clustering. Roughly follows the R knockoff package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>max_size</strong><span class="classifier">int</span></dt><dd><p>Maximum size of a block in the block-diagonal approximation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>blocks</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">)</span></code>-shaped numpy array where <code class="docutils literal notranslate"><span class="pre">blocks[i]</span> <span class="pre">==</span> <span class="pre">j</span></code> indicates
+that variable <code class="docutils literal notranslate"><span class="pre">i</span></code> belongs to block <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

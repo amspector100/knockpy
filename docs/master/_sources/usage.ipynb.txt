@@ -79,21 +79,12 @@
    "cell_type": "code",
    "execution_count": 1,
    "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Knockpy version is: 1.0.3\n"
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
     "# Create a random covariance matrix for X\n",
     "import numpy as np\n",
     "import knockpy\n",
     "import warnings\n",
-    "print(f\"Knockpy version is: {knockpy.__version__}\")\n",
     "\n",
     "np.random.seed(123)\n",
     "n = 300 # number of data points\n",

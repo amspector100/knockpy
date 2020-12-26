@@ -75,6 +75,8 @@ class TestFdrControl(unittest.TestCase):
         init_filter_kwargs = {}
         init_filter_kwargs["ksampler"] = filter_kwargs.pop("ksampler", "gaussian")
         init_filter_kwargs["fstat"] = filter_kwargs.pop("fstat", "lasso")
+        knockoff_kwargs = filter_kwargs.pop('knockoff_kwargs', {})
+
 
         for name, groups in zip([name1, name2], [groups1, groups2]):
 
@@ -120,11 +122,10 @@ class TestFdrControl(unittest.TestCase):
                 knockoff_filter = KnockoffFilter(**init_filter_kwargs)
 
                 # Knockoff kwargs
-                knockoff_kwargs = {
-                    "S": S,
-                    "invSigma": invSigma_arg,
-                    "verbose": False,
-                }
+                knockoff_kwargs['S'] = S
+                knockoff_kwargs['invSigma'] = invSigma_arg
+                knockoff_kwargs['verbose'] = False
+
                 if "df_t" in kwargs:
                     knockoff_kwargs["df_t"] = kwargs["df_t"]
                 if "x_dist" in kwargs:
@@ -478,6 +479,26 @@ class TestKnockoffFilter(TestFdrControl):
             rho=rho,
             infer_sigma=True,
             S_method="mvr",
+            filter_kwargs={
+                "knockoff_kwargs":{
+                    'how_approx':'factor'
+                }, 
+                'fstat':'margcorr'
+            },
+            test_grouped=False,
+        )
+        time_apprx_factored = time.time() - time0
+        print(f"Apprx_factored time is {time_apprx_factored}")
+
+        time0 = time.time()
+        self.check_fdr_control(
+            n=n,
+            p=p,
+            method='blockequi',
+            gamma=gamma,
+            rho=rho,
+            infer_sigma=True,
+            S_method="mvr",
             filter_kwargs={"num_factors":None, 'fstat':'margcorr'},
             test_grouped=False,
         )
@@ -485,9 +506,12 @@ class TestKnockoffFilter(TestFdrControl):
         print(f"Unfactored time is {time_unfactored}")
         self.assertTrue(
             1.5*time_factored < time_unfactored,
-            msg=f"time for factor apprx ({time_factored}) > 1.5*time for no apprx ({time_unfactored})"
+            msg=f"time for factor assumption ({time_factored}) > 1.5*time for no apprx ({time_unfactored})"
         )
-
+        self.assertTrue(
+            1.2*time_apprx_factored < time_unfactored,
+            msg=f"time for factor apprx ({time_apprx_factored}) > 1.2*time for no apprx ({time_unfactored})"
+        )
 
 
     @pytest.mark.quick

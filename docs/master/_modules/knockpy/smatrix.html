@@ -179,14 +179,13 @@
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
         <span class="k">return</span> <span class="s2">&quot;mvr&quot;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;sdp&quot;</span>
-    <span class="k">return</span> <span class="n">method</span></div>
+        <span class="k">return</span> <span class="s2">&quot;sdp&quot;</span></div>
 
-
-<span class="k">def</span> <span class="nf">divide_computation</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">max_block</span><span class="p">):</span>
+<div class="viewcode-block" id="divide_computation"><a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.divide_computation">[docs]</a><span class="k">def</span> <span class="nf">divide_computation</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">max_block</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Approximates Sigma as a block-diagonal matrix.</span>
-<span class="sd">    </span>
+<span class="sd">    Approximates a correlation matrix Sigma as a block-diagonal matrix</span>
+<span class="sd">    using hierarchical clustering. Roughly follows the R knockoff package.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    Sigma : np.ndarray</span>
@@ -198,14 +197,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    blocks : np.ndarray</span>
 <span class="sd">        ``(p, )``-shaped numpy array where ``blocks[i] == j`` indicates</span>
-<span class="sd">        that variable ``i`` belongs to block ``j``. </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-
-<div class="viewcode-block" id="divide_computation"><a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.divide_computation">[docs]</a><span class="k">def</span> <span class="nf">divide_computation</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">max_block</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Approximates a correlation matrix Sigma as a block-diagonal matrix</span>
-<span class="sd">    using hierarchical clustering. Roughly follows the R knockoff package.</span>
+<span class="sd">        that variable ``i`` belongs to block ``j``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Correlation tree. We add noise to deal with highly structured Sigma.</span>
@@ -318,7 +310,7 @@
 
     <span class="c1"># Compute factor model if not inputted</span>
     <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">U</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+        <span class="n">D</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_factor</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">num_factors</span><span class="o">=</span><span class="n">num_factors</span><span class="p">)</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     

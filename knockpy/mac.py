@@ -403,11 +403,6 @@ def solve_group_SDP(
 
     # Scale to make this PSD using binary search
     S, gamma = utilities.scale_until_PSD(Sigma, S, tol, num_iter)
-    if verbose:
-        mineig = np.linalg.eigh(2 * Sigma - S)[0].min()
-        print(
-            f"After SDP, mineig is {mineig} after {num_iter} line search iters. Gamma is {gamma}"
-        )
 
     # Return unsorted S value
     return S

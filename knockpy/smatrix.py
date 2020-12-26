@@ -21,13 +21,12 @@ def parse_method(method, groups, p=None):
         return "mvr"
     else:
         return "sdp"
-    return method
-
 
 def divide_computation(Sigma, max_block):
     """
-    Approximates Sigma as a block-diagonal matrix.
-    
+    Approximates a correlation matrix Sigma as a block-diagonal matrix
+    using hierarchical clustering. Roughly follows the R knockoff package.
+
     Parameters
     ----------
     Sigma : np.ndarray
@@ -39,14 +38,7 @@ def divide_computation(Sigma, max_block):
     -------
     blocks : np.ndarray
         ``(p, )``-shaped numpy array where ``blocks[i] == j`` indicates
-        that variable ``i`` belongs to block ``j``. 
-    """
-
-
-def divide_computation(Sigma, max_block):
-    """
-    Approximates a correlation matrix Sigma as a block-diagonal matrix
-    using hierarchical clustering. Roughly follows the R knockoff package.
+        that variable ``i`` belongs to block ``j``.
     """
 
     # Correlation tree. We add noise to deal with highly structured Sigma.
@@ -159,7 +151,7 @@ def compute_smatrix_factored(
 
     # Compute factor model if not inputted
     if D is None or U is None:
-        raise NotImplementedError("TODO")
+        D, U = utilities.estimate_factor(Sigma, num_factors=num_factors)
     p = D.shape[0]
     k = U.shape[1]
     
