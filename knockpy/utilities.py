@@ -160,8 +160,8 @@ def blockdiag_to_blocks(M, groups):
     """
     Given a square array `M`, returns a list of diagonal blocks of `M` as specified by `groups`.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     M : np.ndarray
         ``(p, p)``-shaped array
     groups : np.ndarray
@@ -350,8 +350,8 @@ def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
     outputs : list
         List of outputs for each input, in the order of the inputs.
 
-    Example
-    -------
+    Examples
+    --------
     If we are varying inputs 'a' and 'b', we might have
     ``apply_pool(
         func=my_func, a=[1,3,5], b=[2,4,6]

@@ -939,8 +939,8 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         Samples knockoffs using the metropolized knockoff
         sampler.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         clip : float
             To provide numerical stability, we make the minimum
             acceptance probability clip. If ``clip=0``, some 

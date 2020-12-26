@@ -206,8 +206,8 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
     **kwargs
         kwargs for sklearn model.
 
-    Note
-    ----
+    Notes
+    -----
     To avoid FDR control violations, this randomly permutes
     the features before fitting the lasso.
 
@@ -290,8 +290,8 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
     **kwargs
         kwargs for sklearn model.
 
-    Note
-    ----
+    Notes
+    -----
     To avoid FDR control violations, this randomly permutes
     the features before fitting the ridge.
 
@@ -365,8 +365,8 @@ def fit_group_lasso(
     **kwargs
         kwargs for eventual (group) lasso model.
 
-    Note
-    ----
+    Notes
+    -----
     To avoid FDR control violations, this randomly permutes
     the features before fitting the group lasso.
 
