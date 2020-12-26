@@ -1,0 +1,26 @@
+===================================
+Welcome to knockpy's documentation!
+===================================
+
+Knockoffs are a powerful tool which can be used in combination with nearly any machine learning algorithm to control the false discovery rate (FDR) in feature selection. Knockoffs were initially developed in `Barber and Candes 2015`_ and `Candes et al 2018`_.
+
+.. _Candes et al 2018: https://arxiv.org/abs/1610.02351
+.. _Barber and Candes 2015: https://projecteuclid.org/download/pdfview_1/euclid.aos/1438606853
+
+Knockpy is a python implementation of the knockoffs framework which makes it easy to apply knockoff-based inference in only a few lines of code. Knockpy is also built to be modular, so researchers and analysts can easily layer functionality on top of it. See usage for more details!
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Contents:
+
+   installation
+   usage
+   apiref
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

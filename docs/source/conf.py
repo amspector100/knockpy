@@ -66,7 +66,7 @@ html_sidebars = {
         'versioning.html',
     ],
 }
-smv_branch_whitelist = None
+smv_branch_whitelist = "master"
 
 # -- Options for HTML output -------------------------------------------------
 
