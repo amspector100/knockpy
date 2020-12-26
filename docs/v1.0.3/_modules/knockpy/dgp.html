@@ -1,0 +1,1233 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>knockpy.dgp &mdash; knockpy 1.0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>knockpy.dgp</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for knockpy.dgp</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; A collection of functions for generating synthetic datasets.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+
+<span class="c1"># Utility functions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">shift_until_PSD</span><span class="p">,</span> <span class="n">chol2inv</span><span class="p">,</span> <span class="n">cov2corr</span>
+
+<span class="c1"># Tree methods</span>
+<span class="kn">import</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="k">as</span> <span class="nn">hierarchy</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial.distance</span> <span class="k">as</span> <span class="nn">ssd</span>
+
+<span class="n">DEFAULT_DF_T</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<div class="viewcode-block" id="Wishart"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.Wishart">[docs]</a><span class="k">def</span> <span class="nf">Wishart</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Let W be a random `d` x `p` matrix with i.i.d. Gaussian</span>
+<span class="sd">    entries. Then Sigma = ``cov2corr``(W^T W).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="UniformDot"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.UniformDot">[docs]</a><span class="k">def</span> <span class="nf">UniformDot</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Let U be a random `d` x `p` matrix with i.i.d. uniform</span>
+<span class="sd">    entries. Then Sigma = ``cov2corr``(U^T U)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DirichletCorr"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.DirichletCorr">[docs]</a><span class="k">def</span> <span class="nf">DirichletCorr</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a correlation matrix by sampling p eigenvalues</span>
+<span class="sd">    from a dirichlet distribution whose `p` parameters are i.i.d.</span>
+<span class="sd">    uniform [`tol`, `temp`] and generating a random covariance matrix</span>
+<span class="sd">    with those eigenvalues.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">dirichlet</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span><span class="o">.</span><span class="n">rvs</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># We have to round to prevent errors from random_correlation,</span>
+    <span class="c1"># which is supperr sensitive to d.sum() != p even when the</span>
+    <span class="c1"># error is a floating point error.</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">d</span> <span class="o">+</span> <span class="n">tol</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">d</span> <span class="o">/</span> <span class="n">d</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">p</span> <span class="o">-</span> <span class="n">d</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># This is like 1e-10 but otherwise throws an error</span>
+
+    <span class="c1"># Create and return matrix</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">random_correlation</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">V</span></div>
+
+
+<div class="viewcode-block" id="AR1"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.AR1">[docs]</a><span class="k">def</span> <span class="nf">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates `p`-dimensional correlation matrix for</span>
+<span class="sd">    AR(1) Gaussian process, where successive correlations</span>
+<span class="sd">    are drawn from Beta(`a`,`b`) independelty. If `rho` is</span>
+<span class="sd">    specified, then the process is stationary with correlation</span>
+<span class="sd">    `rho`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Generate rhos, take log to make multiplication easier</span>
+    <span class="k">if</span> <span class="n">rho</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;rho </span><span class="si">{</span><span class="n">rho</span><span class="si">}</span><span class="s2"> must be a correlation between -1 and 1&quot;</span><span class="p">)</span>
+        <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">rho</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)]))</span>
+    <span class="n">rhos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Log correlations between x_1 and x_i for each i</span>
+    <span class="n">cumrhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">rhos</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Use cumsum tricks to calculate all correlations</span>
+    <span class="n">log_corrs</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cumrhos</span> <span class="o">-</span> <span class="n">cumrhos</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+    <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_corrs</span><span class="p">)</span>
+
+    <span class="c1"># Ensure PSD-ness</span>
+    <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">,</span> <span class="n">tol</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">corr_matrix</span></div>
+
+
+<div class="viewcode-block" id="NestedAR1"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.NestedAR1">[docs]</a><span class="k">def</span> <span class="nf">NestedAR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">num_nests</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nest_size</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates correlation matrix for AR(1) Gaussian process</span>
+<span class="sd">    with hierarchical correlation structure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First set of correlations</span>
+    <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">rhos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Create nested structure</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_nests</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">rho_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">))</span>
+        <span class="c1"># These indexes will get smaller correlations</span>
+        <span class="n">nest_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">%</span> <span class="p">(</span><span class="n">nest_size</span> <span class="o">**</span> <span class="n">j</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">nest_size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">nest_inds</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">rhos</span> <span class="o">+=</span> <span class="n">mask</span> <span class="o">*</span> <span class="n">rho_samples</span>
+
+    <span class="c1"># Generate cov matrix</span>
+    <span class="n">rhos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">cumrhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">rhos</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Use cumsum tricks to calculate all correlations</span>
+    <span class="n">log_corrs</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cumrhos</span> <span class="o">-</span> <span class="n">cumrhos</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+    <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_corrs</span><span class="p">)</span>
+
+    <span class="c1"># Ensure PSD-ness</span>
+    <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">corr_matrix</span></div>
+
+
+<div class="viewcode-block" id="ErdosRenyi"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.ErdosRenyi">[docs]</a><span class="k">def</span> <span class="nf">ErdosRenyi</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Randomly samples bernoulli flags as well as values</span>
+<span class="sd">    for partial correlations to generate sparse square</span>
+<span class="sd">    matrices. Follows https://arxiv.org/pdf/1908.11611.pdf.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initialization</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+    <span class="n">triang_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">p</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Sample the upper triangle</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">bernoulli</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">triang_size</span><span class="p">)</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">triang_size</span><span class="p">)</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">triang_size</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">triang</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">*</span> <span class="n">flags</span> <span class="o">*</span> <span class="n">vals</span>
+
+    <span class="c1"># Set values and add diagonal</span>
+    <span class="n">upper_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">V</span><span class="p">[</span><span class="n">upper_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">triang</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">V</span> <span class="o">+</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">V</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">V</span><span class="p">))</span>
+
+    <span class="c1"># Force to be positive definite -</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">V</span></div>
+
+
+<div class="viewcode-block" id="FactorModel"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.FactorModel">[docs]</a><span class="k">def</span> <span class="nf">FactorModel</span><span class="p">(</span>
+    <span class="n">p</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates random correlation matrix from a factor model </span>
+<span class="sd">    with dimension `p` and rank `rank`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">diag_entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">diag_entries</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">noise</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">cov2corr</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">chol2inv</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">V</span><span class="p">,</span> <span class="n">Q</span></div>
+
+
+<div class="viewcode-block" id="PartialCorr"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.PartialCorr">[docs]</a><span class="k">def</span> <span class="nf">PartialCorr</span><span class="p">(</span>
+    <span class="n">p</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a correlation matrix of dimension `p` with partial correlation `rho`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Q_init</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">chol2inv</span><span class="p">(</span><span class="n">Q_init</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">cov2corr</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">chol2inv</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">V</span><span class="p">,</span> <span class="n">Q</span></div>
+
+
+<div class="viewcode-block" id="block_equi_graph"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.block_equi_graph">[docs]</a><span class="k">def</span> <span class="nf">block_equi_graph</span><span class="p">(</span>
+    <span class="n">n</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span>
+    <span class="n">p</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">rho</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">coeff_size</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span>
+    <span class="n">coeff_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sign_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">iid_signs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">corr_signals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Samples data according to a block-equicorrelated Gaussian design,</span>
+<span class="sd">    where ``rho`` is the within-block correlation and ``gamma * rho``</span>
+<span class="sd">    is the between-block correlation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of data points</span>
+<span class="sd">    p : int</span>
+<span class="sd">        The dimensionality of the data</span>
+<span class="sd">    block_size : int</span>
+<span class="sd">        The size of blocks. Defaults to 5.</span>
+<span class="sd">    sparsity : float</span>
+<span class="sd">        The proportion of groups which are null. Defaults to 0.1</span>
+<span class="sd">    rho : float</span>
+<span class="sd">        The within-group correlation</span>
+<span class="sd">    gamma : float</span>
+<span class="sd">        The between-group correlation is ``gamma * rho``</span>
+<span class="sd">    beta : np.ndarray</span>
+<span class="sd">        If supplied, the ``(p,)``-shaped set of coefficients. Else,</span>
+<span class="sd">        will be generated by calling </span>
+<span class="sd">        ``knockpy.dgp.sample_sparse_coefficients.``</span>
+<span class="sd">    mu : np.ndarray</span>
+<span class="sd">        The ``p``-dimensional mean of the covariates. Defaults to 0.</span>
+<span class="sd">    kwargs : dict</span>
+<span class="sd">        Args passed to ``knockpy.dgp.sample_response``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This defaults to the same data-generating process as</span>
+<span class="sd">    Dai and Barber 2016 (see https://arxiv.org/abs/1602.03589).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Set default values</span>
+    <span class="n">num_groups</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">block_size</span><span class="p">)</span>
+
+    <span class="c1"># Create blocks / blocks</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">num_groups</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)])</span>
+
+    <span class="c1"># Helper fn for covariance matrix</span>
+    <span class="k">def</span> <span class="nf">get_corr</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">g1</span> <span class="o">==</span> <span class="n">g2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rho</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">rho</span>
+
+    <span class="n">get_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="n">get_corr</span><span class="p">)</span>
+
+    <span class="c1"># Create correlation matrix, invert</span>
+    <span class="n">Xcoords</span><span class="p">,</span> <span class="n">Ycoords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">groups</span><span class="p">)</span>
+    <span class="n">Sigma</span> <span class="o">=</span> <span class="n">get_corr</span><span class="p">(</span><span class="n">Xcoords</span><span class="p">,</span> <span class="n">Ycoords</span><span class="p">)</span>
+    <span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diagflat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sigma</span><span class="p">))</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+
+    <span class="c1"># Create beta</span>
+    <span class="k">if</span> <span class="n">beta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">create_sparse_coefficients</span><span class="p">(</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
+            <span class="n">sparsity</span><span class="o">=</span><span class="n">sparsity</span><span class="p">,</span>
+            <span class="n">coeff_size</span><span class="o">=</span><span class="n">coeff_size</span><span class="p">,</span>
+            <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span>
+            <span class="n">sign_prob</span><span class="o">=</span><span class="n">sign_prob</span><span class="p">,</span>
+            <span class="n">iid_signs</span><span class="o">=</span><span class="n">iid_signs</span><span class="p">,</span>
+            <span class="n">coeff_dist</span><span class="o">=</span><span class="n">coeff_dist</span><span class="p">,</span>
+            <span class="n">corr_signals</span><span class="o">=</span><span class="n">corr_signals</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Sample design matrix</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+    <span class="c1"># Sample y</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">sample_response</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="create_sparse_coefficients"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.create_sparse_coefficients">[docs]</a><span class="k">def</span> <span class="nf">create_sparse_coefficients</span><span class="p">(</span>
+    <span class="n">p</span><span class="p">,</span>
+    <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">coeff_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">coeff_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sign_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">iid_signs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">corr_signals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a set of sparse coefficients for single index or sparse additive models.</span>
+<span class="sd">    p : int</span>
+<span class="sd">        Dimensionality of coefficients </span>
+<span class="sd">    sparsity : float</span>
+<span class="sd">        Proportion of non-null coefficients. Generates ``np.floor(p*sparsity)`` non-nulls.</span>
+<span class="sd">    coeff_size: float</span>
+<span class="sd">        Size of non-zero coefficients</span>
+<span class="sd">    groups : np.ndarray</span>
+<span class="sd">        A p-length array of integers from 1 to num_groups such that</span>
+<span class="sd">        ``groups[j] == i`` indicates that variable `j` is a member of group `i`.</span>
+<span class="sd">        Defaults to ``None``. Else, floor(sparsity * num_groups) groups will be </span>
+<span class="sd">        chosen to be non-null, where all elements of each group are non-null.</span>
+<span class="sd">    sign_prob : float</span>
+<span class="sd">        The probability that each nonzero coefficient will be positive. </span>
+<span class="sd">    iid_signs : bool</span>
+<span class="sd">        If True, the signs of the coeffs are assigned independently.</span>
+<span class="sd">        Else, exactly sign_prob*sparsity*p coefficients will be positive.</span>
+<span class="sd">    coeff_dist : str</span>
+<span class="sd">        Specifies the distribution of nonzero coefficients. Three options:</span>
+<span class="sd">        - ``None``: all coefficients have absolute value coeff_size.</span>
+<span class="sd">        - ``normal``: all nonzero coefficients are drawn from Normal(coeff_size, 1). </span>
+<span class="sd">        - ``uniform``: nonzero coeffs are drawn from Unif(coeff_size/2, coeff_size).</span>
+<span class="sd">    corr_signals : bool</span>
+<span class="sd">        If true, all of the nonzero coefficients will lie in a consecutive block.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    beta : np.ndarray</span>
+<span class="sd">        ``(p,)``-shaped array of sparse coefficients</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># First, decide which coefficients are nonzero, one of two methods</span>
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="c1"># Method one: a certain number of groups are nonzero</span>
+        <span class="n">num_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">num_nonzero_groups</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">sparsity</span> <span class="o">*</span> <span class="n">num_groups</span><span class="p">))</span>
+        <span class="n">chosen_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">),</span> <span class="n">num_nonzero_groups</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coeff_size</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chosen_groups</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># Method two (default): a certain percentage of coefficients are nonzero</span>
+        <span class="n">num_nonzero</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">sparsity</span> <span class="o">*</span> <span class="n">p</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">corr_signals</span><span class="p">:</span>
+            <span class="n">nonnull_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span> <span class="o">-</span> <span class="n">num_nonzero</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">beta</span><span class="p">[</span><span class="n">nonnull_start</span> <span class="p">:</span> <span class="n">nonnull_start</span> <span class="o">+</span> <span class="n">num_nonzero</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coeff_size</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_nonzero</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">num_nonzero</span><span class="p">))</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
+
+    <span class="n">beta_nonzeros</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="n">num_nonzero</span> <span class="o">=</span> <span class="n">beta_nonzeros</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="c1"># Now draw random signs</span>
+    <span class="k">if</span> <span class="n">iid_signs</span><span class="p">:</span>
+        <span class="n">signs</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">stats</span><span class="o">.</span><span class="n">bernoulli</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">sign_prob</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">signs</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num_pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">num_nonzero</span> <span class="o">*</span> <span class="n">sign_prob</span><span class="p">))</span>
+        <span class="n">signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">num_pos</span><span class="p">)),</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">num_nonzero</span> <span class="o">-</span> <span class="n">num_pos</span><span class="p">))]</span>
+        <span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">signs</span><span class="p">)</span>
+        <span class="n">beta</span><span class="p">[</span><span class="n">beta_nonzeros</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="p">[</span><span class="n">beta_nonzeros</span><span class="p">]</span> <span class="o">*</span> <span class="n">signs</span>
+
+    <span class="c1"># Possibly change the absolute values of beta</span>
+    <span class="k">if</span> <span class="n">coeff_dist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span><span class="p">:</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="n">beta</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="o">*</span> <span class="n">beta_nonzeros</span>
+        <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;uniform&quot;</span><span class="p">:</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;dsliu2020&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_nonzero</span> <span class="o">!=</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;To replicate dsliu2020 paper, need num_nonzero (</span><span class="si">{</span><span class="n">num_nonzero</span><span class="si">}</span><span class="s2">)=50&quot;</span>
+                <span class="p">)</span>
+            <span class="n">variance</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">beta_nonzeros</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gmliu2019&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_nonzero</span> <span class="o">!=</span> <span class="mi">60</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;To replicate gmliu2019 paper, need num_nonzero (</span><span class="si">{</span><span class="n">num_nonzero</span><span class="si">}</span><span class="s2">)=60&quot;</span>
+                <span class="p">)</span>
+            <span class="n">variance</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">beta_nonzeros</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;coeff_dist (</span><span class="si">{</span><span class="n">coeff_dist</span><span class="si">}</span><span class="s2">) must be &#39;none&#39;, &#39;normal&#39;, or &#39;uniform&#39;&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">beta</span></div>
+
+
+<div class="viewcode-block" id="sample_response"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.sample_response">[docs]</a><span class="k">def</span> <span class="nf">sample_response</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">cond_mean</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Given a design matrix X and coefficients beta, samples a response y.</span>
+
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        ``(n, p)``-shaped design matrix</span>
+<span class="sd">    beta : np.ndarray</span>
+<span class="sd">        ``(p, )``-shaped coefficient vector</span>
+<span class="sd">    cond_mean : str</span>
+<span class="sd">        How to calculate the conditional mean of y given X, denoted mu(X). </span>
+<span class="sd">        Six options:</span>
+<span class="sd">            1. &quot;linear&quot; denotes ``np.dot(X, beta)``</span>
+<span class="sd">            2. &quot;cubic&quot; denotes ``np.dot(X**3, beta) - np.dot(X, beta)``</span>
+<span class="sd">            3. &quot;trunclinear&quot; ``((X * beta &gt;= 1).sum(axis = 1))``</span>
+<span class="sd">            Stands for truncated linear.</span>
+<span class="sd">            4. &quot;pairint&quot;: pairs up non-null coefficients according to the</span>
+<span class="sd">            order of beta, multiplies them and their beta values, then</span>
+<span class="sd">            sums. &quot;pairint&quot; stands for pairwise-interactions.</span>
+<span class="sd">            5. &quot;cos&quot;: ``mu(X) = sign(beta) * (beta != 0) * np.cos(X)``</span>
+<span class="sd">            6. &quot;quadratic&quot;: ``mu(X) = np.dot(np.power(X, 2), beta)``</span>
+<span class="sd">    y_dist : str</span>
+<span class="sd">        If &quot;gaussian&quot;, y is the conditional mean plus gaussian noise.</span>
+<span class="sd">        If &quot;binomial&quot;, Pr(y=1) = softmax(cond_mean).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y : np.ndarray</span>
+<span class="sd">        ``(n,)``-shaped response vector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">cond_mean</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="n">cond_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cond_mean</span> <span class="o">==</span> <span class="s2">&quot;quadratic&quot;</span><span class="p">:</span>
+        <span class="n">cond_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">beta</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cond_mean</span> <span class="o">==</span> <span class="s2">&quot;cubic&quot;</span><span class="p">:</span>
+        <span class="n">cond_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">beta</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cond_mean</span> <span class="o">==</span> <span class="s2">&quot;trunclinear&quot;</span><span class="p">:</span>
+        <span class="n">cond_mean</span> <span class="o">=</span> <span class="p">((</span><span class="n">X</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cond_mean</span> <span class="o">==</span> <span class="s2">&quot;cos&quot;</span><span class="p">:</span>
+        <span class="n">cond_mean</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">X</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cond_mean</span> <span class="o">==</span> <span class="s2">&quot;pairint&quot;</span><span class="p">:</span>
+        <span class="c1"># Pair up the coefficients</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[[]]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">beta</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">pairs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">j</span><span class="p">])</span>
+
+        <span class="c1"># Multiply pairs and add to cond_mean</span>
+        <span class="n">cond_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+            <span class="n">interaction_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">:</span>
+                <span class="n">interaction_term</span> <span class="o">=</span> <span class="n">interaction_term</span> <span class="o">*</span> <span class="n">beta</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">interaction_term</span> <span class="o">=</span> <span class="n">interaction_term</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
+            <span class="n">cond_mean</span> <span class="o">+=</span> <span class="n">interaction_term</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;cond_mean must be one of &#39;linear&#39;, &#39;quadratic&#39;, cubic&#39;, &#39;trunclinear&#39;, &#39;cos&#39;, &#39;pairint&#39;, not </span><span class="si">{</span><span class="n">cond_mean</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Create y, one of two families</span>
+    <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">cond_mean</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">cond_mean</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">bernoulli</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;y_dist must be one of &#39;gaussian&#39;, &#39;binomial&#39;, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="sample_ar1t"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.sample_ar1t">[docs]</a><span class="k">def</span> <span class="nf">sample_ar1t</span><span class="p">(</span>
+    <span class="n">rhos</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">df_t</span><span class="o">=</span><span class="n">DEFAULT_DF_T</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Samples t-distributed variables according to a Markov chain.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rhos : np.ndarray</span>
+<span class="sd">        ``(p-1, )``-length array of correlations between consecutive</span>
+<span class="sd">        variables.</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of data points to sample</span>
+<span class="sd">    df_t : float</span>
+<span class="sd">        The degrees of freedom of the t variables</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        ``(n, p)``-shaped design matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initial t samples</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">rhos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">tvars</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df_t</span><span class="p">)</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+
+    <span class="c1"># Initialize X</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">df_t</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">df_t</span><span class="p">)</span>
+    <span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">tvars</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Loop through variables according to markov chain</span>
+    <span class="n">conjugates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rhos</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhos</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">conjugates</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">tvars</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">X</span></div>
+
+
+<div class="viewcode-block" id="cov2blocks"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.cov2blocks">[docs]</a><span class="k">def</span> <span class="nf">cov2blocks</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decomposes a PREORDERED block-diagonal matrix V into its blocks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">block_start</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">block_inds</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Detect if we have exited the block</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="n">p</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V</span><span class="p">[</span><span class="n">block_start</span><span class="p">:</span><span class="n">j</span><span class="p">,</span> <span class="n">block_start</span><span class="p">:</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">block_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">block_start</span><span class="p">,</span> <span class="n">j</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">V</span><span class="p">[</span><span class="n">block_start</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="c1"># If so, reset the block_start</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V</span><span class="p">[</span><span class="n">block_start</span><span class="p">:</span><span class="n">j</span><span class="p">,</span> <span class="n">block_start</span><span class="p">:</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">block_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">block_start</span><span class="p">,</span> <span class="n">j</span><span class="p">)))</span>
+            <span class="n">block_start</span> <span class="o">=</span> <span class="n">j</span>
+
+    <span class="k">return</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">block_inds</span></div>
+
+
+<div class="viewcode-block" id="sample_block_tmvn"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.sample_block_tmvn">[docs]</a><span class="k">def</span> <span class="nf">sample_block_tmvn</span><span class="p">(</span>
+    <span class="n">blocks</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">df_t</span><span class="o">=</span><span class="n">DEFAULT_DF_T</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Samples a blocks of multivariate-t distributed variables</span>
+<span class="sd">    according to a list of covariance matrices called ``blocks``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blocks : list</span>
+<span class="sd">        A list of square, symmetric numpy arrays. These are</span>
+<span class="sd">        the covariance matrices for each block of variables.</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of data points to sample</span>
+<span class="sd">    df_t : float</span>
+<span class="sd">        The degrees of freedom of the t-distribution</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The variables are scaled such that the marginal variance</span>
+<span class="sd">    of each variable equals a diagonal element in one of the blocks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Possibly calculate sqrt roots</span>
+    <span class="c1">#if block_sqrts is None:</span>
+    <span class="n">block_sqrts</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+    <span class="c1"># if len(block_sqrts) != len(blocks):</span>
+    <span class="c1">#     raise ValueError(f&quot;Blocks and block_sqrts must have same length&quot;)</span>
+
+    <span class="c1"># Loop through blocks and sample multivariate t</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block_sqrt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block_sqrts</span><span class="p">):</span>
+        <span class="c1"># Dimensionality and also sample chisquares</span>
+        <span class="n">p_block</span> <span class="o">=</span> <span class="n">block_sqrt</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">chi_block</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df_t</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Linear transformatino + chi square multiplication</span>
+        <span class="n">Z_block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p_block</span><span class="p">)</span>  <span class="c1"># n x p</span>
+        <span class="n">t_block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Z_block</span><span class="p">,</span> <span class="n">block_sqrt</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>  <span class="c1"># n x p</span>
+        <span class="n">t_block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">df_t</span> <span class="o">/</span> <span class="n">chi_block</span><span class="p">)</span> <span class="o">*</span> <span class="n">t_block</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t_block</span><span class="p">)</span>
+
+    <span class="c1">#  Append back together and scale such that variance is 1</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">df_t</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">df_t</span><span class="p">))</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X</span></div>
+
+
+<span class="c1">### Helper functions for Gibbs Sampling</span>
+<div class="viewcode-block" id="num2coords"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.num2coords">[docs]</a><span class="k">def</span> <span class="nf">num2coords</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">gridwidth</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Coordinates of variable i in a Gibbs grid</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    i : int</span>
+<span class="sd">        Position of variable in ordering</span>
+<span class="sd">    gridwidth : int</span>
+<span class="sd">        Width of the grid</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    length_coord, width_coord (coordinates)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">length_coord</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="n">gridwidth</span>
+    <span class="n">width_coord</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="n">gridwidth</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">length_coord</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">width_coord</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="coords2num"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.coords2num">[docs]</a><span class="k">def</span> <span class="nf">coords2num</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">gridwidth</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Takes coordinates of variable in a Gibbs grid, returns position&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;=</span> <span class="n">gridwidth</span> <span class="ow">or</span> <span class="n">w</span> <span class="o">&gt;=</span> <span class="n">gridwidth</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="n">gridwidth</span> <span class="o">+</span> <span class="n">l</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="graph2cliques"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.graph2cliques">[docs]</a><span class="k">def</span> <span class="nf">graph2cliques</span><span class="p">(</span><span class="n">Q</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Turns graph Q of connections into binary cliques for Gibbs grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">clique_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">Q</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">clique_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+                <span class="n">clique_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+    <span class="c1"># Remove duplicates</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">clique_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">clique_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">clique_dict</span></div>
+
+<div class="viewcode-block" id="construct_gibbs_grid"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.construct_gibbs_grid">[docs]</a><span class="k">def</span> <span class="nf">construct_gibbs_grid</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates gridlike ``gibbs_graph`` parameter for ``sample_gibbs``.</span>
+<span class="sd">    See ``sample_gibbs``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Infer dimensionality</span>
+    <span class="n">gridwidth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)))</span>
+
+    <span class="c1"># Generate</span>
+    <span class="n">gibbs_graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>  
+    <span class="k">for</span> <span class="n">i1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">lc</span><span class="p">,</span> <span class="n">wc</span> <span class="o">=</span> <span class="n">num2coords</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span> <span class="n">gridwidth</span><span class="o">=</span><span class="n">gridwidth</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ladd</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="n">coords2num</span><span class="p">(</span><span class="n">lc</span> <span class="o">+</span> <span class="n">ladd</span><span class="p">,</span> <span class="n">wc</span><span class="p">,</span> <span class="n">gridwidth</span><span class="o">=</span><span class="n">gridwidth</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i2</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+                <span class="n">gibbs_graph</span><span class="p">[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">*</span> <span class="n">sign</span>
+                <span class="n">gibbs_graph</span><span class="p">[</span><span class="n">i2</span><span class="p">,</span> <span class="n">i1</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">*</span> <span class="n">sign</span>
+        <span class="k">for</span> <span class="n">wadd</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="n">coords2num</span><span class="p">(</span><span class="n">lc</span><span class="p">,</span> <span class="n">wc</span> <span class="o">+</span> <span class="n">wadd</span><span class="p">,</span> <span class="n">gridwidth</span><span class="o">=</span><span class="n">gridwidth</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i2</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+                <span class="n">gibbs_graph</span><span class="p">[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">*</span> <span class="n">sign</span>
+                <span class="n">gibbs_graph</span><span class="p">[</span><span class="n">i2</span><span class="p">,</span> <span class="n">i1</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">*</span> <span class="n">sign</span>
+
+    <span class="k">return</span> <span class="n">gibbs_graph</span></div>
+
+<div class="viewcode-block" id="sample_gibbs"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.sample_gibbs">[docs]</a><span class="k">def</span> <span class="nf">sample_gibbs</span><span class="p">(</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">gibbs_graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Samples from a discrete Gibbs measure using a gibbs sampler.</span>
+
+<span class="sd">    The joint likelihood for the `p`-dimensional data X1 through Xp</span>
+<span class="sd">    is the product of all terms of the following form: </span>
+<span class="sd">        ```np.exp(-1*gibbs_graph[i,j]*np.abs(Xi - Xj))```</span>
+<span class="sd">    where `gibbs_graph` is assumed to be symmetric (and is usually</span>
+<span class="sd">    sparse). Each feature takes values on an evenly spaced grid from</span>
+<span class="sd">    ``-1*max_val`` to ``max_val`` with ``K`` values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        How many data points to sample</span>
+<span class="sd">    p : int</span>
+<span class="sd">        Dimensionality of the data</span>
+<span class="sd">    gibbs_graph : np.ndarray</span>
+<span class="sd">        A symmetric ``(p, p)``-shaped array. See likelihood equation.</span>
+<span class="sd">        By default, this is corresponds to an undirected graphical</span>
+<span class="sd">        model with a square grid (like an Ising model) with nonzero</span>
+<span class="sd">        entries set to 1 or -1 with equal probability.</span>
+<span class="sd">    temp : float</span>
+<span class="sd">        Governs the strength of interactions between features---see </span>
+<span class="sd">        the likelihood equation.</span>
+<span class="sd">    num_iter : int</span>
+<span class="sd">        Number of iterations in the Gibbs sampler; defaults to 15.</span>
+<span class="sd">    K : int</span>
+<span class="sd">        Number of discrete values each sampled feature can take.</span>
+<span class="sd">    max_val : float</span>
+<span class="sd">        The maximum absolute value each feature can take.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        ``(n, p)``-shaped array of data</span>
+<span class="sd">    gibbs_graph : np.ndarray</span>
+<span class="sd">        The generated `gibbs_graph`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create buckets from (approximately) -max_val to max_val</span>
+    <span class="n">buckets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">K</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">K</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">/</span> <span class="n">max_val</span><span class="p">)</span>
+
+    <span class="c1"># Log potentials generator</span>
+    <span class="k">def</span> <span class="nf">log_potential</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">X2</span> <span class="o">=</span> <span class="n">X1</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">X1</span> <span class="o">=</span> <span class="n">X1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">temp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X1</span> <span class="o">-</span> <span class="n">X2</span><span class="p">)</span>
+
+    <span class="c1"># Construct cliques from gibbs_graph</span>
+    <span class="k">if</span> <span class="n">gibbs_graph</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gibbs_graph</span> <span class="o">=</span> <span class="n">construct_gibbs_grid</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="n">temp</span><span class="p">)</span>
+    <span class="n">clique_dict</span> <span class="o">=</span> <span class="n">graph2cliques</span><span class="p">(</span><span class="n">gibbs_graph</span><span class="p">)</span>
+
+    <span class="c1"># Initialize</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X</span> <span class="o">-</span> <span class="n">buckets</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">dists</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">buckets</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+    <span class="c1"># Marginalize / gibbs sample</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="c1"># Cliques and marginals for this node</span>
+            <span class="n">cliques</span> <span class="o">=</span> <span class="n">clique_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">marginals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">cliques</span><span class="p">:</span>
+                <span class="c1"># Calculate log-potential from this clique</span>
+                <span class="n">X1</span> <span class="o">=</span> <span class="n">buckets</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">X2</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">clique</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">marginals</span> <span class="o">+=</span> <span class="n">log_potential</span><span class="p">(</span>
+                    <span class="n">X1</span><span class="o">=</span><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="n">X2</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="n">gibbs_graph</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">clique</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Resample distribution of this value of X</span>
+            <span class="c1"># Note the exp is a bottleneck here for efficiency</span>
+            <span class="n">marginals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">marginals</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+            <span class="n">marginals</span> <span class="o">=</span> <span class="n">marginals</span> <span class="o">/</span> <span class="n">marginals</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">marginals</span> <span class="o">=</span> <span class="n">marginals</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Batched multinomial sampling using uniforms</span>
+            <span class="c1"># (faster than for loops + numpy)</span>
+            <span class="n">unifs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">Xnew</span> <span class="o">=</span> <span class="n">buckets</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">unifs</span> <span class="o">&lt;=</span> <span class="n">marginals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">X</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xnew</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">gibbs_graph</span></div>
+
+
+<div class="viewcode-block" id="DGP"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.DGP">[docs]</a><span class="k">class</span> <span class="nc">DGP</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A utility class which creates a (random) data-generating process </span>
+<span class="sd">    for a design matrix X and a response y. If the parameters are</span>
+<span class="sd">    not specified, they will be randomly generated during the</span>
+<span class="sd">    ``sample_data`` method. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : np.ndarray</span>
+<span class="sd">        ``(p,)``-shaped mean vector for X data</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped covariance matrix for X data</span>
+<span class="sd">    invSigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped precision matrix for X data</span>
+<span class="sd">    beta : np.ndarray</span>
+<span class="sd">        coefficients used to generate y from X in a single </span>
+<span class="sd">        index or sparse additive model.</span>
+<span class="sd">    gibbs_graph : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped matrix of coefficients for gibbs</span>
+<span class="sd">        grid method.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : np.ndarray</span>
+<span class="sd">        See above</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        See above</span>
+<span class="sd">    invSigma : np.ndarray</span>
+<span class="sd">        See above</span>
+<span class="sd">    beta : np.ndarray</span>
+<span class="sd">        See above</span>
+<span class="sd">    gibbs_Graph : np.ndarray</span>
+<span class="sd">        See above</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        ``(n, p)``-shaped design matrix</span>
+<span class="sd">    y : np.ndarray</span>
+<span class="sd">        ``(n, )``-shaped response vector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> 
+            <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">Sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">invSigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">gibbs_graph</span><span class="o">=</span><span class="kc">None</span>
+        <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">invSigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gibbs_graph</span> <span class="o">=</span> <span class="n">gibbs_graph</span>
+
+<div class="viewcode-block" id="DGP.sample_data"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.DGP.sample_data">[docs]</a>    <span class="k">def</span> <span class="nf">sample_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">p</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">n</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">x_dist</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;AR1&quot;</span><span class="p">,</span>
+        <span class="n">y_dist</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+        <span class="n">cond_mean</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+        <span class="n">coeff_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">coeff_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sign_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">iid_signs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">corr_signals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">df_t</span><span class="o">=</span><span class="n">DEFAULT_DF_T</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        (Possibly) generates random data-generating parameters</span>
+<span class="sd">        and then samples data using those parameters. By default,</span>
+<span class="sd">        (X, y) are jointly Gaussian and y is a linear response to</span>
+<span class="sd">        X.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int</span>
+<span class="sd">            The number of data points</span>
+<span class="sd">        p : int</span>
+<span class="sd">            The dimensionality of the data</span>
+<span class="sd">        x_dist : str</span>
+<span class="sd">            Specifies the distribution of X. One of &quot;Gaussian&quot;, &quot;blockt&quot;, &quot;ar1t&quot;, or &quot;gibbs&quot;.</span>
+<span class="sd">        method : str</span>
+<span class="sd">            How to generate the covariance matrix of X. One of</span>
+<span class="sd">            &quot;AR1&quot;, &quot;NestedAR1&quot;, &quot;partialcorr&quot;, &quot;factor&quot;, </span>
+<span class="sd">            &quot;blockequi&quot;, &quot;ver&quot;, &quot;qer&quot;, &quot;dirichlet&quot;, or &quot;uniformdot&quot;.</span>
+<span class="sd">            See the docs for each of these methods.</span>
+<span class="sd">        y_dist : str</span>
+<span class="sd">            Specifies the distribution of y. One of &quot;Gaussian&quot; or &quot;binomial&quot;.</span>
+<span class="sd">        cond_mean : str </span>
+<span class="sd">            How to calculate the conditional mean of y given X. Defaults to </span>
+<span class="sd">            &quot;linear&quot;. See ``knockpy.dgp.sample_response`` for more options.</span>
+<span class="sd">        coeff_size: float</span>
+<span class="sd">            Size of non-zero coefficients</span>
+<span class="sd">        coeff_dist : str</span>
+<span class="sd">            Specifies the distribution of nonzero coefficients. Three options:</span>
+<span class="sd">            - ``None``: all coefficients have absolute value coeff_size.</span>
+<span class="sd">            - ``normal``: all nonzero coefficients are drawn from Normal(coeff_size, 1). </span>
+<span class="sd">            - ``uniform``: nonzero coeffs are drawn from Unif(coeff_size/2, coeff_size).</span>
+<span class="sd">        sparsity : float</span>
+<span class="sd">            Proportion of non-null coefficients. </span>
+<span class="sd">            Generates ``np.floor(p*sparsity)`` non-nulls.</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            A p-length array of integers from 1 to num_groups such that</span>
+<span class="sd">            ``groups[j] == i`` indicates that variable `j` is a member of group `i`.</span>
+<span class="sd">            Defaults to ``None``. Else, floor(sparsity * num_groups) groups will be </span>
+<span class="sd">            chosen to be non-null, where all elements of each group are non-null.</span>
+<span class="sd">        sign_prob : float</span>
+<span class="sd">            The probability that each nonzero coefficient will be positive. </span>
+<span class="sd">        iid_signs : bool</span>
+<span class="sd">            If True, the signs of the coeffs are assigned independently.</span>
+<span class="sd">            Else, exactly sign_prob*sparsity*p coefficients will be positive.</span>
+<span class="sd">        corr_signals : bool</span>
+<span class="sd">            If true, all of the nonzero coefficients will lie in a consecutive block.</span>
+<span class="sd">        df_t : float</span>
+<span class="sd">            If the X variables are marginally t-distributed, the degrees of freedom.</span>
+<span class="sd">        kwargs: dict</span>
+<span class="sd">            keyword arguments to pass to method for generating the covariance matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Defaults</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="c1"># grid / Gibbs Sampling</span>
+        <span class="k">if</span> <span class="n">x_dist</span> <span class="o">==</span> <span class="s2">&quot;gibbs&quot;</span><span class="p">:</span>
+            <span class="c1"># Sample X, Q</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gibbs_graph</span> <span class="o">=</span> <span class="n">sample_gibbs</span><span class="p">(</span>
+                <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">gibbs_graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gibbs_graph</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Estimate cov matrix</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_covariance</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">shrinkage</span><span class="o">=</span><span class="kc">None</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Create covariance matrix</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">method</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ar1&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;nestedar1&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">NestedAR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;partialcorr&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">PartialCorr</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;factor&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">FactorModel</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;equi&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;blockequi&quot;</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">block_equi_graph</span><span class="p">(</span>
+                    <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
+                    <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+                    <span class="n">coeff_size</span><span class="o">=</span><span class="n">coeff_size</span><span class="p">,</span>
+                    <span class="n">coeff_dist</span><span class="o">=</span><span class="n">coeff_dist</span><span class="p">,</span>
+                    <span class="n">sparsity</span><span class="o">=</span><span class="n">sparsity</span><span class="p">,</span>
+                    <span class="n">sign_prob</span><span class="o">=</span><span class="n">sign_prob</span><span class="p">,</span>
+                    <span class="n">iid_signs</span><span class="o">=</span><span class="n">iid_signs</span><span class="p">,</span>
+                    <span class="n">corr_signals</span><span class="o">=</span><span class="n">corr_signals</span><span class="p">,</span>
+                    <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ver&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">ErdosRenyi</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;qer&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">ErdosRenyi</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;dirichlet&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">DirichletCorr</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;wishart&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">Wishart</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;uniformdot&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">UniformDot</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Other method </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> not implemented yet&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Create sparse coefficients</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">create_sparse_coefficients</span><span class="p">(</span>
+                <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
+                <span class="n">sparsity</span><span class="o">=</span><span class="n">sparsity</span><span class="p">,</span>
+                <span class="n">coeff_size</span><span class="o">=</span><span class="n">coeff_size</span><span class="p">,</span>
+                <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span>
+                <span class="n">sign_prob</span><span class="o">=</span><span class="n">sign_prob</span><span class="p">,</span>
+                <span class="n">iid_signs</span><span class="o">=</span><span class="n">iid_signs</span><span class="p">,</span>
+                <span class="n">coeff_dist</span><span class="o">=</span><span class="n">coeff_dist</span><span class="p">,</span>
+                <span class="n">corr_signals</span><span class="o">=</span><span class="n">corr_signals</span><span class="p">,</span>
+                <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Sample design matrix</span>
+        <span class="k">if</span> <span class="n">x_dist</span> <span class="o">==</span> <span class="s2">&quot;gibbs&quot;</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">x_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">x_dist</span> <span class="o">==</span> <span class="s2">&quot;ar1t&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;ar1&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;For x_dist=</span><span class="si">{</span><span class="n">x_dist</span><span class="si">}</span><span class="s2">, method (</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">) should equal &#39;ar1&#39;&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">sample_ar1t</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">rhos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">df_t</span><span class="o">=</span><span class="n">df_t</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">x_dist</span> <span class="o">==</span> <span class="s2">&quot;blockt&quot;</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cov2blocks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">sample_block_tmvn</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">df_t</span><span class="o">=</span><span class="n">df_t</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;x_dist must be one of &#39;gaussian&#39;, &#39;gibbs&#39;, &#39;ar1t&#39;, &#39;blockt&#39;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Sample y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">sample_response</span><span class="p">(</span>
+            <span class="n">X</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="n">y_dist</span><span class="p">,</span> <span class="n">cond_mean</span><span class="o">=</span><span class="n">cond_mean</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span></div></div>
+
+
+<div class="viewcode-block" id="create_correlation_tree"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.create_correlation_tree">[docs]</a><span class="k">def</span> <span class="nf">create_correlation_tree</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;average&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Creates hierarchical clustering (correlation tree)</span>
+<span class="sd">    from a correlation matrix</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr_matrix : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped correlation matrix</span>
+<span class="sd">    method : str</span>
+<span class="sd">        the method of hierarchical clustering:</span>
+<span class="sd">        &#39;single&#39;, &#39;average&#39;, &#39;fro&#39;, or &#39;complete&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    link : np.ndarray</span>
+<span class="sd">        The `link` of the correlation tree, as in scipy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Distance matrix for tree method</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;fro&quot;</span><span class="p">:</span>
+        <span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">dist_matrix</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">diagflat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">))</span>
+
+    <span class="n">condensed_dist_matrix</span> <span class="o">=</span> <span class="n">ssd</span><span class="o">.</span><span class="n">squareform</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">)</span>
+
+    <span class="c1"># Create linkage</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;single&quot;</span><span class="p">:</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="n">condensed_dist_matrix</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;average&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;fro&quot;</span><span class="p">:</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">condensed_dist_matrix</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;complete&quot;</span><span class="p">:</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">condensed_dist_matrix</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;Only &quot;single&quot;, &quot;complete&quot;, &quot;average&quot;, &quot;fro&quot; are valid methods, not </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">link</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v1.0.3
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="dgp.html">v1.0.3</a></dd>
+      <dd><a href="../../../v1.0.4/index.html">v1.0.4</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

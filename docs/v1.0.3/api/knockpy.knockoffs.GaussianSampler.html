@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GaussianSampler &mdash; knockpy 1.0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apiref.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>GaussianSampler</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/knockpy.knockoffs.GaussianSampler.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="gaussiansampler">
+<h1>GaussianSampler<a class="headerlink" href="#gaussiansampler" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="knockpy.knockoffs.GaussianSampler">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoffs.</code><code class="sig-name descname">GaussianSampler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">mu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sigma</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">invSigma</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sample_tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">S</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/knockpy/knockoffs.html#GaussianSampler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoffs.GaussianSampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../apiref.html#knockpy.knockoffs.KnockoffSampler" title="knockpy.knockoffs.KnockoffSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">knockpy.knockoffs.KnockoffSampler</span></code></a></p>
+<p>Samples MX Gaussian (group) knockoffs.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design</p>
+</dd>
+<dt><strong>mu</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">)</span></code>-shaped mean of the features. If None, this defaults to
+the empirical mean of the features.</p>
+</dd>
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of the features. If None, this
+is estimated using the <code class="docutils literal notranslate"><span class="pre">utilities.estimate_covariance</span></code> function.</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped knockoff S-matrix used to generate knockoffs. This 
+is defined such that Cov(X, tilde(X)) = Sigma - S. When None,
+will be constructed by knockoff generator. Defaults to None.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>Specifies how to construct S matrix. This will be ignored if <code class="docutils literal notranslate"><span class="pre">S</span></code> is not None.
+There are several options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘mvr’: Minimum Variance-Based Reconstructability knockoffs.</p></li>
+<li><p>‘mmi’: Minimizes the mutual information between X and the knockoffs.</p></li>
+<li><p>‘ci’: Conditional independence knockoffs.</p></li>
+<li><p>‘sdp’: minimize the mean absolute covariance (MAC) between the features</p></li>
+</ul>
+<p>and the knockoffs.
+- ‘equicorrelated’: Minimizes the MAC under the constraint that the 
+the correlation between each feature and its knockoff is the same.</p>
+</div></blockquote>
+<p>The default is to use mvr for non-group knockoffs, and to use the group-SDP
+for grouped knockoffs (the implementation for group mvr knockoffs is currently
+fairly slow). In both cases we use a block-diagonal approximation 
+if the number if features is greater than 1000.</p>
+</dd>
+<dt><strong>objective</strong><span class="classifier">str</span></dt><dd><p>How to optimize the S matrix if using the SDP for group knockoffs.
+There are several options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘abs’: minimize sum(abs(Sigma - S))</p></li>
+</ul>
+<p>between groups and the group knockoffs.
+- ‘pnorm’: minimize Lp-th matrix norm.
+Equivalent to abs when p = 1.
+- ‘norm’: minimize different type of matrix norm
+(see norm_type below).</p>
+</div></blockquote>
+</dd>
+<dt><strong>sample_tol</strong><span class="classifier">float</span></dt><dd><p>Minimum eigenvalue allowed for feature-knockoff covariance 
+matrix. Keep this small but nonzero (1e-5) to prevent numerical errors.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True, prints progress over time</p>
+</dd>
+<dt><strong>rec_prop</strong><span class="classifier">float</span></dt><dd><p>The proportion of knockoffs to recycle (see Barber and Candes 2018,
+<a class="reference external" href="https://arxiv.org/abs/1602.03574">https://arxiv.org/abs/1602.03574</a>). If method = ‘mvr’, then S_generation 
+takes this into account and should increase the power of recycled knockoffs.    sparsely-correlated, high-dimensional settings.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Other kwargs for S-matrix solvers.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_PSD_condition</span></code>(Sigma, S)</p></td>
+<td><p>Checks that the feature-knockoff cov matrix is PSD.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_xk_validity</span></code>(X, Xk[, testname, alpha])</p></td>
+<td><p>Runs a variety of KS tests on X and Xk to (informally) check that Xk are valid knockoffs for X.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../apiref.html#knockpy.knockoffs.GaussianSampler.fetch_S" title="knockpy.knockoffs.GaussianSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<td><p>Fetches knockoff S-matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">many_ks_tests</span></code>(sample1s, sample2s)</p></td>
+<td><p>Samples1s, Sample2s = list of arrays Gets p values by running ks tests and then does a multiple testing correction.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../apiref.html#knockpy.knockoffs.GaussianSampler.sample_knockoffs" title="knockpy.knockoffs.GaussianSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
+<td><p>Samples knockoffs.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../apiref.html#knockpy.knockoffs.GaussianSampler.fetch_S" title="knockpy.knockoffs.GaussianSampler.fetch_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_S</span></code></a>()</p></td>
+<td><p>Fetches knockoff S-matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../apiref.html#knockpy.knockoffs.GaussianSampler.sample_knockoffs" title="knockpy.knockoffs.GaussianSampler.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
+<td><p>Samples knockoffs.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="knockpy.knockoffs.GaussianSampler.fetch_S">
+<code class="sig-name descname">fetch_S</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/knockpy/knockoffs.html#GaussianSampler.fetch_S"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoffs.GaussianSampler.fetch_S" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches knockoff S-matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.knockoffs.GaussianSampler.sample_knockoffs">
+<code class="sig-name descname">sample_knockoffs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/knockpy/knockoffs.html#GaussianSampler.sample_knockoffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoffs.GaussianSampler.sample_knockoffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples knockoffs. returns n x p knockoff matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v1.0.3
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="knockpy.knockoffs.GaussianSampler.html">v1.0.3</a></dd>
+      <dd><a href="../../v1.0.4/api/knockpy.knockoffs.GaussianSampler.html">v1.0.4</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

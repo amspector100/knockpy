@@ -1,0 +1,861 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>knockpy.mrc &mdash; knockpy 1.0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>knockpy.mrc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for knockpy.mrc</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Methods for minimum-reconstructability knockoffs.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span><span class="p">,</span> <span class="n">constants</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">choldate</span>
+    <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="cholupdate"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.cholupdate">[docs]</a><span class="k">def</span> <span class="nf">cholupdate</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs rank one updates to a cholesky factor `R` in place.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    R : np.ndarray</span>
+<span class="sd">        A ``(p,p)``-shaped upper-triangular matrix.</span>
+<span class="sd">    x : np.ndarray</span>
+<span class="sd">        A ``(p,)``-shaped vector.</span>
+<span class="sd">    add : bool</span>
+<span class="sd">        If True, performs a rank one update; else performs a</span>
+<span class="sd">        rank one downdate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    R : np.ndarray</span>
+<span class="sd">        Suppose the parameter R was a cholesky factor of a matrix V.</span>
+<span class="sd">        Upon return, R is the cholesky factor of </span>
+<span class="sd">        ``V +/- np.outer(x, x)``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - This function modifies both ``R`` and ``x`` in place. </span>
+<span class="sd">    - The ``choldate`` package is a much faster and more </span>
+<span class="sd">    numerically stable alternative.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">add</span><span class="p">:</span>
+              <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+              <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">r</span><span class="o">/</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">/</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">if</span> <span class="n">add</span><span class="p">:</span>
+            <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">])</span><span class="o">/</span><span class="n">c</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">])</span><span class="o">/</span><span class="n">c</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span><span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">*</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">R</span></div>
+
+<span class="c1">### Coordinate Descent Solvers</span>
+<div class="viewcode-block" id="mvr_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mvr_loss">[docs]</a><span class="k">def</span> <span class="nf">mvr_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Computes minimum variance-based reconstructability</span>
+<span class="sd">    loss for knockoffs, e.g., the trace of the feature-knockoff</span>
+<span class="sd">    precision matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped S-matrix used to generate knockoffs</span>
+<span class="sd">    smoothing : float</span>
+<span class="sd">        Add ``smoothing`` to all eigenvalues of the feature-knockoff</span>
+<span class="sd">        precision matrix before inverting to avoid numerical</span>
+<span class="sd">        instability. Defaults to 0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    loss : float</span>
+<span class="sd">        The MVR loss for Sigma and S. This is infinite if S is not feasible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check for negative eigenvalues</span>
+    <span class="n">eigs_S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+    <span class="n">eigs_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigs_S</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigs_diff</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c1"># Inverse of eigenvalues</span>
+    <span class="n">trace_invG</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">eigs_diff</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">eigs_S</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">trace_invG</span></div>
+
+
+<div class="viewcode-block" id="maxent_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.maxent_loss">[docs]</a><span class="k">def</span> <span class="nf">maxent_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the log determinant of the feature-knockoff precision</span>
+<span class="sd">    matrix, which is proportional to the negative entropy of [X, tilde{X}].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped S-matrix used to generate knockoffs</span>
+<span class="sd">    smoothing : float</span>
+<span class="sd">        Add ``smoothing`` to all eigenvalues of the feature-knockoff</span>
+<span class="sd">        precision matrix before taking the log determinant</span>
+<span class="sd">        to avoid numerical instability. Defaults to 0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    loss : float</span>
+<span class="sd">        The maxent loss for Sigma and S. This is infinite if S is not feasible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">eigs_S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+    <span class="n">eigs_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigs_S</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigs_diff</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="n">det_invG</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">eigs_diff</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">det_invG</span> <span class="o">=</span> <span class="n">det_invG</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">eigs_S</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">det_invG</span></div>
+
+<div class="viewcode-block" id="mmi_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mmi_loss">[docs]</a><span class="k">def</span> <span class="nf">mmi_loss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the log determinant of the feature-knockoff precision</span>
+<span class="sd">    matrix, which is proportional mutual information between X and knockoffs.</span>
+
+<span class="sd">    This is identical to ``maxent_loss`` and exists only for backwards </span>
+<span class="sd">    compatability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">maxent_loss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="solve_mvr_quadratic"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr_quadratic">[docs]</a><span class="k">def</span> <span class="nf">solve_mvr_quadratic</span><span class="p">(</span><span class="n">cn</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">sj</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_eig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">acc_rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solves a quadratic equation to find</span>
+<span class="sd">    the optimal updates for the MVR S-matrix</span>
+<span class="sd">    based off of cn and cd.</span>
+<span class="sd">    See https://arxiv.org/pdf/2011.14625.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># 1. Construct quadratic equation</span>
+    <span class="c1"># We want to minimize 1/(sj + delta) - (delta * cn)/(1 - delta * cd)</span>
+    <span class="n">coef2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">cn</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">cd</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">coef1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">cn</span> <span class="o">*</span> <span class="p">(</span><span class="n">sj</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">)</span> <span class="o">+</span> <span class="n">cd</span><span class="p">)</span>
+    <span class="n">coef0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">cn</span> <span class="o">*</span> <span class="p">(</span><span class="n">sj</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">orig_options</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coef2</span><span class="p">,</span> <span class="n">coef1</span><span class="p">,</span> <span class="n">coef0</span><span class="p">]))</span>
+
+    <span class="c1"># 2. Eliminate complex solutions</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">delta</span> <span class="k">for</span> <span class="n">delta</span> <span class="ow">in</span> <span class="n">orig_options</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># Eliminate solutions which violate PSD-ness</span>
+    <span class="n">upper_bound</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">cd</span>
+    <span class="n">lower_bound</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">sj</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">delta</span>
+            <span class="k">for</span> <span class="n">delta</span> <span class="ow">in</span> <span class="n">options</span>
+            <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="n">upper_bound</span> <span class="ow">and</span> <span class="n">delta</span> <span class="o">&gt;</span> <span class="n">lower_bound</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;All quadratic solutions (</span><span class="si">{</span><span class="n">orig_options</span><span class="si">}</span><span class="s2">) were infeasible or imaginary&quot;</span>
+        <span class="p">)</span>
+        
+    <span class="c1"># 3. If multiple solutions left (unlikely), pick the smaller one</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">sj</span> <span class="o">+</span> <span class="n">options</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">options</span> <span class="o">*</span> <span class="n">cn</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">options</span> <span class="o">*</span> <span class="n">cd</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">losses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">losses</span><span class="o">.</span><span class="n">min</span><span class="p">():</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        
+    <span class="c1"># 4. Account for rejections</span>
+    <span class="k">if</span> <span class="n">acc_rate</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">extra_space</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_eig</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># Helps deal with coord desc</span>
+        <span class="n">opt_postrej_value</span> <span class="o">=</span> <span class="n">sj</span> <span class="o">+</span> <span class="n">delta</span>
+        <span class="n">opt_prerej_value</span> <span class="o">=</span> <span class="n">opt_postrej_value</span> <span class="o">/</span> <span class="p">(</span><span class="n">acc_rate</span><span class="p">)</span>
+        <span class="n">opt_prerej_value</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">sj</span> <span class="o">+</span> <span class="n">upper_bound</span> <span class="o">-</span> <span class="n">extra_space</span><span class="p">,</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">opt_prerej_value</span><span class="p">,</span> <span class="n">extra_space</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">opt_prerej_value</span> <span class="o">-</span> <span class="n">sj</span>
+        
+    <span class="k">return</span> <span class="n">delta</span></div>
+
+<div class="viewcode-block" id="solve_mvr_factored"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr_factored">[docs]</a><span class="k">def</span> <span class="nf">solve_mvr_factored</span><span class="p">(</span>
+    <span class="n">D</span><span class="p">,</span>
+    <span class="n">U</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">num_iter</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes S-matrix used to generate mvr knockoffs</span>
+<span class="sd">    using coordinate descent assuming that</span>
+<span class="sd">    the covariance matrix follows a factor model.</span>
+<span class="sd">    This means Sigma = D + UU^T for a p x p diagonal matrix</span>
+<span class="sd">    D and a p x k matrix U. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : np.ndarray</span>
+<span class="sd">        ``p``-shaped array of diagonal elements.</span>
+<span class="sd">    U : np.ndarray</span>
+<span class="sd">        ``(p, k)``-shaped matrix. Usually k &lt;&lt; p.</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Minimum permissible eigenvalue of 2Sigma - S and S.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        If True, prints updates during optimization.</span>
+<span class="sd">    num_iter : int</span>
+<span class="sd">        The number of coordinate descent iterations. Defaults to 50.</span>
+<span class="sd">    converge_tol : float</span>
+<span class="sd">        A parameter specifying the criteria for convergence.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initial constants</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c1"># TODO: this is Omega(p^3).</span>
+    <span class="c1"># Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062</span>
+    <span class="n">Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">D</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">diag_Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+    <span class="n">mineig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mineig</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;D + UU^T is not PSD&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Initialize values</span>
+    <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Sdiag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">mineig</span>
+    <span class="c1"># These are k x k matrices</span>
+    <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">),</span> <span class="n">U</span><span class="p">))</span>
+
+    <span class="n">quadtime</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">solvetime</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">:</span>
+
+            <span class="c1"># 1. Calculate parameters cd/cn</span>
+            <span class="c1"># (see https://arxiv.org/pdf/2011.14625.pdf)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">diff_inv_ej</span> <span class="o">=</span>  <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">)</span>
+            <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">cd</span> <span class="o">=</span> <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">cn</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">diff_inv_ej</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="c1"># 2. Find optimal update</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">solve_mvr_quadratic</span><span class="p">(</span><span class="n">cn</span><span class="o">=</span><span class="n">cn</span><span class="p">,</span> <span class="n">cd</span><span class="o">=</span><span class="n">cd</span><span class="p">,</span> <span class="n">sj</span><span class="o">=</span><span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            
+            <span class="c1"># 3. Rank one update to QR decomp</span>
+            <span class="n">muj</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">delta</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
+                <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+                <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+                <span class="n">u</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">c</span><span class="o">*</span><span class="n">muj</span><span class="p">,</span>
+                <span class="n">v</span><span class="o">=</span><span class="n">muj</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># 4. Update S</span>
+            <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta</span>
+            
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sdiag</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="solve_mvr"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr">[docs]</a><span class="k">def</span> <span class="nf">solve_mvr</span><span class="p">(</span>
+    <span class="n">Sigma</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">rej_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">converge_tol</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">choldate_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes S-matrix used to generate minimum variance-based</span>
+<span class="sd">    reconstructability knockoffs using coordinate descent.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Minimum permissible eigenvalue of 2Sigma - S and S.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        If True, prints updates during optimization.</span>
+<span class="sd">    num_iter : int</span>
+<span class="sd">        The number of coordinate descent iterations. Defaults to 50.</span>
+<span class="sd">    smoothing : float</span>
+<span class="sd">        Add ``smoothing`` to all eigenvalues of the feature-knockoff</span>
+<span class="sd">        precision matrix before inverting to avoid numerical</span>
+<span class="sd">        instability. Defaults to 0.</span>
+<span class="sd">    converge_tol : float</span>
+<span class="sd">        A parameter specifying the criteria for convergence.</span>
+<span class="sd">    choldate_warning : bool</span>
+<span class="sd">        If True, will warn the user if choldate is not installed. </span>
+<span class="sd">        Defaults to True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Warning if choldate not available</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">CHOLDATE_AVAILABLE</span> <span class="ow">and</span> <span class="n">choldate_warning</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">CHOLDATE_WARNING</span><span class="p">)</span>
+
+    <span class="c1"># Initial constants</span>
+    <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">Sigma</span>  <span class="c1"># Shorthand prevents lines from spilling over</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">acc_rate</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">rej_rate</span>
+    <span class="c1"># Takes a bit longer for rej_rate adjusted to converge</span>
+    <span class="k">if</span> <span class="n">acc_rate</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">converge_tol</span> <span class="o">=</span> <span class="mf">1e-2</span>
+
+    <span class="c1"># Initialize values</span>
+    <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_eig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">V</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">min_eig</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">V</span> <span class="o">-</span> <span class="n">S</span> <span class="o">+</span> <span class="n">smoothing</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">:</span>
+            <span class="c1"># 1. Compute coefficients cn and cd</span>
+            <span class="n">ej</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># jth basis element</span>
+            <span class="n">ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># 1a. Compute cd</span>
+            <span class="n">vd</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">L</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ej</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">cd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">vd</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="c1"># 1b. Compute vn</span>
+            <span class="n">vn</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">vd</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">cn</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">vn</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="c1"># 2. Construct/solve quadratic equation</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">solve_mvr_quadratic</span><span class="p">(</span>
+                <span class="n">cn</span><span class="o">=</span><span class="n">cn</span><span class="p">,</span>
+                <span class="n">cd</span><span class="o">=</span><span class="n">cd</span><span class="p">,</span>
+                <span class="n">sj</span><span class="o">=</span><span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">],</span>
+                <span class="n">min_eig</span><span class="o">=</span><span class="n">min_eig</span><span class="p">,</span>
+                <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">,</span>
+                <span class="n">acc_rate</span><span class="o">=</span><span class="n">acc_rate</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># 3. Update S and L</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">delta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">CHOLDATE_AVAILABLE</span><span class="p">:</span>
+                    <span class="n">choldate</span><span class="o">.</span><span class="n">choldowndate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cholupdate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">CHOLDATE_AVAILABLE</span><span class="p">:</span>
+                    <span class="n">choldate</span><span class="o">.</span><span class="n">cholupdate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cholupdate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Set new value for S</span>
+            <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">delta</span>
+
+        <span class="c1"># Check for convergence</span>
+        <span class="n">prev_loss</span> <span class="o">=</span> <span class="n">loss</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mvr_loss</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">acc_rate</span> <span class="o">*</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="n">decayed_improvement</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="p">(</span><span class="n">prev_loss</span> <span class="o">-</span> <span class="n">loss</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">decayed_improvement</span> <span class="o">&lt;</span> <span class="n">converge_tol</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converged after iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> with loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+    <span class="c1"># Ensure validity of solution</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+    <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">S</span></div>
+
+<div class="viewcode-block" id="solve_maxent_factored"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_maxent_factored">[docs]</a><span class="k">def</span> <span class="nf">solve_maxent_factored</span><span class="p">(</span>
+    <span class="n">D</span><span class="p">,</span>
+    <span class="n">U</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes S-matrix used to generate maximum entropy</span>
+<span class="sd">    knockoffs using coordinate descent assuming that</span>
+<span class="sd">    the covariance matrix follows a factor model.</span>
+<span class="sd">    This means Sigma = D + UU^T for a p x p diagonal matrix</span>
+<span class="sd">    D and a p x k matrix U. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : np.ndarray</span>
+<span class="sd">        ``p``-shaped array of diagonal elements.</span>
+<span class="sd">    U : np.ndarray</span>
+<span class="sd">        ``(p, k)``-shaped matrix. Usually k &lt;&lt; p.</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Minimum permissible eigenvalue of 2Sigma - S and S.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        If True, prints updates during optimization.</span>
+<span class="sd">    num_iter : int</span>
+<span class="sd">        The number of coordinate descent iterations. Defaults to 50.</span>
+<span class="sd">    converge_tol : float</span>
+<span class="sd">        A parameter specifying the criteria for convergence.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initial constants</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c1"># TODO: this is Omega(p^3).</span>
+    <span class="c1"># Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062</span>
+    <span class="n">Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">D</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">diag_Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+    <span class="n">mineig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mineig</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;D + UU^T is not PSD&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Initialize values</span>
+    <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Sdiag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">mineig</span>
+    <span class="c1"># These are all k x k matrices</span>
+    <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">),</span> <span class="n">U</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">:</span>
+            <span class="c1"># Qprime, Rprime are rank-one updates of Q, R</span>
+            <span class="c1"># to help solve for the optimal Sj</span>
+            <span class="n">Qprime</span><span class="p">,</span> <span class="n">Rprime</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
+                <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+                <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+                <span class="n">u</span><span class="o">=</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span>
+                <span class="n">v</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                <span class="n">overwrite_qruv</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Calculate update for S---for notation, see</span>
+            <span class="c1"># https://arxiv.org/pdf/2006.08790.pdf</span>
+            <span class="n">MjUjT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Qprime</span><span class="p">,</span> <span class="n">Rprime</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span>
+                <span class="n">a</span><span class="o">=</span><span class="n">Rprime</span><span class="p">,</span>
+                <span class="n">b</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Qprime</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">MjUjT</span><span class="p">),</span>
+                <span class="n">lower</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">sub_term</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">MjUjT</span><span class="p">)</span> <span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">MjUjT</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">Sjstar</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">diag_Sigma</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">sub_term</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            
+            <span class="c1"># Rank one update to QR decomp</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sjstar</span> 
+            <span class="n">muj</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">delta</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">delta</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
+                <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+                <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+                <span class="n">u</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">c</span><span class="o">*</span><span class="n">muj</span><span class="p">,</span>
+                <span class="n">v</span><span class="o">=</span><span class="n">muj</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># Update S</span>
+            <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">Sjstar</span>
+            
+    <span class="c1"># S = utilities.shift_until_PSD(S, tol=tol)</span>
+    <span class="c1"># S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sdiag</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="solve_maxent"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_maxent">[docs]</a><span class="k">def</span> <span class="nf">solve_maxent</span><span class="p">(</span>
+    <span class="n">Sigma</span><span class="p">,</span> 
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+    <span class="n">choldate_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes S-matrix used to generate maximum entropy</span>
+<span class="sd">    knockoffs using coordinate descent.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Minimum permissible eigenvalue of 2Sigma - S and S.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        If True, prints updates during optimization.</span>
+<span class="sd">    num_iter : int</span>
+<span class="sd">        The number of coordinate descent iterations. Defaults to 50.</span>
+<span class="sd">    converge_tol : float</span>
+<span class="sd">        A parameter specifying the criteria for convergence.</span>
+<span class="sd">    choldate_warning : bool</span>
+<span class="sd">        If True, will warn the user if choldate is not installed. </span>
+<span class="sd">        Defaults to True</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Warning if choldate not available</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">CHOLDATE_AVAILABLE</span> <span class="ow">and</span> <span class="n">choldate_warning</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">CHOLDATE_WARNING</span><span class="p">)</span>
+
+    <span class="c1"># Initial constants</span>
+    <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">Sigma</span>  <span class="c1"># Shorthand prevents lines from spilling over</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c1"># Initialize values</span>
+    <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">V</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">V</span> <span class="o">-</span> <span class="n">S</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">V</span> <span class="o">-</span> <span class="n">S</span>
+
+            <span class="c1"># Solve cholesky equation</span>
+            <span class="n">tildey</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">V</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">tildey</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">L</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">tildey</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Use cholesky eq to get new update</span>
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">diff</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+            <span class="n">x22</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">qinvterm</span> <span class="o">=</span> <span class="n">zeta</span> <span class="o">*</span> <span class="n">x22</span> <span class="o">/</span> <span class="p">(</span><span class="n">zeta</span> <span class="o">+</span> <span class="n">x22</span><span class="p">)</span>
+
+            <span class="c1"># Inverse of Qj using SWM formula</span>
+            <span class="n">sjstar</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">V</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">qinvterm</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+            <span class="c1"># Rank one update for cholesky</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">sjstar</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">delta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">CHOLDATE_AVAILABLE</span><span class="p">:</span>
+                    <span class="n">choldate</span><span class="o">.</span><span class="n">cholupdate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cholupdate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">CHOLDATE_AVAILABLE</span><span class="p">:</span>
+                    <span class="n">choldate</span><span class="o">.</span><span class="n">choldowndate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cholupdate</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Set new value for S</span>
+            <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">sjstar</span>
+
+        <span class="c1"># Check for convergence</span>
+        <span class="n">prev_loss</span> <span class="o">=</span> <span class="n">loss</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">maxent_loss</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="n">decayed_improvement</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="p">(</span><span class="n">prev_loss</span> <span class="o">-</span> <span class="n">loss</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">decayed_improvement</span> <span class="o">&lt;</span> <span class="n">converge_tol</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converged after iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> with loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+
+    <span class="c1"># Ensure validity of solution</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+    <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">S</span></div>
+
+<div class="viewcode-block" id="solve_mmi"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mmi">[docs]</a><span class="k">def</span> <span class="nf">solve_mmi</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes S-matrix used to generate minimum mutual information</span>
+<span class="sd">    knockoffs. This is identical to ``solve_maxent``</span>
+<span class="sd">    and exists only for backwards compatability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">solve_maxent</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="solve_ciknock"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_ciknock">[docs]</a><span class="k">def</span> <span class="nf">solve_ciknock</span><span class="p">(</span>
+    <span class="n">Sigma</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes S-matrix used to generate conditional independence</span>
+<span class="sd">    knockoffs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Minimum permissible eigenvalue of 2Sigma - S and S.</span>
+<span class="sd">    num_iter : int</span>
+<span class="sd">        The number of iterations in the binary search to ensure</span>
+<span class="sd">        S is feasible.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When the S-matrix corresponding to conditional independence knockoffs</span>
+<span class="sd">    is not feasible, this computes that S matrix and then does a binary </span>
+<span class="sd">    search to find the maximum gamma such that gamma * S is feasible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Compute vanilla S_CI</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)))</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+    <span class="c1"># Ensure validity of solution</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+    <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="n">num_iter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">S</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v1.0.4
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.3/index.html">v1.0.3</a></dd>
+      <dd><a href="mrc.html">v1.0.4</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

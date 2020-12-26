@@ -1,0 +1,1744 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>knockpy.knockoff_stats &mdash; knockpy 1.0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>knockpy.knockoff_stats</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for knockpy.knockoff_stats</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Model-fitters</span>
+<span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">,</span> <span class="n">ensemble</span>
+<span class="kn">from</span> <span class="nn">group_lasso</span> <span class="kn">import</span> <span class="n">GroupLasso</span><span class="p">,</span> <span class="n">LogisticGroupLasso</span>
+<span class="kn">from</span> <span class="nn">pyglmnet</span> <span class="kn">import</span> <span class="n">GLMCV</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="n">DEFAULT_REG_VALS</span>
+
+
+<div class="viewcode-block" id="calc_mse"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.calc_mse">[docs]</a><span class="k">def</span> <span class="nf">calc_mse</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gets MSE of a model &quot;&quot;&quot;</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">resids</span> <span class="o">=</span> <span class="p">(</span><span class="n">preds</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">y</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">resids</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="use_reg_lasso"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.use_reg_lasso">[docs]</a><span class="k">def</span> <span class="nf">use_reg_lasso</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Parses whether or not to use group lasso &quot;&quot;&quot;</span>
+    <span class="c1"># See if we are using regular lasso...</span>
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">m</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="parse_y_dist"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.parse_y_dist">[docs]</a><span class="k">def</span> <span class="nf">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Checks if y is binary; else assumes it is continuous &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;binomial&quot;</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;gaussian&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Treating y data as continuous even though it may be discrete.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;gaussian&quot;</span></div>
+
+
+<div class="viewcode-block" id="parse_logistic_flag"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.parse_logistic_flag">[docs]</a><span class="k">def</span> <span class="nf">parse_logistic_flag</span><span class="p">(</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Checks whether y_dist is binomial &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;y_dist&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_dist&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="combine_Z_stats"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.combine_Z_stats">[docs]</a><span class="k">def</span> <span class="nf">combine_Z_stats</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">antisym</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span> <span class="n">group_agg</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given Z scores (variable importances), returns (grouped) feature statistics</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Z : np.ndarray</span>
+<span class="sd">        ``(2p,)``-shaped numpy array of Z-statistics. The first p values</span>
+<span class="sd">        correspond to true features, and the last p correspond to knockoffs</span>
+<span class="sd">        (in the same order as the true features).</span>
+<span class="sd">    groups : np.ndarray</span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">        is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">    antisym : str</span>
+<span class="sd">        The antisymmetric function used to create (ungrouped) feature</span>
+<span class="sd">        statistics. Three options: </span>
+<span class="sd">        - &quot;CD&quot; (Difference of absolute vals of coefficients),</span>
+<span class="sd">        - &quot;SM&quot; (signed maximum).</span>
+<span class="sd">        - &quot;SCD&quot; (Simple difference of coefficients - NOT recommended)</span>
+<span class="sd">    group_agg : str</span>
+<span class="sd">        For group knockoffs, specifies how to turn individual feature</span>
+<span class="sd">        statistics into grouped feature statistics. Two options: </span>
+<span class="sd">        &quot;sum&quot; and &quot;avg&quot;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    W : np.ndarray</span>
+<span class="sd">        an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">        for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">        group knockoffs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Step 1: Pairwise W statistics.</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unexpected shape </span><span class="si">{</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> for Z statistics (expected (</span><span class="si">{</span><span class="mi">2</span><span class="o">*</span><span class="n">p</span><span class="si">}</span><span class="s2">,))&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">antisym</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">antisym</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="c1"># Absolute coefficient differences</span>
+    <span class="k">if</span> <span class="n">antisym</span> <span class="o">==</span> <span class="s2">&quot;cd&quot;</span><span class="p">:</span>
+        <span class="n">pair_W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">p</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="n">p</span><span class="p">:])</span>
+    <span class="c1"># Signed maxes</span>
+    <span class="k">elif</span> <span class="n">antisym</span> <span class="o">==</span> <span class="s2">&quot;sm&quot;</span><span class="p">:</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">pair_W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="n">inds</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="n">inds</span> <span class="o">+</span> <span class="n">p</span><span class="p">]))</span>
+        <span class="n">pair_W</span> <span class="o">=</span> <span class="n">pair_W</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="n">inds</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="n">inds</span> <span class="o">+</span> <span class="n">p</span><span class="p">]))</span>
+    <span class="c1"># Simple coefficient differences</span>
+    <span class="k">elif</span> <span class="n">antisym</span> <span class="o">==</span> <span class="s2">&quot;scd&quot;</span><span class="p">:</span>
+        <span class="n">pair_W</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">Z</span><span class="p">[</span><span class="n">p</span><span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;antisym (</span><span class="si">{</span><span class="n">antisym</span><span class="si">}</span><span class="s1">) must be one of &quot;cd&quot;, &quot;sm&quot;, &quot;scd&quot;&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: Group statistics</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">W_group</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">W_group</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pair_W</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+    <span class="c1"># If averaging...</span>
+    <span class="k">if</span> <span class="n">group_agg</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">group_agg</span> <span class="o">==</span> <span class="s2">&quot;avg&quot;</span><span class="p">:</span>
+        <span class="n">group_sizes</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_group_sizes</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">W_group</span> <span class="o">=</span> <span class="n">W_group</span> <span class="o">/</span> <span class="n">group_sizes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;group_agg (</span><span class="si">{</span><span class="n">group_agg</span><span class="si">}</span><span class="s1">) must be one of &quot;sum&quot;, &quot;avg&quot;&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Return</span>
+    <span class="k">return</span> <span class="n">W_group</span></div>
+
+
+<span class="c1"># ------------------------------ Lasso Stuff ---------------------------------------#</span>
+<div class="viewcode-block" id="calc_lars_path"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.calc_lars_path">[docs]</a><span class="k">def</span> <span class="nf">calc_lars_path</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates locations at which X/knockoffs enter lasso </span>
+<span class="sd">    model when regressed on y.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped design matrix</span>
+<span class="sd">    Xk : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">    y : np.ndarray</span>
+<span class="sd">        ``(n,)``-shaped response vector</span>
+<span class="sd">    groups : np.ndarray</span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">        is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        kwargs for ``sklearn.linear_model.lars_path``</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : np.ndarray</span>
+<span class="sd">        ``(2p,)``-shaped array indicating the lasso path statistic</span>
+<span class="sd">        for each variable. (This means the maximum lambda such that</span>
+<span class="sd">        the lasso coefficient on variable j is nonzero.) </span>
+<span class="sd">     &quot;&quot;&quot;</span>
+
+    <span class="c1"># Ignore y_dist kwargs (residual)</span>
+    <span class="k">if</span> <span class="s2">&quot;y_dist&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;y_dist&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Bind data</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Randomize coordinates to make sure everything is symmetric</span>
+    <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">]</span>
+
+    <span class="c1"># By default, all variables are their own group</span>
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Fit</span>
+    <span class="n">alphas</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">coefs</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">lars_path</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,)</span>
+
+    <span class="c1"># Calculate places where features enter the model</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">Z</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Z</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">alphas</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">return</span> <span class="n">Z</span><span class="p">[</span><span class="n">rev_inds</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="fit_lasso"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.fit_lasso">[docs]</a><span class="k">def</span> <span class="nf">fit_lasso</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_lars</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fits cross-validated lasso on [X, Xk] and y.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped design matrix.</span>
+<span class="sd">    Xk : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">    y : np.ndarray</span>
+<span class="sd">        ``(n,)``-shaped response vector</span>
+<span class="sd">    y_dist : str</span>
+<span class="sd">        One of &quot;binomial&quot; or &quot;gaussian&quot;</span>
+<span class="sd">    use_lars : bool</span>
+<span class="sd">        If True, uses a LARS-based solver for Gaussian data.</span>
+<span class="sd">        If False, uses a gradient based solver (default).</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        kwargs for sklearn model.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    To avoid FDR control violations, this randomly permutes</span>
+<span class="sd">    the features before fitting the lasso.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    gl : sklearn.linear_model.LassoCV/LassoLarsCV/LogisticRegressionCV</span>
+<span class="sd">        The sklearn model fit through cross-validation.</span>
+<span class="sd">    inds : np.ndarray</span>
+<span class="sd">        ``(2p,)``-dimensional array of indices representing the random</span>
+<span class="sd">        permutation applied to the concatenation of [X, Xk] before fitting</span>
+<span class="sd">        ``gl.``</span>
+<span class="sd">    rev_inds : np.ndarray:</span>
+<span class="sd">        Indices which reverse the effect of ``inds.`` In particular, if</span>
+<span class="sd">        M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Parse some kwargs/defaults</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">)</span>
+    <span class="n">cv</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cv&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">y_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="c1"># Bind data</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Randomize coordinates to make sure everything is symmetric</span>
+    <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">]</span>
+
+    <span class="c1"># Fit lasso</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_lars</span><span class="p">:</span>
+            <span class="n">gl</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LassoCV</span><span class="p">(</span>
+                <span class="n">alphas</span><span class="o">=</span><span class="n">DEFAULT_REG_VALS</span><span class="p">,</span>
+                <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+                <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">use_lars</span><span class="p">:</span>
+            <span class="n">gl</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LassoLarsCV</span><span class="p">(</span>
+                <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegressionCV</span><span class="p">(</span>
+            <span class="n">Cs</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="n">DEFAULT_REG_VALS</span><span class="p">,</span>
+            <span class="n">penalty</span><span class="o">=</span><span class="s2">&quot;l1&quot;</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+            <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;liblinear&quot;</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">resetwarnings</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">gl</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span></div>
+
+
+<div class="viewcode-block" id="fit_ridge"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.fit_ridge">[docs]</a><span class="k">def</span> <span class="nf">fit_ridge</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fits cross-validated ridge on [X, Xk] and y.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped design matrix</span>
+<span class="sd">    Xk : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">    y : np.ndarray</span>
+<span class="sd">        ``(n,)``-shaped response vector</span>
+<span class="sd">    y_dist : str</span>
+<span class="sd">        One of &quot;binomial&quot; or &quot;gaussian&quot;</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        kwargs for sklearn model.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    To avoid FDR control violations, this randomly permutes</span>
+<span class="sd">    the features before fitting the ridge.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    gl : sklearn.linear_model.RidgeCV/LogisticRegressionCV</span>
+<span class="sd">        The sklearn model fit through cross-validation.</span>
+<span class="sd">    inds : np.ndarray</span>
+<span class="sd">        ``(2p,)``-dimensional array of indices representing the random</span>
+<span class="sd">        permutation applied to the concatenation of [X, Xk] before fitting</span>
+<span class="sd">        ``gl.``</span>
+<span class="sd">    rev_inds : np.ndarray:</span>
+<span class="sd">        Indices which reverse the effect of ``inds.`` In particular, if</span>
+<span class="sd">        M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Bind data</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Randomize coordinates to ensure antisymmetry</span>
+    <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">]</span>
+
+    <span class="c1"># Fit lasso</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+        <span class="n">ridge</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">RidgeCV</span><span class="p">(</span>
+            <span class="n">alphas</span><span class="o">=</span><span class="n">DEFAULT_REG_VALS</span><span class="p">,</span>
+            <span class="n">store_cv_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_squared_error&quot;</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+        <span class="n">ridge</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegressionCV</span><span class="p">(</span>
+            <span class="n">Cs</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="n">DEFAULT_REG_VALS</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="s2">&quot;l2&quot;</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;liblinear&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">resetwarnings</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ridge</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span></div>
+
+
+<div class="viewcode-block" id="fit_group_lasso"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.fit_group_lasso">[docs]</a><span class="k">def</span> <span class="nf">fit_group_lasso</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">use_pyglm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_lasso</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fits cross-validated ridge on [X, Xk] and y.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped design matrix</span>
+<span class="sd">    Xk : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">    y : np.ndarray</span>
+<span class="sd">        ``(n,)``-shaped response vector</span>
+<span class="sd">    groups : np.ndarray</span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">        is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">    use_pyglm : bool</span>
+<span class="sd">        When fitting the group lasso, use the pyglm package if True (default).</span>
+<span class="sd">        Else, use the group_lasso package.</span>
+<span class="sd">    y_dist : str</span>
+<span class="sd">        One of &quot;binomial&quot; or &quot;gaussian&quot;</span>
+<span class="sd">    group_lasso : bool</span>
+<span class="sd">        If True, use a true group lasso. Else just use the sklearn ungrouped</span>
+<span class="sd">        lasso.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        kwargs for eventual (group) lasso model.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    To avoid FDR control violations, this randomly permutes</span>
+<span class="sd">    the features before fitting the group lasso.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    gl : pyglm/sklearn/group_lasso model</span>
+<span class="sd">        The model fit through cross-validation; one of many types.</span>
+<span class="sd">    inds : np.ndarray</span>
+<span class="sd">        ``(2p,)``-dimensional array of indices representing the random</span>
+<span class="sd">        permutation applied to the concatenation of [X, Xk] before fitting</span>
+<span class="sd">        ``gl.``</span>
+<span class="sd">    rev_inds : np.ndarray:</span>
+<span class="sd">        Indices which reverse the effect of ``inds.`` In particular, if</span>
+<span class="sd">        M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Parse some kwargs/defaults</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
+    <span class="n">cv</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cv&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">learning_rate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">y_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="c1"># Bind data</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># By default, all variables are their own group</span>
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># If m == p, meaning each variable is their own group,</span>
+    <span class="c1"># just fit a regular lasso</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">p</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">group_lasso</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fit_lasso</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Make sure variables and their knockoffs are in the same group</span>
+    <span class="c1"># This is necessary for antisymmetry</span>
+    <span class="n">doubled_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">groups</span><span class="p">,</span> <span class="n">groups</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Randomize coordinates to make sure everything is symmetric</span>
+    <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">]</span>
+    <span class="n">doubled_groups</span> <span class="o">=</span> <span class="n">doubled_groups</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+    <span class="c1"># Standardize - important for pyglmnet performance,</span>
+    <span class="c1"># highly detrimental for group_lasso performance</span>
+    <span class="k">if</span> <span class="n">use_pyglm</span><span class="p">:</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="p">(</span><span class="n">features</span> <span class="o">-</span> <span class="n">features</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="n">features</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="n">y</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+
+    <span class="c1"># Get regularization values for cross validation</span>
+    <span class="n">reg_vals</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;reg_vals&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">DEFAULT_REG_VALS</span><span class="p">])</span>
+
+    <span class="c1"># Fit pyglm model using warm starts</span>
+    <span class="k">if</span> <span class="n">use_pyglm</span><span class="p">:</span>
+
+        <span class="n">l1_regs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">reg_vals</span><span class="p">]</span>
+
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">GLMCV</span><span class="p">(</span>
+            <span class="n">distr</span><span class="o">=</span><span class="n">y_dist</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+            <span class="n">group</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">reg_lambda</span><span class="o">=</span><span class="n">l1_regs</span><span class="p">,</span>
+            <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
+            <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;cdfast&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">gl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Pull score, rename</span>
+        <span class="n">best_score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">calc_mse</span><span class="p">(</span><span class="n">gl</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">best_gl</span> <span class="o">=</span> <span class="n">gl</span>
+
+    <span class="c1"># Fit model</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">use_pyglm</span><span class="p">:</span>
+        <span class="n">best_gl</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">for</span> <span class="n">group_reg</span><span class="p">,</span> <span class="n">l1_reg</span> <span class="ow">in</span> <span class="n">reg_vals</span><span class="p">:</span>
+
+            <span class="c1"># Fit logistic/gaussian group lasso</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">use_pyglm</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+                    <span class="n">gl</span> <span class="o">=</span> <span class="n">GroupLasso</span><span class="p">(</span>
+                        <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
+                        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                        <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
+                        <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">elif</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+                    <span class="n">gl</span> <span class="o">=</span> <span class="n">LogisticGroupLasso</span><span class="p">(</span>
+                        <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
+                        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                        <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
+                        <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">gl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">calc_mse</span><span class="p">(</span><span class="n">gl</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="c1"># Score, possibly select</span>
+            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
+                <span class="n">best_gl</span> <span class="o">=</span> <span class="n">gl</span>
+
+    <span class="n">warnings</span><span class="o">.</span><span class="n">resetwarnings</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">best_gl</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span></div>
+
+
+<div class="viewcode-block" id="FeatureStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.FeatureStatistic">[docs]</a><span class="k">class</span> <span class="nc">FeatureStatistic</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The base knockoff feature statistic class, which can wrap any</span>
+<span class="sd">    generic prediction algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : </span>
+<span class="sd">        An instance of a class with a &quot;train&quot; or &quot;fit&quot; method</span>
+<span class="sd">        and a &quot;predict&quot; method.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : </span>
+<span class="sd">        A (predictive) model class underlying the variable importance</span>
+<span class="sd">        measures.</span>
+<span class="sd">    inds : np.ndarray</span>
+<span class="sd">        ``(2p,)``-dimensional array of indices representing the random</span>
+<span class="sd">        permutation applied to the concatenation of [X, Xk] before fitting</span>
+<span class="sd">        ``gl.``</span>
+<span class="sd">    rev_inds : np.ndarray:</span>
+<span class="sd">        Indices which reverse the effect of ``inds.`` In particular, if</span>
+<span class="sd">        M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```</span>
+<span class="sd">    score : float</span>
+<span class="sd">        A metric of the model&#39;s performance, as defined by ``score_type``.</span>
+<span class="sd">    score_type : str</span>
+<span class="sd">        One of MSE, CVMSE, accuracy, or cvaccuracy. (cv stands for</span>
+<span class="sd">        cross-validated)</span>
+<span class="sd">    Z : np.ndarray</span>
+<span class="sd">        a ``2p``-dimsional array of feature and knockoff importances. The</span>
+<span class="sd">        first p coordinates correspond to features, the last p correspond</span>
+<span class="sd">        to knockoffs.</span>
+<span class="sd">    W : np.ndarray</span>
+<span class="sd">        an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">        for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">        group knockoffs.</span>
+<span class="sd">    groups : np.ndarray</span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">        is a member of group `i`. Defaults to None (regular knockoffs).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>  <span class="c1"># sklearn/statsmodels/pyglmnet model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># permutation of features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># reverse permutation of features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># E.g. MSE/CV MSE model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># One of MSE, CVMSE, or accuracy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Z statistic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Grouping of features for group knockoffs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># W statistic</span>
+
+<div class="viewcode-block" id="FeatureStatistic.fit"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.FeatureStatistic.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">Xk</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_importance</span><span class="o">=</span><span class="s2">&quot;swap&quot;</span><span class="p">,</span>
+        <span class="n">antisym</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span>
+        <span class="n">group_agg</span><span class="o">=</span><span class="s2">&quot;avg&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains the model and creates feature importances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">        feature_importance : str</span>
+<span class="sd">            Specifies how to create feature importances from ``model``. </span>
+<span class="sd">            Two options:</span>
+<span class="sd">                - &quot;swap&quot;: The default swap-statistic from </span>
+<span class="sd">                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.</span>
+<span class="sd">                These are good measures of feature importance but</span>
+<span class="sd">                slightly slower.</span>
+<span class="sd">                - &quot;swapint&quot;: The swap-integral defined from</span>
+<span class="sd">                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</span>
+<span class="sd">            Defaults to &#39;swap&#39;</span>
+<span class="sd">        antisym : str</span>
+<span class="sd">            The antisymmetric function used to create (ungrouped) feature</span>
+<span class="sd">            statistics. Three options: </span>
+<span class="sd">            - &quot;CD&quot; (Difference of absolute vals of coefficients),</span>
+<span class="sd">            - &quot;SM&quot; (signed maximum).</span>
+<span class="sd">            - &quot;SCD&quot; (Simple difference of coefficients - NOT recommended)</span>
+<span class="sd">        group_agg : str</span>
+<span class="sd">            For group knockoffs, specifies how to turn individual feature</span>
+<span class="sd">            statistics into grouped feature statistics. Two options: </span>
+<span class="sd">            &quot;sum&quot; and &quot;avg&quot;.</span>
+<span class="sd">        **kwargs : **dict</span>
+<span class="sd">            kwargs to pass to the &#39;train&#39; or &#39;fit&#39; method of the model.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        W : np.ndarray</span>
+<span class="sd">            an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">            for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">            group knockoffs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;For base feature statistic class, must provide a trainable model class instance.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Permute features to prevent FDR control violations</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">]</span>
+
+        <span class="c1"># Train model</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;fit&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="si">}</span><span class="s2"> must have either a &#39;fit&#39; or &#39;train&#39; method&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Score using swap importances</span>
+        <span class="k">if</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;swap&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swap_feature_importances</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;swapint&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swap_path_feature_importances</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized feature_importance </span><span class="si">{</span><span class="n">feature_importance</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Combine Z statistics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">combine_Z_stats</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="n">antisym</span><span class="o">=</span><span class="n">antisym</span><span class="p">,</span> <span class="n">group_agg</span><span class="o">=</span><span class="n">group_agg</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span></div>
+
+<div class="viewcode-block" id="FeatureStatistic.swap_feature_importances"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances">[docs]</a>    <span class="k">def</span> <span class="nf">swap_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a model of the features and y, calculates feature importances</span>
+<span class="sd">        as follows.</span>
+
+<span class="sd">        For feature i, replace the feature with its knockoff and calculate</span>
+<span class="sd">        the relative increase in the loss. Similarly, for knockoff i, </span>
+<span class="sd">        replace the knockoffs with its feature and calculate the relative</span>
+<span class="sd">        increase in the loss.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        features : np.ndarray</span>
+<span class="sd">            ``(n, 2p)``-shaped array of concatenated features and knockoffs,</span>
+<span class="sd">            which must be permuted by ``self.inds``.</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Z_swap : np.ndarray</span>
+<span class="sd">            ``(2p,)``-shaped array of variable importances such that</span>
+<span class="sd">            Z_swap is in the same permuted as ``features`` initially were.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Parse aspects of the DGP</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Iteratively replace columns with their knockoffs/features</span>
+        <span class="n">Z_swap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">knockoff</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+
+                <span class="c1"># Unshuffle features and replace column</span>
+                <span class="n">new_features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">knockoff</span> <span class="o">*</span> <span class="n">p</span>  <span class="c1"># The column we calculate the score for</span>
+                <span class="n">partner</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">knockoff</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span>  <span class="c1"># its corresponding feature/knockoff</span>
+                <span class="n">new_features</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_features</span><span class="p">[:,</span> <span class="n">partner</span><span class="p">]</span>
+                <span class="n">new_features</span> <span class="o">=</span> <span class="n">new_features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">]</span>  <span class="c1"># Reshuffle cols for model</span>
+
+                <span class="c1"># Calculate loss</span>
+                <span class="n">Z_swap</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_model</span><span class="p">(</span><span class="n">new_features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="n">y_dist</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Z_swap</span></div>
+
+<div class="viewcode-block" id="FeatureStatistic.swap_path_feature_importances"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances">[docs]</a>    <span class="k">def</span> <span class="nf">swap_path_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_lambda</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Similar to ``swap_feature_importances``; see</span>
+<span class="sd">        http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Parse aspects of the DGP</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Baseline loss</span>
+        <span class="n">baseline_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_model</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="n">y_dist</span><span class="p">)</span>
+
+        <span class="c1"># Iteratively replace columns with their knockoffs/features</span>
+        <span class="n">lambda_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">lambd</span> <span class="o">=</span> <span class="n">step_size</span>
+        <span class="k">while</span> <span class="n">lambd</span> <span class="o">&lt;=</span> <span class="n">max_lambda</span><span class="p">:</span>
+            <span class="n">lambda_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lambd</span><span class="p">)</span>
+            <span class="n">lambd</span> <span class="o">+=</span> <span class="n">step_size</span>
+        <span class="n">lambda_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lambda_vals</span><span class="p">)</span>
+
+        <span class="c1"># DP approach to calculating area</span>
+        <span class="n">Z_swap_lambd_prev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">baseline_loss</span>
+        <span class="n">Z_swap_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">lambd</span> <span class="ow">in</span> <span class="n">lambda_vals</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">knockoff</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+
+                    <span class="c1"># Unshuffle features and replace column</span>
+                    <span class="n">new_features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">knockoff</span> <span class="o">*</span> <span class="n">p</span>  <span class="c1"># The column we calculate the score for</span>
+                    <span class="n">partner</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">knockoff</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span>
+                    <span class="p">)</span>  <span class="c1"># its corresponding feature/knockoff</span>
+
+                    <span class="c1"># Calc new col as linear interpolation btwn col and partner</span>
+                    <span class="n">fk_diff</span> <span class="o">=</span> <span class="n">new_features</span><span class="p">[:,</span> <span class="n">partner</span><span class="p">]</span> <span class="o">-</span> <span class="n">new_features</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]</span>
+                    <span class="n">new_col</span> <span class="o">=</span> <span class="n">new_features</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]</span> <span class="o">+</span> <span class="n">lambd</span> <span class="o">*</span> <span class="p">(</span><span class="n">fk_diff</span><span class="p">)</span>
+
+                    <span class="c1"># Set new column and reshuffle</span>
+                    <span class="n">new_features</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_col</span>
+                    <span class="n">new_features</span> <span class="o">=</span> <span class="n">new_features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">]</span>  <span class="c1"># Reshuffle</span>
+
+                    <span class="c1"># Calculate area under curve</span>
+                    <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_model</span><span class="p">(</span><span class="n">new_features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="n">y_dist</span><span class="p">)</span>
+                    <span class="n">avg_trapezoid_height</span> <span class="o">=</span> <span class="p">(</span><span class="n">Z_swap_lambd_prev</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">+</span> <span class="n">loss</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                    <span class="n">Z_swap_int</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">+=</span> <span class="n">step_size</span> <span class="o">*</span> <span class="n">avg_trapezoid_height</span>
+
+                    <span class="c1"># Cache for DP</span>
+                    <span class="n">Z_swap_lambd_prev</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span>
+
+        <span class="k">return</span> <span class="n">Z_swap_int</span></div>
+
+<div class="viewcode-block" id="FeatureStatistic.score_model"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.FeatureStatistic.score_model">[docs]</a>    <span class="k">def</span> <span class="nf">score_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes mean-squared error of self.model on</span>
+<span class="sd">        (features, y) when y is nonbinary, and computes</span>
+<span class="sd">        1 - accuracy otherwise.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        loss : float</span>
+<span class="sd">            Either the MSE or one minus the accuracy of the model,</span>
+<span class="sd">            depending on whether y is continuous or binary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make sure model exists</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must train self.model before calling model_training_loss&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Parse y distribution</span>
+        <span class="k">if</span> <span class="n">y_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># MSE for gaussian data</span>
+        <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+            <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">preds</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="c1"># 1- accuracy for binomial data</span>
+        <span class="k">elif</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+            <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+            <span class="n">accuracy</span> <span class="o">=</span> <span class="p">(</span><span class="n">preds</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">accuracy</span>
+            <span class="c1"># log_probs = self.model.predict_log_proba(features)</span>
+            <span class="c1"># log_probs[log_probs == -np.inf] = -10 # Numerical errors</span>
+            <span class="c1"># # TODO: should normalize</span>
+            <span class="c1"># loss = -1*log_probs[:, y.astype(&#39;int32&#39;)].mean()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected y_dist = </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+<div class="viewcode-block" id="FeatureStatistic.cv_score_model"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.FeatureStatistic.cv_score_model">[docs]</a>    <span class="k">def</span> <span class="nf">cv_score_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cv_score</span><span class="p">,</span> <span class="n">logistic_flag</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Similar to score_model, but uses cross-validated scoring if cv_score=True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Possibly, compute CV MSE/Accuracy, although this</span>
+        <span class="c1"># can be very expensive (e.g. for LARS solver)</span>
+        <span class="k">if</span> <span class="n">cv_score</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">RegressorMixin</span><span class="p">):</span>
+
+                <span class="c1"># Parse whether to use MSE or Accuracy</span>
+                <span class="k">if</span> <span class="n">logistic_flag</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;accuracy_cv&quot;</span>
+                    <span class="n">scoring</span> <span class="o">=</span> <span class="s2">&quot;accuracy&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;mse_cv&quot;</span>
+                    <span class="n">scoring</span> <span class="o">=</span> <span class="s2">&quot;neg_mean_squared_error&quot;</span>
+                <span class="n">cv_scores</span> <span class="o">=</span> <span class="n">model_selection</span><span class="o">.</span><span class="n">cross_val_score</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">scoring</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Adjust negative mse to be positive</span>
+                <span class="k">if</span> <span class="n">scoring</span> <span class="o">==</span> <span class="s2">&quot;neg_mean_squared_error&quot;</span><span class="p">:</span>
+                    <span class="n">cv_scores</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">cv_scores</span>
+
+                <span class="c1"># Take the mean</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="n">cv_scores</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Model is of </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">, must be sklearn estimator for cvscoring&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">logistic_flag</span><span class="p">:</span>
+                <span class="n">y_dist</span> <span class="o">=</span> <span class="s2">&quot;binomial&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;log_likelihood&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">y_dist</span> <span class="o">=</span> <span class="s2">&quot;gaussian&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;mse&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_model</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="n">y_dist</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RidgeStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.RidgeStatistic">[docs]</a><span class="k">class</span> <span class="nc">RidgeStatistic</span><span class="p">(</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Ridge statistic wrapper class &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="RidgeStatistic.fit"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.RidgeStatistic.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">Xk</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">antisym</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span>
+        <span class="n">group_agg</span><span class="o">=</span><span class="s2">&quot;avg&quot;</span><span class="p">,</span>
+        <span class="n">cv_score</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps the FeatureStatistic class but uses cross-validated Ridge</span>
+<span class="sd">        coefficients as variable importances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">        antisym : str</span>
+<span class="sd">            The antisymmetric function used to create (ungrouped) feature</span>
+<span class="sd">            statistics. Three options: </span>
+<span class="sd">            - &quot;CD&quot; (Difference of absolute vals of coefficients),</span>
+<span class="sd">            - &quot;SM&quot; (signed maximum).</span>
+<span class="sd">            - &quot;SCD&quot; (Simple difference of coefficients - NOT recommended)</span>
+<span class="sd">        group_agg : str</span>
+<span class="sd">            For group knockoffs, specifies how to turn individual feature</span>
+<span class="sd">            statistics into grouped feature statistics. Two options: </span>
+<span class="sd">            &quot;sum&quot; and &quot;avg&quot;.</span>
+<span class="sd">        cv_score : bool</span>
+<span class="sd">            If true, score the feature statistic&#39;s predictive accuracy</span>
+<span class="sd">            using cross validation.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra kwargs to pass to underlying Lasso classes</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        W : np.ndarray</span>
+<span class="sd">            an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">            for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">            group knockoffs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Possibly set default groups</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Check if y_dist is gaussian, binomial</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_dist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_dist</span>
+
+        <span class="c1"># Step 1: Calculate Z stats by fitting ridge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">fit_ridge</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="o">=</span><span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,)</span>
+
+        <span class="c1"># Retrieve Z statistics and save cv scores</span>
+        <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cv_values_</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;mse_cv&quot;</span>
+        <span class="k">elif</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">scores_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;accuracy_cv&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;y_dist&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Combine Z statistics</span>
+        <span class="n">W_group</span> <span class="o">=</span> <span class="n">combine_Z_stats</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">antisym</span><span class="o">=</span><span class="n">antisym</span><span class="p">,</span> <span class="n">group_agg</span><span class="o">=</span><span class="n">group_agg</span><span class="p">)</span>
+
+        <span class="c1"># Save values for later use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W_group</span>
+        <span class="k">return</span> <span class="n">W_group</span></div></div>
+
+
+<div class="viewcode-block" id="LassoStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.LassoStatistic">[docs]</a><span class="k">class</span> <span class="nc">LassoStatistic</span><span class="p">(</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Lasso Statistic wrapper class &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LassoStatistic.fit"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.LassoStatistic.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">Xk</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">zstat</span><span class="o">=</span><span class="s2">&quot;coef&quot;</span><span class="p">,</span>
+        <span class="n">use_pyglm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">group_lasso</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">antisym</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span>
+        <span class="n">group_agg</span><span class="o">=</span><span class="s2">&quot;avg&quot;</span><span class="p">,</span>
+        <span class="n">cv_score</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">debias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">Ginv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps the FeatureStatistic class but uses cross-validated Lasso</span>
+<span class="sd">        coefficients or Lasso path statistics as variable importances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">        zstat : str:</span>
+<span class="sd">            Two options for the variable importance measure:</span>
+<span class="sd">            - If &#39;coef&#39;, uses to cross-validated (group) lasso coefficients.</span>
+<span class="sd">            - If &#39;lars_path&#39;, uses the lambda value where each feature/knockoff</span>
+<span class="sd">            enters the lasso path (meaning becomes nonzero).</span>
+<span class="sd">            This defaults to coef.</span>
+<span class="sd">        use_pyglm : bool</span>
+<span class="sd">            When fitting the group lasso, use the pyglm package if True (default).</span>
+<span class="sd">            Else, use the group_lasso package.</span>
+<span class="sd">        y_dist : str</span>
+<span class="sd">            One of &quot;binomial&quot; or &quot;gaussian&quot;</span>
+<span class="sd">        group_lasso : bool</span>
+<span class="sd">            If True, use a true group lasso. Else just use the sklearn ungrouped</span>
+<span class="sd">            lasso.</span>
+<span class="sd">        antisym : str</span>
+<span class="sd">            The antisymmetric function used to create (ungrouped) feature</span>
+<span class="sd">            statistics. Three options: </span>
+<span class="sd">            - &quot;CD&quot; (Difference of absolute vals of coefficients),</span>
+<span class="sd">            - &quot;SM&quot; (signed maximum).</span>
+<span class="sd">            - &quot;SCD&quot; (Simple difference of coefficients - NOT recommended)</span>
+<span class="sd">        group_agg : str</span>
+<span class="sd">            For group knockoffs, specifies how to turn individual feature</span>
+<span class="sd">            statistics into grouped feature statistics. Two options: </span>
+<span class="sd">            &quot;sum&quot; and &quot;avg&quot;.</span>
+<span class="sd">        cv_score : bool</span>
+<span class="sd">            If true, score the feature statistic&#39;s predictive accuracy</span>
+<span class="sd">            using cross validation.</span>
+<span class="sd">        debias : bool:</span>
+<span class="sd">            If true, debias the lasso. See https://arxiv.org/abs/1508.02757</span>
+<span class="sd">        Ginv : np.ndarray</span>
+<span class="sd">            ``(2p, 2p)``-shaped precision matrix for the feature-knockoff </span>
+<span class="sd">            covariate distribution. This must be specified if ``debias=True``.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra kwargs to pass to underlying Lasso classes</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        W : np.ndarray</span>
+<span class="sd">            an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">            for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">            group knockoffs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Possibly set default groups</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Check if y_dist is gaussian, binomial, poisson</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_dist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Step 1: Calculate Z statistics</span>
+        <span class="n">zstat</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">zstat</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">zstat</span> <span class="o">==</span> <span class="s2">&quot;coef&quot;</span><span class="p">:</span>
+
+            <span class="c1"># Fit (possibly group) lasso</span>
+            <span class="n">gl</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">fit_group_lasso</span><span class="p">(</span>
+                <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
+                <span class="n">Xk</span><span class="o">=</span><span class="n">Xk</span><span class="p">,</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+                <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span>
+                <span class="n">use_pyglm</span><span class="o">=</span><span class="n">use_pyglm</span><span class="p">,</span>
+                <span class="n">group_lasso</span><span class="o">=</span><span class="n">group_lasso</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Parse the expected output format based on which</span>
+            <span class="c1"># lasso package we are using</span>
+            <span class="n">reg_lasso_flag</span> <span class="o">=</span> <span class="n">use_reg_lasso</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">group_lasso</span><span class="p">)</span>
+            <span class="n">logistic_flag</span> <span class="o">=</span> <span class="n">parse_logistic_flag</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="c1"># Retrieve Z statistics</span>
+            <span class="k">if</span> <span class="n">use_pyglm</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">reg_lasso_flag</span><span class="p">:</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">beta_</span><span class="p">[</span><span class="n">rev_inds</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">reg_lasso_flag</span> <span class="ow">and</span> <span class="n">logistic_flag</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gl</span><span class="o">.</span><span class="n">coef_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Unexpected shape for logistic lasso coefficients (sklearn)&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">rev_inds</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="n">rev_inds</span><span class="p">]</span>
+
+            <span class="c1"># Possibly debias the lasso</span>
+            <span class="k">if</span> <span class="n">debias</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">Ginv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;To debias the lasso, Ginv must be provided&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">logistic_flag</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Debiased lasso is not implemented for binomial data&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">debias_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Ginv</span><span class="p">,</span> <span class="n">features</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                    <span class="n">debias_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">debias_term</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">Z</span><span class="p">))</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span> <span class="o">+</span> <span class="n">debias_term</span> <span class="o">/</span> <span class="n">n</span>
+
+            <span class="c1"># Save lasso class and reverse inds</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">gl</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inds</span> <span class="o">=</span> <span class="n">inds</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">rev_inds</span>
+
+            <span class="c1"># Try to save cv accuracy for logistic lasso</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegressionCV</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">scores_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;accuracy_cv&quot;</span>
+            <span class="c1"># Save cv mse for lasso</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LassoCV</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">mse_path_</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="s2">&quot;mse_cv&quot;</span>
+            <span class="c1"># Else compute the score</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">inds</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cv_score_model</span><span class="p">(</span>
+                    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+                    <span class="n">cv_score</span><span class="o">=</span><span class="n">cv_score</span><span class="p">,</span>
+                    <span class="n">logistic_flag</span><span class="o">=</span><span class="n">logistic_flag</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">zstat</span> <span class="o">==</span> <span class="s2">&quot;lars_path&quot;</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">calc_lars_path</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;zstat (</span><span class="si">{</span><span class="n">zstat</span><span class="si">}</span><span class="s1">) must be one of &quot;coef&quot;, &quot;lars_path&quot;&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Combine Z statistics</span>
+        <span class="n">W_group</span> <span class="o">=</span> <span class="n">combine_Z_stats</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">antisym</span><span class="o">=</span><span class="n">antisym</span><span class="p">,</span> <span class="n">group_agg</span><span class="o">=</span><span class="n">group_agg</span><span class="p">)</span>
+
+        <span class="c1"># Save values for later use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W_group</span>
+        <span class="k">return</span> <span class="n">W_group</span></div></div>
+
+
+<div class="viewcode-block" id="MargCorrStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.MargCorrStatistic">[docs]</a><span class="k">class</span> <span class="nc">MargCorrStatistic</span><span class="p">(</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Lasso Statistic wrapper class &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MargCorrStatistic.fit"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.MargCorrStatistic.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps the FeatureStatistic class using marginal correlations </span>
+<span class="sd">        between X, Xk and y as variable importances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra kwargs to pass to underlying ``combine_Z_stats``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        W : np.ndarray</span>
+<span class="sd">            an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">            for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">            group knockoffs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Calc correlations</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">correlations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Combine</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">combine_Z_stats</span><span class="p">(</span><span class="n">correlations</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">correlations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W</span>
+
+        <span class="k">return</span> <span class="n">W</span></div></div>
+
+
+<div class="viewcode-block" id="OLSStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.OLSStatistic">[docs]</a><span class="k">class</span> <span class="nc">OLSStatistic</span><span class="p">(</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Lasso Statistic wrapper class &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="OLSStatistic.fit"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.OLSStatistic.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cv_score</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps the FeatureStatistic class with OLS coefs as variable importances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">        cv_score : bool</span>
+<span class="sd">            If true, score the feature statistic&#39;s predictive accuracy</span>
+<span class="sd">            using cross validation.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra kwargs to pass to ``combine_Z_stats``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        W : np.ndarray</span>
+<span class="sd">            an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">            for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">            group knockoffs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Run linear regression, permute indexes to prevent FDR violations</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">]</span>
+
+        <span class="n">lm</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">(</span><span class="n">fit_intercept</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">coef_</span>
+
+        <span class="c1"># Play with shape</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unexpected shape </span><span class="si">{</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> for sklearn LinearRegression coefs (expected (</span><span class="si">{</span><span class="mi">2</span><span class="o">*</span><span class="n">p</span><span class="si">}</span><span class="s2">,))&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Undo random permutation</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[</span><span class="n">rev_inds</span><span class="p">]</span>
+
+        <span class="c1"># Combine with groups to create W-statistic</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">combine_Z_stats</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Save</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">lm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span> <span class="o">=</span> <span class="n">inds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">rev_inds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W</span>
+
+        <span class="c1"># Score model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_score_model</span><span class="p">(</span>
+            <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">cv_score</span><span class="o">=</span><span class="n">cv_score</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">W</span></div></div>
+
+
+<div class="viewcode-block" id="RandomForestStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.RandomForestStatistic">[docs]</a><span class="k">class</span> <span class="nc">RandomForestStatistic</span><span class="p">(</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomForestStatistic.fit"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.RandomForestStatistic.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">Xk</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_importance</span><span class="o">=</span><span class="s2">&quot;swap&quot;</span><span class="p">,</span>
+        <span class="n">antisym</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span>
+        <span class="n">group_agg</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+        <span class="n">cv_score</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps the FeatureStatistic class using a Random Forest to </span>
+<span class="sd">        generate variable importances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">        feature_importance : str</span>
+<span class="sd">            Specifies how to create feature importances from ``model``. </span>
+<span class="sd">            Three options:</span>
+<span class="sd">                - &quot;sklearn&quot;: Use sklearn feature importances. These</span>
+<span class="sd">                are very poor measures of feature importance, but</span>
+<span class="sd">                very fast.</span>
+<span class="sd">                - &quot;swap&quot;: The default swap-statistic from </span>
+<span class="sd">                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.</span>
+<span class="sd">                These are good measures of feature importance but</span>
+<span class="sd">                slightly slower.</span>
+<span class="sd">                - &quot;swapint&quot;: The swap-integral defined from</span>
+<span class="sd">                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</span>
+<span class="sd">            Defaults to &#39;swap&#39;</span>
+<span class="sd">        antisym : str</span>
+<span class="sd">            The antisymmetric function used to create (ungrouped) feature</span>
+<span class="sd">            statistics. Three options: </span>
+<span class="sd">            - &quot;CD&quot; (Difference of absolute vals of coefficients),</span>
+<span class="sd">            - &quot;SM&quot; (signed maximum).</span>
+<span class="sd">            - &quot;SCD&quot; (Simple difference of coefficients - NOT recommended)</span>
+<span class="sd">        group_agg : str</span>
+<span class="sd">            For group knockoffs, specifies how to turn individual feature</span>
+<span class="sd">            statistics into grouped feature statistics. Two options: </span>
+<span class="sd">            &quot;sum&quot; and &quot;avg&quot;.</span>
+<span class="sd">        cv_score : bool</span>
+<span class="sd">            If true, score the feature statistic&#39;s predictive accuracy</span>
+<span class="sd">            using cross validation. This is extremely expensive for random</span>
+<span class="sd">            forests.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra kwargs to pass to underlying RandomForest class</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        W : np.ndarray</span>
+<span class="sd">            an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">            for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">            group knockoffs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Bind data</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Randomize coordinates to make sure everything is symmetric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">]</span>
+
+        <span class="c1"># By default, all variables are their own group</span>
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+
+        <span class="c1"># Parse y_dist, initialize model</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="c1"># Avoid future warnings</span>
+        <span class="k">if</span> <span class="s2">&quot;n_estimators&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">RandomForestRegressor</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">RandomForestClassifier</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Fit model, get Z statistics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">feature_importance</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">feature_importance</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_importances_</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;swap&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swap_feature_importances</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;swapint&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swap_path_feature_importances</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;feature_importance </span><span class="si">{</span><span class="n">feature_importance</span><span class="si">}</span><span class="s2"> must be one of &#39;swap&#39;, &#39;swapint&#39;, &#39;default&#39;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Get W statistics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">combine_Z_stats</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="n">antisym</span><span class="o">=</span><span class="n">antisym</span><span class="p">,</span> <span class="n">group_agg</span><span class="o">=</span><span class="n">group_agg</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Possibly score model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_score_model</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">cv_score</span><span class="o">=</span><span class="n">cv_score</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span></div></div>
+
+
+<div class="viewcode-block" id="DeepPinkStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.DeepPinkStatistic">[docs]</a><span class="k">class</span> <span class="nc">DeepPinkStatistic</span><span class="p">(</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+<div class="viewcode-block" id="DeepPinkStatistic.fit"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.DeepPinkStatistic.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">Xk</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_importance</span><span class="o">=</span><span class="s2">&quot;deeppink&quot;</span><span class="p">,</span>
+        <span class="n">antisym</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span>
+        <span class="n">group_agg</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+        <span class="n">cv_score</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">train_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps the FeatureStatistic class using DeepPINK to generate</span>
+<span class="sd">        variable importances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to None (regular knockoffs). </span>
+<span class="sd">        feature_importance : str</span>
+<span class="sd">            Specifies how to create feature importances from ``model``. </span>
+<span class="sd">            Four options:</span>
+<span class="sd">                - &quot;deeppink&quot;: Use the deeppink feature importance</span>
+<span class="sd">                defined in https://arxiv.org/abs/1809.01185</span>
+<span class="sd">                - &quot;unweighted&quot;: Use the Z weights from the deeppink</span>
+<span class="sd">                paper without weighting them using the layers from</span>
+<span class="sd">                the MLP. Deeppink usually outperforms this feature</span>
+<span class="sd">                importance (but not always).</span>
+<span class="sd">                - &quot;swap&quot;: The default swap-statistic from </span>
+<span class="sd">                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</span>
+<span class="sd">                - &quot;swapint&quot;: The swap-integral defined from</span>
+<span class="sd">                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</span>
+<span class="sd">            Defaults to deeppink, which is often both the most powerful and </span>
+<span class="sd">            the most computationally efficient.</span>
+<span class="sd">        antisym : str</span>
+<span class="sd">            The antisymmetric function used to create (ungrouped) feature</span>
+<span class="sd">            statistics. Three options: </span>
+<span class="sd">            - &quot;CD&quot; (Difference of absolute vals of coefficients),</span>
+<span class="sd">            - &quot;SM&quot; (signed maximum).</span>
+<span class="sd">            - &quot;SCD&quot; (Simple difference of coefficients - NOT recommended)</span>
+<span class="sd">        group_agg : str</span>
+<span class="sd">            For group knockoffs, specifies how to turn individual feature</span>
+<span class="sd">            statistics into grouped feature statistics. Two options: </span>
+<span class="sd">            &quot;sum&quot; and &quot;avg&quot;.</span>
+<span class="sd">        cv_score : bool</span>
+<span class="sd">            If true, score the feature statistic&#39;s predictive accuracy</span>
+<span class="sd">            using cross validation. This is extremely expensive for random</span>
+<span class="sd">            forests.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra kwargs to pass to underlying RandomForest class</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        W : np.ndarray</span>
+<span class="sd">            an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">            for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">            group knockoffs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check if kpytorch (and therefore deeppink) is available.</span>
+        <span class="n">utilities</span><span class="o">.</span><span class="n">check_kpytorch_available</span><span class="p">(</span><span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;deepPINK statistics&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">.kpytorch</span> <span class="kn">import</span> <span class="n">deeppink</span>
+
+        <span class="c1"># Bind data</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Randomize coordinates to make sure everything is symmetric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># By default, all variables are their own group</span>
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+
+        <span class="c1"># Parse y_dist, hidden_sizes, initialize model</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;hidden_sizes&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;hidden_sizes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">deeppink</span><span class="o">.</span><span class="n">DeepPinkModel</span><span class="p">(</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+        <span class="c1"># Train model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">deeppink</span><span class="o">.</span><span class="n">train_deeppink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">train_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="c1"># Get Z statistics</span>
+        <span class="n">feature_importance</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">feature_importance</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;deeppink&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_importances</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;unweighted&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_importances</span><span class="p">(</span><span class="n">weight_scores</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;swap&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swap_feature_importances</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;swapint&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swap_path_feature_importances</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;feature_importance </span><span class="si">{</span><span class="n">feature_importance</span><span class="si">}</span><span class="s2"> must be one of &#39;deeppink&#39;, &#39;unweighted&#39;, &#39;swap&#39;, &#39;swapint&#39;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Get W statistics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">combine_Z_stats</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="n">antisym</span><span class="o">=</span><span class="n">antisym</span><span class="p">,</span> <span class="n">group_agg</span><span class="o">=</span><span class="n">group_agg</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Possibly score model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_score_model</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">cv_score</span><span class="o">=</span><span class="n">cv_score</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span></div></div>
+
+
+<div class="viewcode-block" id="data_dependent_threshhold"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.data_dependent_threshhold">[docs]</a><span class="k">def</span> <span class="nf">data_dependent_threshhold</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate data-dependent threshhold given W statistics.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    W : np.ndarray</span>
+<span class="sd">        p-length numpy array of feature statistics OR (p, batch_length) </span>
+<span class="sd">        shaped array.</span>
+<span class="sd">    fdr : float</span>
+<span class="sd">        desired level of false discovery rate control</span>
+<span class="sd">    offset : int</span>
+<span class="sd">        If offset = 0, control the modified FDR.</span>
+<span class="sd">        If offset = 1 (default), controls the FDR exactly.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    T : float or np.ndarray</span>
+<span class="sd">        The data-dependent threshhold. Either a float or a (batch_length,) </span>
+<span class="sd">        dimensional array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Add dummy batch axis if necessary</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Sort W by absolute values</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">sorted_W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take_along_axis</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">ind</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Calculate ratios</span>
+    <span class="n">negatives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sorted_W</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sorted_W</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">positives</span><span class="p">[</span><span class="n">positives</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Don&#39;t divide by 0</span>
+    <span class="n">ratios</span> <span class="o">=</span> <span class="p">(</span><span class="n">negatives</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span> <span class="o">/</span> <span class="n">positives</span>
+
+    <span class="c1"># Add zero as an option to prevent index errors</span>
+    <span class="c1"># (zero means select everything strictly &gt; 0)</span>
+    <span class="n">sorted_W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">sorted_W</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">batch</span><span class="p">))],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Find maximum indexes satisfying FDR control</span>
+    <span class="c1"># Adding np.arange is just a batching trick</span>
+    <span class="n">helper</span> <span class="o">=</span> <span class="p">(</span><span class="n">ratios</span> <span class="o">&lt;=</span> <span class="n">fdr</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">p</span>
+    <span class="n">sorted_W</span><span class="p">[</span><span class="mi">1</span><span class="p">:][</span><span class="n">helper</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>  <span class="c1"># Never select values where the ratio &gt; fdr</span>
+    <span class="n">T_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">helper</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">more_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">T_inds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># Find Ts</span>
+    <span class="n">acceptable</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sorted_W</span><span class="p">)[</span><span class="n">T_inds</span><span class="p">,</span> <span class="n">more_inds</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Replace 0s with a very small value to ensure that</span>
+    <span class="c1"># downstream you don&#39;t select W statistics == 0.</span>
+    <span class="c1"># This value is the smallest abs value of nonzero W</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">acceptable</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">W_new</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">W_new</span><span class="p">[</span><span class="n">W_new</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">zero_replacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">W_new</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">acceptable</span><span class="p">[</span><span class="n">acceptable</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero_replacement</span><span class="p">[</span><span class="n">acceptable</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">batch</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">acceptable</span> <span class="o">=</span> <span class="n">acceptable</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">acceptable</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v1.0.4
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.3/index.html">v1.0.3</a></dd>
+      <dd><a href="knockoff_stats.html">v1.0.4</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

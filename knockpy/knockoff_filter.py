@@ -303,7 +303,7 @@ class KnockoffFilter:
             Three options:
                 - if ``None``, does nothing.
                 - if an integer > 1, uses the first "recycle_up_to"
-                rows of X as the the first "recycle_up_to" rows of knockoffs.
+                rows of X as the the first ``recycle_up_to`` rows of knockoffs
                 - if a float between 0 and 1 (inclusive), interpreted
                 as the proportion of rows to recycle. 
             For more on recycling, see https://arxiv.org/abs/1602.03574
