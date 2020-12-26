@@ -463,7 +463,7 @@ class TestKnockoffFilter(TestFdrControl):
             rho=rho,
             infer_sigma=True,
             S_method="mvr",
-            filter_kwargs={"num_factors":2},
+            filter_kwargs={"num_factors":2, 'fstat':'margcorr'},
             test_grouped=False,
         )
         time_factored = time.time() - time0
@@ -478,14 +478,14 @@ class TestKnockoffFilter(TestFdrControl):
             rho=rho,
             infer_sigma=True,
             S_method="mvr",
-            filter_kwargs={"num_factors":None},
+            filter_kwargs={"num_factors":None, 'fstat':'margcorr'},
             test_grouped=False,
         )
         time_unfactored = time.time() - time0
         print(f"Unfactored time is {time_unfactored}")
         self.assertTrue(
-            1.2*time_factored < time_unfactored,
-            msg=f"time for factor apprx ({time_factored}) > 1.2*time for no apprx ({time_unfactored})"
+            1.5*time_factored < time_unfactored,
+            msg=f"time for factor apprx ({time_factored}) > 1.5*time for no apprx ({time_unfactored})"
         )
 
 
