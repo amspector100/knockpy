@@ -236,7 +236,7 @@ def _solve_mvr_ungrouped(
     Sigma,
     tol=1e-5,
     verbose=False,
-    num_iter=10,
+    num_iter=50,
     smoothing=0,
     rej_rate=0,
     converge_tol=1,
@@ -640,7 +640,7 @@ def solve_mvr(
     groups=None,
     tol=1e-5,
     verbose=False,
-    num_iter=10,
+    num_iter=50,
     smoothing=0,
     rej_rate=0,
     converge_tol=1,
@@ -764,7 +764,7 @@ def solve_maxent_factored(
     U,
     tol=1e-5,
     verbose=False,
-    num_iter=10,
+    num_iter=50,
     converge_tol=1e-4,
 ):
     """
@@ -852,9 +852,7 @@ def solve_maxent_factored(
             )
             # Update S
             Sdiag[j] = Sjstar
-            
-    # S = utilities.shift_until_PSD(S, tol=tol)
-    # S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
+
     return np.diag(Sdiag)
 
 
@@ -862,7 +860,7 @@ def solve_maxent(
     Sigma, 
     tol=1e-5,
     verbose=False,
-    num_iter=10,
+    num_iter=50,
     converge_tol=1e-4,
     choldate_warning=True,
 ):
