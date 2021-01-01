@@ -5,7 +5,7 @@ import time
 import numpy as np
 import scipy as sp
 from scipy import stats
-from . import utilities, constants
+from . import utilities, constants, mac
 try:
     import choldate
     CHOLDATE_AVAILABLE = True
@@ -350,6 +350,7 @@ def _solve_mvr_ungrouped(
 
     return S
 
+### Group MVR
 def _solve_mvr_quadratic_group(cn_diff, cd_diff, cn_S, cd_S):
     """
     Internal helper function for group mvr.
@@ -429,6 +430,19 @@ def _mvr_group_contrib(Q, R, i, j):
     
     return objective, min_delta, max_delta
 
+def _solve_cn_cd(Q, R, j):
+    """
+    Solves for cn/cd using QR decomp. This is 
+    specialized for diagonal elements for group knockoffs.
+    See https://arxiv.org/abs/2011.14625.
+    """
+    # Notational note: W = (QR)^{-1}
+    Wj = sp.linalg.solve_triangular(a=R, b=Q[j], lower=False)
+    inv = np.linalg.inv(np.dot(Q, R))
+    cd = Wj[j]
+    cn = np.power(Wj, 2).sum()
+    return cn, cd
+
 def _solve_mvr_grouped(
     Sigma,
     groups=None,
@@ -487,6 +501,7 @@ def _solve_mvr_grouped(
                 S_elems.append(((i, j), (i_within, j_within), g_id))
                 
     # Basis elements
+    p = Sigma.shape[0]
     basis = []
     for j in range(p):
         ej = np.zeros(p)
@@ -501,7 +516,7 @@ def _solve_mvr_grouped(
     # Initialize values
     decayed_improvement = 10
     min_eig = np.linalg.eigh(Sigma)[0].min()
-    S = knockpy.mac.solve_equicorrelated(Sigma, groups)/2
+    S = mac.solve_equicorrelated(Sigma, groups)/2
     Q, R = np.linalg.qr(2 * Sigma - S + smoothing * np.eye(p))
 
     # Running QR decompositions of blocks of S
@@ -569,13 +584,12 @@ def _solve_mvr_grouped(
 
             # For diagonal elements, rank-1 update
             else:
-                cn_diff, cd_diff = solve_cn_cd(Q, R, i, j)
+                cn_diff, cd_diff = _solve_cn_cd(Q, R, j)
 
                 # 2. Compute coefficients cn and cd for S
-                cn_S, cd_S = solve_cn_cd(
+                cn_S, cd_S = _solve_cn_cd(
                     Q=Q_S,
                     R=R_S,
-                    i=i_within,
                     j=j_within
                 )
 
@@ -609,7 +623,7 @@ def _solve_mvr_grouped(
 
         # Check for convergence
         prev_loss = loss
-        loss = mrc.mvr_loss(Sigma, acc_rate * S, smoothing=smoothing)
+        loss = mvr_loss(Sigma, acc_rate * S, smoothing=smoothing)
         if it != 0:
             decayed_improvement = decayed_improvement / 10 + 9 * (prev_loss - loss) / 10
         if verbose:

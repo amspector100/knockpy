@@ -673,6 +673,39 @@ class TestMRCSolvers(CheckSMatrix):
                 msg=f"For {method}, coord descent mmi solver has higher loss {cd_mmi_loss} v. PSGD {psgd_mmi_loss}",
             )
 
+    def test_cd_group_mvr(self):
+
+        np.random.seed(110)
+        p = 100
+        for method in ['ar1', 'ver', 'qer']:
+            # Sample data
+            dgprocess = knockpy.dgp.DGP()
+            dgprocess.sample_data(method=method, p=p)
+            Sigma = dgprocess.Sigma
+
+            # Sanity check: grouped solver gets right soln for ungrouped
+            S1 = mrc._solve_mvr_grouped(
+                Sigma, groups=np.arange(1, p+1), converge_tol=1e-2, verbose=True
+            )
+            S2 = mrc.solve_mvr(Sigma)
+            Sdiff = S1 - S2
+            mean_diff = np.abs(Sdiff[Sdiff != 0]).mean()
+            err_msg = f"For no groups, method={method}, avg diff. between grouped/ungrouped solvers is {mean_diff} > 1e-2"
+            err_msg = f"grouped solver: {S1} \n ungrouped solver: {S2} \n" + err_msg
+            self.assertTrue(
+                mean_diff < 1e-2, err_msg
+            )
+
+            # Check that adding groups lowers loss
+            loss_ungrouped = mrc.mvr_loss(Sigma, S2)
+            groups = np.around(np.arange(1, p+1)/2)
+            Sgroup = mrc.solve_mvr(Sigma, groups)
+            loss_grouped = mrc.mvr_loss(Sigma, Sgroup)
+            self.assertTrue(
+                loss_grouped < loss_ungrouped,
+                f"Grouped loss ({loss_grouped}) > ungrouped loss ({loss_ungrouped}) for method={method}" 
+            )
+
     def test_complex_group_solns(self):
         """
         Check the solutions of the PSGD solver
