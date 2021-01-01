@@ -415,18 +415,17 @@ def _mvr_group_contrib(Q, R, i, j):
         [Wi[j], Wj[j]], 
         [Wi[i], Wi[j]]
     ])
-    def boundary_search(upper=True):
-        min_infeasible = 2 if upper else -2 # works better for scaled cov matrices
-        max_feasible = 0
-        for _ in range(10):
-            max_delta = (max_feasible + min_infeasible)/2
-            if np.linalg.eig(I + max_delta*B)[0].min() < 0:
-                min_infeasible = max_delta
-            else:
-                max_feasible = max_delta
-        return max_feasible
-    min_delta = boundary_search(upper=False)
-    max_delta = boundary_search(upper=True)
+    eigs_B = np.linalg.eig(B)[0]
+    max_delta = -1 * (eigs_B[eigs_B < 0])
+    if max_delta.shape[0] == 0:
+        max_delta = np.inf
+    else:
+        max_delta = (1/max_delta).max() - 1e-5
+    min_delta = -1 * (eigs_B[eigs_B > 0])
+    if min_delta.shape[0] == 0:
+        min_delta = -np.inf
+    else:
+        min_delta = (1/min_delta).max() + 1e-5
     
     return objective, min_delta, max_delta
 
@@ -438,7 +437,6 @@ def _solve_cn_cd(Q, R, j):
     """
     # Notational note: W = (QR)^{-1}
     Wj = sp.linalg.solve_triangular(a=R, b=Q[j], lower=False)
-    inv = np.linalg.inv(np.dot(Q, R))
     cd = Wj[j]
     cn = np.power(Wj, 2).sum()
     return cn, cd
