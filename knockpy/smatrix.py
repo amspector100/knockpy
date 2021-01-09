@@ -336,18 +336,17 @@ def compute_smatrix(
 
         return S * best_gamma * scale_matrix
 
-    # Currently cd solvers cannot handle group knockoffs
+    # Currently cd maxent solver cannot handle group knockoffs
     # (this is todo)
-    if not np.all(groups == np.arange(1, p + 1, 1)):
+    if not np.all(groups == np.arange(1, p + 1, 1)) and method == 'maxent':
         solver = "psgd"
     if (method == "mvr" or method == "maxent") and solver == "psgd":
         # Check for imports
         utilities.check_kpytorch_available(purpose="group MRC knockoffs OR PSGD solver")
         from .kpytorch import mrcgrad
-
         S = mrcgrad.solve_mrc_psgd(Sigma=Sigma, groups=groups, method=method, **kwargs)
     elif method == "mvr":
-        S = mrc.solve_mvr(Sigma=Sigma, **kwargs)
+        S = mrc.solve_mvr(Sigma=Sigma, groups=groups, **kwargs)
     elif method == "maxent":
         S = mrc.solve_maxent(Sigma=Sigma, **kwargs)
     elif method == "sdp" or method == "asdp":
