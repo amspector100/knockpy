@@ -239,7 +239,7 @@ def _solve_mvr_ungrouped(
     num_iter=50,
     smoothing=0,
     rej_rate=0,
-    converge_tol=1,
+    converge_tol=1e-2,
     choldate_warning=True,
 ):
     """
@@ -283,9 +283,6 @@ def _solve_mvr_ungrouped(
     inds = np.arange(p)
     loss = np.inf
     acc_rate = 1 - rej_rate
-    # Takes a bit longer for rej_rate adjusted to converge
-    if acc_rate < 1:
-        converge_tol = 1e-2
 
     # Initialize values
     decayed_improvement = 10
@@ -447,7 +444,7 @@ def _solve_mvr_grouped(
     tol=1e-5,
     verbose=False,
     num_iter=20,
-    converge_tol=1,
+    converge_tol=1e-3,
     smoothing=0,
     rej_rate=0,
 ):
@@ -614,10 +611,8 @@ def _solve_mvr_grouped(
                     u=ei,
                     v=delta*ej
                 )
-            
                 # 5. Set new value for S
                 S[i, j] += delta
-        
 
         # Check for convergence
         prev_loss = loss
@@ -628,7 +623,7 @@ def _solve_mvr_grouped(
             print(
                 f"After iter {it} at time {np.around(time.time() - time0,3)}, loss={loss}, decayed_improvement={decayed_improvement}"
             )
-        if decayed_improvement < converge_tol:
+        if decayed_improvement < converge_tol and decayed_improvement > 0:
             if verbose:
                 print(f"Converged after iteration {it} with loss={loss}")
             break
@@ -643,7 +638,7 @@ def solve_mvr(
     num_iter=50,
     smoothing=0,
     rej_rate=0,
-    converge_tol=1,
+    converge_tol=1e-3,
     choldate_warning=True,
 ):
     """
