@@ -409,6 +409,18 @@ class TestSampleData(unittest.TestCase):
             err_msg=f"random AR1 gen has unexpected avg rho {mean_rho} vs {expected} ",
         )
 
+        # Check that maxcorr works
+        max_corr = 0.8
+        dgprocess = dgp.DGP()
+        _, _, _, _, Sigma = dgprocess.sample_data(
+            p=500, method="AR1", a=10, b=1, max_corr=max_corr
+        )
+        obs_max_corr = np.max(np.diag(Sigma, 1))
+        self.assertTrue(
+            max_corr >= obs_max_corr - 1e-5, # float errors
+            f"observed max corr {obs_max_corr} > max_corr {max_corr}"
+        )
+
     def test_nested_AR1(self):
 
         # Check that a, b parameters work
@@ -520,7 +532,6 @@ class TestSampleData(unittest.TestCase):
         np.random.seed(110)
         dgprocess = dgp.DGP()
         _, _, _, Q, V = dgprocess.sample_data(p=p, delta=delta, method="ver")
-
         prop_nonzero = (np.abs(V) > 0.001).mean()
         self.assertTrue(
             abs(prop_nonzero - delta) < 0.02,
@@ -532,6 +543,23 @@ class TestSampleData(unittest.TestCase):
             abs(mean_val) < 0.1,
             "True (V)ErdosRenyi sampler fails to give correct mean val",
         )
+
+        # Try er = V with maxcorr
+        max_corr = 0.1
+        delta = 0.05
+        dgprocess = dgp.DGP()
+        _, _, _, _, V = dgprocess.sample_data(p=p, delta=delta, method="ver", max_corr=max_corr)
+        np.testing.assert_array_almost_equal(
+            np.diag(V),
+            np.ones(p),
+            err_msg=f"After setting max_corr={max_corr}, ER cov is not corr. matrix")
+        hV = V - np.diag(np.diag(V)) # zero out diagonals 
+        obs_max_corr = np.abs(hV).max()
+        self.assertTrue(
+            obs_max_corr <= max_corr + 1e-5,
+            f"For VER, obs_max_corr {obs_max_corr} >= max_corr {max_corr}"
+        )
+
 
     def test_tblock_sample(self):
 
@@ -642,6 +670,34 @@ class TestSampleData(unittest.TestCase):
 
         self.assertRaisesRegex(ValueError, "x_dist must be one of", bad_xdist)
 
+class TestGroupings(unittest.TestCase):
+
+    def test_group_creation(self):
+
+        # Random covariance matrix
+        np.random.seed(110)
+        dgprocess = knockpy.dgp.DGP()
+        dgprocess.sample_data(p=100)
+        # Check within-group correlations are less than 0.5
+        Sigma = dgprocess.Sigma
+        #helper_Sigma = dgprocess.Sigma.copy()
+        #helper_Sigma = helper_Sigma - 1 * np.diag(np.diag(helper_Sigma))
+        for cutoff in [0.1, 0.5, 0.9]:
+            groups = knockpy.dgp.create_grouping(Sigma, cutoff=cutoff, method='single')
+            for j in np.unique(groups):
+                between_group_corrs = Sigma[groups==j][:, groups!=j]
+                maxcorr = np.max(np.abs(between_group_corrs))
+                self.assertTrue(
+                     maxcorr <= cutoff,
+                    f"Max between-group corr is {maxcorr} > cutoff {cutoff}"
+                )
+
+        groups = knockpy.dgp.create_grouping(Sigma, cutoff=1, method='single')
+        np.testing.assert_array_almost_equal(
+            np.sort(groups),
+            np.arange(1, Sigma.shape[0] + 1),
+            err_msg=f"When cutoff=1, groups are not trivial groups"
+        )
 
 if __name__ == "__main__":
     unittest.main()

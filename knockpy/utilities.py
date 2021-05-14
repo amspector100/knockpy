@@ -275,7 +275,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
     mineig = np.linalg.eigh(Sigma)[0].min()
 
     # Parse none strng
-    if str(shrinkage).lower() == "none":
+    if str(shrinkage).lower() == "none" or str(shrinkage).lower() == 'mle':
         shrinkage = None
 
     # Possibly shrink Sigma

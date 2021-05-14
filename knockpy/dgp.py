@@ -58,7 +58,7 @@ def DirichletCorr(p=100, temp=1, tol=1e-6):
     return V
 
 
-def AR1(p=30, a=1, b=1, tol=1e-3, rho=None):
+def AR1(p=30, a=1, b=1, tol=1e-3, max_corr=1, rho=None):
     """
     Generates `p`-dimensional correlation matrix for
     AR(1) Gaussian process, where successive correlations
@@ -69,7 +69,9 @@ def AR1(p=30, a=1, b=1, tol=1e-3, rho=None):
 
     # Generate rhos, take log to make multiplication easier
     if rho is None:
-        rhos = np.log(stats.beta.rvs(size=p, a=a, b=b))
+        rhos = np.log(np.minimum(
+            stats.beta.rvs(size=p, a=a, b=b), max_corr
+        ))
     else:
         if np.abs(rho) > 1:
             raise ValueError(f"rho {rho} must be a correlation between -1 and 1")
@@ -907,7 +909,10 @@ class DGP:
                     **kwargs,
                 )
             elif method == "ver":
+                max_corr = kwargs.pop('max_corr', 1) # enforce maximum corr
                 self.Sigma = cov2corr(ErdosRenyi(p=p, **kwargs))
+                self.Sigma = np.maximum(np.minimum(self.Sigma, max_corr), -1*max_corr)
+                self.Sigma += np.eye(p) - np.diag(np.diag(self.Sigma))
                 self.invSigma = chol2inv(self.Sigma)
             elif method == "qer":
                 self.invSigma = ErdosRenyi(p=p, **kwargs)
@@ -973,7 +978,7 @@ class DGP:
         return self.X, self.y, self.beta, self.invSigma, self.Sigma
 
 
-def create_correlation_tree(corr_matrix, method="average"):
+def create_correlation_tree(corr_matrix, method="single"):
     """ Creates hierarchical clustering (correlation tree)
     from a correlation matrix
 
@@ -983,7 +988,8 @@ def create_correlation_tree(corr_matrix, method="average"):
         ``(p, p)``-shaped correlation matrix
     method : str
         the method of hierarchical clustering:
-        'single', 'average', 'fro', or 'complete'
+        'single', 'average', 'fro', or 'complete'.
+        Defaults to 'single'.
     
     Returns
     -------
@@ -1013,3 +1019,31 @@ def create_correlation_tree(corr_matrix, method="average"):
         )
 
     return link
+
+def create_grouping(Sigma, cutoff=0.95, **kwargs):
+    """ Creates a knockoff grouping from a covariance matrix
+    using hierarchical clustering.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix
+    cutoff : np.ndarray
+        The correlation at which to "cut" the correlation tree.
+        For method='single', cutoff=0.95 ensures that
+        no two variables in different groups have absolute correlation
+        greater than 0.95.
+    
+    Returns
+    -------
+    groups : np.ndarray
+        `(p,)`-shaped array of groups for each variable
+    """
+
+
+    # Create correlation tree
+    corr_matrix = cov2corr(Sigma)
+    link = create_correlation_tree(
+        corr_matrix, **kwargs
+    )
+    return hierarchy.fcluster(link, 1-cutoff, criterion="distance")
