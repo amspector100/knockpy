@@ -15,6 +15,11 @@ try:
     DSDP_AVAILABLE = True
 except:
     DSDP_AVAILABLE = False
+try:
+    import choldate
+    CHOLDATE_AVAILABLE = True
+except:
+    CHOLDATE_AVAILABLE = False
 
 # Options for group SDP solver
 OBJECTIVE_OPTIONS = ["abs", "pnorm", "norm"]

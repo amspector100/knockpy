@@ -884,6 +884,61 @@ def solve_maxent(
     S : np.ndarray
         ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
+    return _solve_maxent_sdp_cd(
+        Sigma=Sigma,
+        tol=tol,
+        verbose=verbose,
+        num_iter=num_iter,
+        converge_tol=converge_tol,
+        choldate_warning=choldate_warning,
+        solve_sdp=False,
+    )
+
+
+def _solve_maxent_sdp_cd(
+    Sigma, 
+    solve_sdp,
+    tol=1e-5,
+    verbose=False,
+    num_iter=50,
+    converge_tol=1e-4,
+    choldate_warning=True,
+    mu=0.98,
+    lambd=0.5,
+):
+    """
+    This function is internally used to compute the S-matrices
+    used to generate maximum entropy and SDP knockoffs. Users
+    should not call this function---they should call ``solve_maxent``
+    or ``solve_sdp`` directly.
+
+    Parameters
+    ----------
+    Sigma : np.ndarray
+        ``(p, p)``-shaped covariance matrix of X
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    verbose : bool
+        If True, prints updates during optimization.
+    num_iter : int
+        The number of coordinate descent iterations. Defaults to 50.
+    converge_tol : float
+        A parameter specifying the criteria for convergence.
+    choldate_warning : bool
+        If True, will warn the user if choldate is not installed. 
+        Defaults to True
+    solve_sdp : bool
+        If True, will solve SDP. Otherwise, will solve maxent formulation.
+    lambd : float
+        Initial barrier constant
+    mu : float
+        Barrier decay constant
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
+    """
 
     # Warning if choldate not available
     if not CHOLDATE_AVAILABLE and choldate_warning:
@@ -901,6 +956,12 @@ def solve_maxent(
     S = np.linalg.eigh(V)[0].min() * np.eye(p)
     L = np.linalg.cholesky(2 * V - S)
 
+    # Loss function
+    if solve_sdp:
+        loss_fn = lambda S: np.diag(S).sum()
+    else:
+        loss_fn = maxent_loss
+
     for i in range(num_iter):
         np.random.shuffle(inds)
         for j in inds:
@@ -917,7 +978,10 @@ def solve_maxent(
             qinvterm = zeta * x22 / (zeta + x22)
 
             # Inverse of Qj using SWM formula
-            sjstar = (2 * V[j, j] - qinvterm) / 2
+            if solve_sdp:
+                sjstar = max(min(1, 2 * V[j, j] - qinvterm - lambd), 0)
+            else:
+                sjstar = (2 * V[j, j] - qinvterm) / 2
 
             # Rank one update for cholesky
             delta = S[j, j] - sjstar
@@ -939,7 +1003,7 @@ def solve_maxent(
 
         # Check for convergence
         prev_loss = loss
-        loss = maxent_loss(V, S)
+        loss = loss_fn(V, S)
         if i != 0:
             decayed_improvement = decayed_improvement / 10 + 9 * (prev_loss - loss) / 10
         if verbose:
@@ -950,6 +1014,10 @@ def solve_maxent(
             if verbose:
                 print(f"Converged after iteration {i} with loss={loss}")
             break
+
+        # Update barrier parameter if solving SDP
+        if solve_sdp:
+            lambd = mu * lambd
 
     # Ensure validity of solution
     S = utilities.shift_until_PSD(S, tol=tol)
