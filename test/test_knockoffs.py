@@ -886,7 +886,7 @@ class TestFactorApprx(CheckSMatrix):
         ks = [1, 10, 20, 50]
         p = 150
         for k in ks:
-            for method in ['mvr', 'maxent']:   
+            for method in ['mvr', 'maxent', 'sdp']:   
                 D = np.random.uniform(low=0.01, high=1, size=(p,))
                 U = np.random.randn(p, k) / np.sqrt(k)
                 # Rescale to correlation matrix
@@ -899,7 +899,7 @@ class TestFactorApprx(CheckSMatrix):
                     Sigma=None, D=D, U=U, method=method, how_approx='factor'
                 )
                 S2 = smatrix.compute_smatrix(
-                   Sigma=Sigma, method=method, tol=0
+                   Sigma=Sigma, method=method, solver='cd', tol=0
                 )
                 np.testing.assert_array_almost_equal(
                     S1, S2, decimal=2,

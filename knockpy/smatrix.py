@@ -161,6 +161,8 @@ def compute_smatrix_factored(
         S = mrc.solve_mvr_factored(D=D, U=U, **kwargs)
     elif method == 'maxent' or method == 'mmi':
         S = mrc.solve_maxent_factored(D=D, U=U, **kwargs)
+    elif method == 'sdp' or method == 'asdp':
+        S = mrc._solve_maxent_sdp_factored(D=D, U=U, solve_sdp=True, **kwargs)
     else: 
         raise NotImplementedError(f"Factor model solver is not implemented for method={method}")
 

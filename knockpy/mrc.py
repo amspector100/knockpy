@@ -753,7 +753,6 @@ def mmi_loss(*args, **kwargs):
     """
     return maxent_loss(*args, **kwargs)
 
-
 def solve_maxent_factored(
     D,
     U,
@@ -789,6 +788,59 @@ def solve_maxent_factored(
     S : np.ndarray
         ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
     """
+    return _solve_maxent_sdp_factored(
+        D=D,
+        U=U,
+        solve_sdp=False,
+        tol=tol,
+        verbose=verbose,
+        num_iter=num_iter,
+        converge_tol=converge_tol
+    )
+
+
+def _solve_maxent_sdp_factored(
+    D,
+    U,
+    solve_sdp,
+    tol=1e-5,
+    verbose=False,
+    num_iter=50,
+    converge_tol=1e-4,
+    mu=0.9,
+    lambd=0.5,
+):
+    """
+    Internal function for maxent/sdp s-matrix using
+    factor approximation.
+
+    Parameters
+    ----------
+    D : np.ndarray
+        ``p``-shaped array of diagonal elements.
+    U : np.ndarray
+        ``(p, k)``-shaped matrix. Usually k << p.
+    solve_sdp : bool
+        If True, solve for SDP knockoffs. Else, solve for
+        maximum entropy knockoffs.
+    tol : float
+        Minimum permissible eigenvalue of 2Sigma - S and S.
+    verbose : bool
+        If True, prints updates during optimization.
+    num_iter : int
+        The number of coordinate descent iterations. Defaults to 50.
+    converge_tol : float
+        A parameter specifying the criteria for convergence.
+    mu : float
+        Barrier decay parameter
+    lambd : float
+        Initial barrier parameter
+
+    Returns
+    -------
+    S : np.ndarray
+        ``(p, p)``-shaped (block) diagonal matrix used to generate knockoffs
+    """
 
     # Initial constants
     p = D.shape[0]
@@ -807,7 +859,12 @@ def solve_maxent_factored(
     # Initialize values
     time0 = time.time()
     decayed_improvement = 1
-    Sdiag = np.zeros(p) + mineig
+    if solve_sdp:
+        Sdiag = np.zeros(p) + 0.01 * mineig
+    else:
+        Sdiag = np.zeros(p) + mineig
+    lambd = min(2*mineig, lambd)
+
     # These are all k x k matrices
     Q, R = sp.linalg.qr(np.eye(k) + 2*np.dot(U.T / (2*D - Sdiag), U))
 
@@ -833,7 +890,10 @@ def solve_maxent_factored(
                 lower=False
             )
             sub_term = 4*np.dot(U[j], MjUjT) - 8*np.dot(MjUjT, x)
-            Sjstar = (2*diag_Sigma[j] - sub_term)/2
+            if solve_sdp:
+                Sjstar = max(min(1, 2*diag_Sigma[j] - sub_term - lambd), 0)
+            else:
+                Sjstar = (2*diag_Sigma[j] - sub_term)/2
             
             # Rank one update to QR decomp
             delta = Sdiag[j] - Sjstar 
@@ -845,8 +905,12 @@ def solve_maxent_factored(
                 u=-2*c*muj,
                 v=muj,
             )
+
             # Update S
             Sdiag[j] = Sjstar
+
+        if solve_sdp:
+            lambd = mu * lambd
 
     return np.diag(Sdiag)
 
