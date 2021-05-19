@@ -237,7 +237,7 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     if verbose:
         mineig = np.linalg.eigh(2 * Sigma - S)[0].min()
         print(
-            f"After SDP, mineig is {mineig} after {num_iter} line search iters. Gamma is {gamma}"
+            f"After SDP, mineig is {mineig} after {num_iter} line search iters."
         )
 
     return S

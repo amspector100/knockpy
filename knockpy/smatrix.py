@@ -8,6 +8,7 @@ from . import constants
 
 # These methods don't require approximation
 NON_APPROX_METHODS = ["equicorrelated", "eq", "ci", "ciknock"]
+DEFAULT_SOLVERS = {"mvr":"cd", "maxent":"cd", "sdp":"sdp"}
 
 def parse_method(method, groups, p=None):
     """ Decides which method to use to create the knockoff S matrix """
@@ -175,7 +176,7 @@ def compute_smatrix(
     Sigma,
     groups=None,
     method=None,
-    solver="cd",
+    solver=None,
     how_approx='blockdiag',
     max_block=1000,
     num_factors=20,
@@ -201,9 +202,9 @@ def compute_smatrix(
     method : str
         Method for constructing S-matrix. One of mvr, maxent, mmi, sdp, equicorrelated, ci.
     solver : str
-        Method for solving mrc knockoffs. One of 'cd' (coordinate descent) 
-        or 'psgd' (projected gradient descent). Coordinate descent is 
-        highly recommended.
+        Method for solving for knockoffs. One of 'cd' (coordinate descent),
+        'sdp' (default sdp solver), or 'psgd' (projected gradient descent). 
+        Coordinate descent is recommended for MRC knockoffs.
     how_approx : str
         How to approximate the covariance matrix to speed up computation. 
         - If 'blockdiag', approximates Sigma as a block-diagonal matrix.
@@ -248,6 +249,15 @@ def compute_smatrix(
     if method is not None:
         method = str(method).lower()
     method = parse_method(method, groups, None)
+
+    # Parse solver
+    if solver is None:
+        if method in DEFAULT_SOLVERS:
+            solver = DEFAULT_SOLVERS[method]
+        else:
+            solver = "cd"
+    solver = str(solver).lower()
+
     # These two are the same
     if method == 'mmi':
         method = 'maxent'
@@ -338,7 +348,8 @@ def compute_smatrix(
 
     # Currently cd maxent solver cannot handle group knockoffs
     # (this is todo)
-    if not np.all(groups == np.arange(1, p + 1, 1)) and method == 'maxent':
+    no_grouping = np.all(groups == np.arange(1, p + 1, 1))
+    if not no_grouping and method == 'maxent':
         solver = "psgd"
     if (method == "mvr" or method == "maxent") and solver == "psgd":
         # Check for imports
@@ -350,7 +361,16 @@ def compute_smatrix(
     elif method == "maxent":
         S = mrc.solve_maxent(Sigma=Sigma, **kwargs)
     elif method == "sdp" or method == "asdp":
-        S = mac.solve_group_SDP(Sigma, groups, **kwargs,)
+        # Currently cd sdp solver cannot handle group knockoffs
+        # (this is todo)
+        if solver == "sdp" or not no_grouping:
+            S = mac.solve_group_SDP(Sigma, groups, **kwargs,)
+        elif solver == 'cd' and no_grouping:
+            S = mrc._solve_maxent_sdp_cd(
+                Sigma=Sigma, solve_sdp=True, **kwargs
+            )
+        else:
+            raise ValueError(f"solver={solver} is not supported for {method} knockoffs")
     elif method == "ciknock" or method == "ci":
         S = mrc.solve_ciknock(Sigma, **kwargs)
     elif method == "equicorrelated" or method == "eq":

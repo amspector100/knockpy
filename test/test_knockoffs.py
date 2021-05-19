@@ -175,7 +175,7 @@ class TestSDP(CheckSMatrix):
             decimal=2,
             err_msg="solve_group_SDP does not produce optimal S matrix (blockequi graphs)",
         )
-        self.check_S_properties(corr_matrix, S_triv, trivial_groups)
+        self.check_S_properties(corr_matrix, S_triv, trivial_groups)        
 
         # Repeat for gaussian_knockoffs method
         ksampler = knockoffs.GaussianSampler(
@@ -227,27 +227,40 @@ class TestSDP(CheckSMatrix):
 
         # Test non-group SDP on equicorrelated cov matrix
         p = 100
-        rho = 0.8
-        V = rho * np.ones((p, p)) + (1 - rho) * np.eye(p)
-        S = mac.solve_group_SDP(V, verbose=True)
-        expected = (2 - 2 * rho) * np.eye(p)
-        np.testing.assert_almost_equal(
-            S,
-            expected,
-            decimal=2,
-            err_msg="solve_SDP does not produce optimal S matrix (equicorrelated graph)",
-        )
+        rhos = [0.6, 0.8, 0.9]
+        solvers = ['sdp', 'cd']
+        scales = [1, 5]
+        for scale in scales:
+            for rho in rhos:
+                V = scale * rho * np.ones((p, p)) + scale * (1 - rho) * np.eye(p)
+                for solver in solvers:
+                    S = smatrix.compute_smatrix(Sigma=V, method="sdp", solver=solver, verbose=True)
+                    expected = (2 - 2 * rho) * np.eye(p)
+                    np.testing.assert_almost_equal(
+                        S / scale,
+                        expected,
+                        decimal=2,
+                        err_msg=f"compute_smatrix produces incorrect S_SDP for equicorr, rho={rho}, scale={scale}, solver={solver}",
+                    )
 
-        # Repeat for scaled cov matrix
-        scale = 5
-        V = scale * V
-        S = smatrix.compute_smatrix(Sigma=V, method="sdp", verbose=True)
-        expected = (2 - 2 * rho) * np.eye(p)
+    def test_cd_SDP(self):
+        """
+        Test that CD / SDP solvers get similar answers in a hard problem
+        """
+
+        np.random.seed(110)
+        V = utilities.cov2corr(dgp.ErdosRenyi(p=100, tol=1e-1))
+        S_cd = smatrix.compute_smatrix(
+            Sigma=V, method="sdp", solver="cd", verbose=True, mu=0.95, num_iter=100
+        )
+        mac_cd = np.diag(S_cd).mean()
+        S_sdp = smatrix.compute_smatrix(Sigma=V, method="sdp", solver="sdp")
+        mac_sdp = np.diag(S_sdp).mean()
         np.testing.assert_almost_equal(
-            S / scale,
-            expected,
+            mac_sdp,
+            mac_cd,
             decimal=2,
-            err_msg="compute_smatrix does not produce optimal S matrix for scaled equicorr graph",
+            err_msg=f"compute_smatrix mac differs between SDP/CD solvers ({mac_sdp}, {mac_cd}, respectively"
         )
 
     def test_sdp_tolerance(self):

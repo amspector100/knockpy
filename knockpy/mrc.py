@@ -903,7 +903,7 @@ def _solve_maxent_sdp_cd(
     num_iter=50,
     converge_tol=1e-4,
     choldate_warning=True,
-    mu=0.98,
+    mu=0.9,
     lambd=0.5,
 ):
     """
@@ -953,12 +953,17 @@ def _solve_maxent_sdp_cd(
 
     # Initialize values
     decayed_improvement = 1
-    S = np.linalg.eigh(V)[0].min() * np.eye(p)
+    mineig = np.linalg.eigh(V)[0].min()
+    if solve_sdp:
+        S = 0.01 * mineig * np.eye(p)
+    else:
+        S = mineig * np.eye(p)
     L = np.linalg.cholesky(2 * V - S)
+    lambd = min(2*mineig, lambd)
 
     # Loss function
     if solve_sdp:
-        loss_fn = lambda S: np.diag(S).sum()
+        loss_fn = lambda V, S: S.shape[0] - np.diag(S).sum()
     else:
         loss_fn = maxent_loss
 
@@ -1005,7 +1010,10 @@ def _solve_maxent_sdp_cd(
         prev_loss = loss
         loss = loss_fn(V, S)
         if i != 0:
-            decayed_improvement = decayed_improvement / 10 + 9 * (prev_loss - loss) / 10
+            loss_diff = prev_loss - loss 
+            if solve_sdp:
+                loss_diff = max(loss_diff, lambd)
+            decayed_improvement = decayed_improvement / 10 + 9 * (loss_diff) / 10
         if verbose:
             print(
                 f"After iter {i} at time {np.around(time.time() - time0,3)}, loss={loss}, decayed_improvement={decayed_improvement}"
