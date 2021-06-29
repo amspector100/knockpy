@@ -251,6 +251,44 @@ class TestFeatureStatistics(KStatVal):
             max_l2norm=np.inf,
         )
 
+    def test_vanilla_group_lasso_fit(self):
+
+        glasso_kwargs = {
+            "use_pyglm": False, 
+            "group_lasso": True,
+        }
+        self.check_kstat_fit(
+            fstat=kstats.LassoStatistic(),
+            fstat_name="Vanilla group lasso solver",
+            fstat_kwargs=glasso_kwargs,
+            n=500,
+            p=200,
+            rho=0.2,
+            coeff_size=5,
+            sparsity=0.5,
+            seed=110,
+            min_power=0,
+            group_features=True,
+            max_l2norm=np.inf,
+        )
+
+        # Repeat for logistic case
+        self.check_kstat_fit(
+            fstat=kstats.LassoStatistic(),
+            fstat_name="Vanilla group lasso solver",
+            fstat_kwargs=glasso_kwargs,
+            n=500,
+            p=100,
+            rho=0.2,
+            coeff_size=5,
+            sparsity=0.5,
+            seed=110,
+            min_power=0,
+            group_features=True,
+            y_dist="binomial",
+            max_l2norm=np.inf,
+        )
+
     def test_lasso_fit(self):
 
         # Lasso fit for Gaussian data
