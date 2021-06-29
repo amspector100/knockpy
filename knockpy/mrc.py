@@ -898,7 +898,8 @@ def _solve_maxent_sdp_factored(
             # Rank one update to QR decomp
             delta = Sdiag[j] - Sjstar 
             muj = U[j].T / (2*D[j] - Sdiag[j])
-            c = delta/(1 + delta/(2*D[j] - Sdiag[j]))
+            denom = 1 + delta/(2*D[j] - Sdiag[j])
+            c = delta/denom
             Q, R = sp.linalg.qr_update(
                 Q=Q,
                 R=R,

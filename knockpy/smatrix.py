@@ -183,6 +183,7 @@ def compute_smatrix(
     max_block=1000,
     num_factors=20,
     num_processes=1,
+    line_search=True,
     D=None,
     U=None,
     **kwargs,
@@ -225,6 +226,8 @@ def compute_smatrix(
     U : np.ndarray
         ``(p, k)``-shaped matrix for factor model. Usually k << p. Only used 
         if how_approx='factor'. This is optional if Sigma is not None.
+    line_search : bool
+        If false, mrc methods do not do a line search after blockdiag approximation.
     kwargs : dict
         kwargs to pass to one of the wrapped S-matrix solvers.
 
@@ -332,13 +335,13 @@ def compute_smatrix(
             num_iter=kwargs.get("num_iter", 10),
         )
         # Line search for MRC methods
-        smoothing = kwargs.get("smoothing", 0)
-        if method == "mvr":
-            loss_fn = mrc.mvr_loss
-        elif method == "maxent":
-            loss_fn = mrc.maxent_loss
         best_gamma = 1
-        if method in ["mvr", "maxent"]:
+        if line_search and method in ["mvr", "maxent"]:
+            smoothing = kwargs.get("smoothing", 0)
+            if method == "mvr":
+                loss_fn = mrc.mvr_loss
+            elif method == "maxent":
+                loss_fn = mrc.maxent_loss
             best_loss = loss_fn(Sigma=Sigma, S=S, smoothing=smoothing)
             for gamma in np.arange(20)/10:
                 loss = loss_fn(Sigma=Sigma, S=gamma * S, smoothing=smoothing)
