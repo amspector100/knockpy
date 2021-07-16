@@ -145,7 +145,7 @@ class TestSampleData(unittest.TestCase):
         _, _, beta, _, _ = dgprocess.sample_data(
             p=p, sparsity=1, coeff_size=1, coeff_dist="normal", sign_prob=0
         )
-        expected = 1
+        expected = 0
         mean_est = beta.mean()
         self.assertTrue(
             np.abs(mean_est - expected) < 0.1,

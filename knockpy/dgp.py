@@ -361,7 +361,7 @@ def create_sparse_coefficients(
     # Possibly change the absolute values of beta
     if coeff_dist is not None:
         if str(coeff_dist).lower() == "normal":
-            beta = (beta + np.random.randn(p)) * beta_nonzeros
+            beta = (np.sqrt(coeff_size) * np.random.randn(p)) * beta_nonzeros
         elif str(coeff_dist).lower() == "uniform":
             beta = beta * np.random.uniform(size=p) / 2 + beta / 2
         elif str(coeff_dist).lower() == "dsliu2020":
