@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorials &mdash; knockpy 1.0.5 documentation</title>
+  <title>Tutorials &mdash; knockpy 1.1.0 documentation</title>
   
 
   
@@ -40,7 +40,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API Reference" href="apiref.html" />
+    <link rel="next" title="MRC Knockoffs Primer" href="mrcknock.html" />
     <link rel="prev" title="Getting Started" href="installation.html" /> 
 </head>
 
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                1.0.5
+                1.1.0
               </div>
             
           
@@ -107,6 +107,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#To-dos">To-dos</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
 </ul>
 
@@ -520,8 +521,8 @@ div.rendered_html tbody tr:hover {
 <span class="p">)</span>
 <span class="c1"># Check the number of discoveries we made</span>
 <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -541,11 +542,11 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 13.7931
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Try again with estimated cov matrix</span>
 <span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lasso&#39;</span><span class="p">)</span>
-<span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">shrinkage</span><span class="o">=</span><span class="s2">&quot;ledoitwolf&quot;</span><span class="p">)</span>
 <span class="c1"># Check the number of discoveries we made</span>
 <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -565,7 +566,7 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 <p>There are a variety of other options to choose from, including:</p>
 <ul class="simple">
 <li><p>MAXENT knockoffs maximize the entropy of <span class="math notranslate nohighlight">\([X, \tilde{X}]\)</span>, which is equivalent to minimizing the mutual information between <span class="math notranslate nohighlight">\(X\)</span> and <span class="math notranslate nohighlight">\(\tilde{X}\)</span>. See <a class="reference external" href="https://arxiv.org/abs/1810.11378">Gimenez and Zou (2019)</a> or <a class="reference external" href="https://arxiv.org/abs/2011.14625">Spector and Janson (2020)</a> for more details.</p></li>
-<li><p>SDP knockoffs minimize the mean absolute covariance (MAC) between features and their knockoffs. These are often referred to as <em>SDP knockoffs</em>. These are currently the default choice for group knockoffs, although that might change!</p></li>
+<li><p>SDP knockoffs minimize the mean absolute covariance (MAC) between features and their knockoffs.</p></li>
 <li><p>Equicorrelated knockoffs also minimize the MAC, but with a constraint that increases computational efficiency and (usually) reduces statistical power. See <a class="reference external" href="https://arxiv.org/abs/1404.5609">Barber and Candes 2015</a> for a discussion.</p></li>
 <li><p>Conditional Independence (CI) knockoffs guarantee that each feature <span class="math notranslate nohighlight">\(X_j\)</span> and its knockoff <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> are conditionally independent given all of the other features <span class="math notranslate nohighlight">\(X_{-j}\)</span>; however, CI knockoffs do not always exist, so we use a heuristic defined in <a class="reference external" href="https://arxiv.org/abs/2010.08132">Ke et al. (2020)</a> in general.</p></li>
 </ul>
@@ -590,7 +591,7 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 </div>
 <p>Knockpy provides this functionality by offering very fast solvers for generating the knockoff <span class="math notranslate nohighlight">\(S\)</span>-matrix, as detailed below:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -616,7 +617,7 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-For p=500, MVR took 1.8 sec, Maxent took 3.6 sec, SDP took 4.3 sec
+For p=500, MVR took 2.6 sec, Maxent took 6.0 sec, SDP took 7.8 sec
 </pre></div></div>
 </div>
 </div>
@@ -625,7 +626,7 @@ For p=500, MVR took 1.8 sec, Maxent took 3.6 sec, SDP took 4.3 sec
 <p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> implements a fully general covariance-guided Metropolized knockoff sampler, which is capable of sampling model-X knockoffs for any <span class="math notranslate nohighlight">\(X\)</span> distribution given an (unnormalized) density function of <span class="math notranslate nohighlight">\(X\)</span>. This Metropolized knockoff sampler uses a variety of computational tricks to make it orders of magnitude faster than a naive implementation, although these tricks only work when the distribution of <span class="math notranslate nohighlight">\(X\)</span> has conditional independence properties, as specified by an undirected
 graphical model. See <a class="reference external" href="https://arxiv.org/abs/1903.00434">Bates et al. (2020)</a> for more details.</p>
 <p>The API reference as well as the source for the metro module details more advanced usage of metro; however, for now, we simply demonstrate how to pass in an arbitrary log-likelihood function to the <code class="docutils literal notranslate"><span class="pre">MetropolizedKnockoffSampler</span></code> class and use it to sample knockoffs.</p>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
@@ -658,6 +659,15 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 <span class="n">Xk</span> <span class="o">=</span> <span class="n">metrosampler</span><span class="o">.</span><span class="n">sample_knockoffs</span><span class="p">()</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/asher/.local/lib/python3.6/site-packages/knockpy/metro.py:867: RuntimeWarning: overflow encountered in exp
+  return np.exp((ld_ratio + lq_ratio + Fj_ratio).astype(np.float32))
+</pre></div></div>
 </div>
 <p>It is possible to generate Metropolized knockoffs for discrete data via the <code class="docutils literal notranslate"><span class="pre">buckets</span></code> argument, which specifies the support of the discrete data.</p>
 <p>If you want to build a custom knockoff sampler class, as long as it inherets from the base class <code class="docutils literal notranslate"><span class="pre">knockpy.knockoffs.KnockoffSampler</span></code>, you can still pass it to the KnockoffFilter constructor to run the knockoff filter. For example, we pass the customized metropolized knockoff sampler to a KnockoffFilter below:</p>
@@ -744,7 +754,7 @@ FeatureStatistic class temporarily replaces <span class="math notranslate nohigh
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Made 35.0 rejections!
+Made 20.0 rejections!
 </pre></div></div>
 </div>
 </div>
@@ -752,7 +762,7 @@ Made 35.0 rejections!
 <h2>Other functionality<a class="headerlink" href="#Other-functionality" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="Group-knockoffs">
 <h3>Group knockoffs<a class="headerlink" href="#Group-knockoffs" title="Permalink to this headline">¶</a></h3>
-<p>The KnockoffFilter offers some support for sampling group knockoffs for the gaussian and fixed-X knockoff types, as demonstrated below (see the API reference for more details).</p>
+<p>The KnockoffFilter offers some support for sampling group knockoffs for the gaussian and fixed-X knockoff types (see the API reference for more details). New in version 1.1.0, knockpy supports fast computation of group MVR and ME knockoffs, as demonstrated below.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -778,10 +788,9 @@ Made 35.0 rejections!
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Made 56.0 rejections!
+Made 60.0 rejections!
 </pre></div></div>
 </div>
-<p>Note, however, that our current implementations for group knockoffs are in beta and are substantially slower than the ungrouped sampling methods, and the MVR/MAXENT methods use a heuristic gradient based method which lacks formal convergence guarantees. We plan to add more support for group knockoffs over the next few releases.</p>
 </div>
 </div>
 <div class="section" id="To-dos">
@@ -798,7 +807,7 @@ Made 56.0 rejections!
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="apiref.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="mrcknock.html" class="btn btn-neutral float-right" title="MRC Knockoffs Primer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

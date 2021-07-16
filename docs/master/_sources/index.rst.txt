@@ -15,6 +15,7 @@ Knockpy is a python implementation of the knockoffs framework which makes it eas
 
    installation
    usage
+   mrcknock
    apiref
 
 

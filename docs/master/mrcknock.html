@@ -438,7 +438,9 @@ div.rendered_html tbody tr:hover {
 \[\mathrm{MAC} = \sum_{j=1}^p |\text{Cor}(X_j, \tilde{X}_j)|.\]</div>
 <p>As discussed in <a class="reference external" href="https://arxiv.org/abs/2011.14625">Spector and Janson (2020)</a>, MAC-minimizing knockoffs (known as “SDP knockoffs”) perform poorly when the features are correlated. In particular, minimizing the MAC often makes it possible to <em>reconstruct</em> each feature <span class="math notranslate nohighlight">\(X_j\)</span> using the other features <span class="math notranslate nohighlight">\(X_{-j}\)</span> and the knockoffs <span class="math notranslate nohighlight">\(\tilde{X}\)</span>. In other words, SDP knockoffs often ensures that no features contain any unique information, which makes it very hard to determine which
 features are important and which are unimportant.</p>
-<p>A better approach to constructing knockoffs is to <em>minimizing the reconstructability</em> (MRC) of each feature <span class="math notranslate nohighlight">\(X_j\)</span>. Intuitively, this framework maximizes the amount of unique information each feature contains, making it easier to determine which features are important. <strong>MVR knockoffs</strong> are one instantiation of this framework, and as illustrated below, they have much higher power than SDP knockoffs in a variety of settings.</p>
+<p>A better approach to constructing knockoffs is to <em>minimizing the reconstructability</em> (MRC) of each feature <span class="math notranslate nohighlight">\(X_j\)</span>. Intuitively, this framework maximizes the amount of unique information each feature contains, making it easier to determine which features are important. <strong>MVR knockoffs</strong> are one instantiation of this framework, which informally maximize <span class="math notranslate nohighlight">\(\text{Var}(X_j \mid X_{-j}, \tilde{X})\)</span> for each <span class="math notranslate nohighlight">\(j\)</span>, ensuring that each feature contains as much unique information as
+possible.</p>
+<p>MVR knockoffs have much higher power than SDP knockoffs in a variety of settings, as illustrated below.</p>
 <p><strong>Example 1</strong>: As an example, we consider a case where <span class="math notranslate nohighlight">\(X\)</span> is Gaussian and the correlation between each pair of features is <span class="math notranslate nohighlight">\(50\%\)</span>. In this situation, SDP knockoffs are provably nearly powerless to select any features.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -635,6 +637,19 @@ MVR knockoffs had a power of 94.0% and false positive rate of 14.55%.
 
   </div>
   
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="mrcknock.html">master</a></dd>
+    </dl>
+  </div>
+</div>
 
   <script type="text/javascript">
       jQuery(function () {
