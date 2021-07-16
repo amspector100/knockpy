@@ -1,0 +1,669 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Kpytorch API Reference &mdash; knockpy 1.0.0dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Utilities API Reference" href="dgp.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kfilter.html">Knockoff Filter API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ksamplers.html">Knockoff Sampler API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kstats.html">Knockoff Feature Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="smatrix.html">Knockoff S-Matrix Generation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dgp.html">Utilities API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Kpytorch API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Kpytorch API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/kpytorch.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="kpytorch-api-reference">
+<h1>Kpytorch API Reference<a class="headerlink" href="#kpytorch-api-reference" title="Permalink to this headline">¶</a></h1>
+<p>The kpytorch submodule includes a miscallaneous
+set of classes and methods which rely on <code class="docutils literal notranslate"><span class="pre">pytorch</span></code>
+for automatic differentation.</p>
+<span class="target" id="module-knockpy.kpytorch.deeppink"></span><dl class="py class">
+<dt id="knockpy.kpytorch.deeppink.DeepPinkModel">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.kpytorch.deeppink.</code><code class="sig-name descname">DeepPinkModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">inds</span></em>, <em class="sig-param"><span class="n">rev_inds</span></em>, <em class="sig-param"><span class="n">hidden_sizes</span><span class="o">=</span><span class="default_value">[64]</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">'gaussian'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/deeppink.html#DeepPinkModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.deeppink.DeepPinkModel" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(*input, **kwargs)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
+<td><p>Adds a child module to the current module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply</span></code>(fn)</p></td>
+<td><p>Applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> recursively to every submodule (as returned by <code class="docutils literal notranslate"><span class="pre">.children()</span></code>) as well as self.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">buffers</span></code>([recurse])</p></td>
+<td><p>Returns an iterator over module buffers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">children</span></code>()</p></td>
+<td><p>Returns an iterator over immediate children modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cpu</span></code>()</p></td>
+<td><p>Moves all model parameters and buffers to the CPU.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cuda</span></code>([device])</p></td>
+<td><p>Moves all model parameters and buffers to the GPU.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">double</span></code>()</p></td>
+<td><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">double</span></code> datatype.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eval</span></code>()</p></td>
+<td><p>Sets the module in evaluation mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">extra_repr</span></code>()</p></td>
+<td><p>Set the extra representation of the module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>()</p></td>
+<td><p>Casts all floating point parameters and buffers to float datatype.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.kpytorch.deeppink.DeepPinkModel.forward" title="knockpy.kpytorch.deeppink.DeepPinkModel.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>(features)</p></td>
+<td><p>NOTE: FEATURES CANNOT BE SHUFFLED</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">half</span></code>()</p></td>
+<td><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">half</span></code> datatype.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict[, strict])</p></td>
+<td><p>Copies parameters and buffers from <code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code> into this module and its descendants.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">modules</span></code>()</p></td>
+<td><p>Returns an iterator over all modules in the network.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_buffers</span></code>([prefix, recurse])</p></td>
+<td><p>Returns an iterator over module buffers, yielding both the name of the buffer as well as the buffer itself.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_children</span></code>()</p></td>
+<td><p>Returns an iterator over immediate children modules, yielding both the name of the module as well as the module itself.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_modules</span></code>([memo, prefix])</p></td>
+<td><p>Returns an iterator over all modules in the network, yielding both the name of the module as well as the module itself.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_parameters</span></code>([prefix, recurse])</p></td>
+<td><p>Returns an iterator over module parameters, yielding both the name of the parameter as well as the parameter itself.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code>([recurse])</p></td>
+<td><p>Returns an iterator over module parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.kpytorch.deeppink.DeepPinkModel.predict" title="knockpy.kpytorch.deeppink.DeepPinkModel.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(features)</p></td>
+<td><p>Wraps forward method, for compatibility with sklearn classes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</p></td>
+<td><p>Registers a backward hook on the module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_buffer</span></code>(name, tensor)</p></td>
+<td><p>Adds a persistent buffer to the module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_hook</span></code>(hook)</p></td>
+<td><p>Registers a forward hook on the module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_pre_hook</span></code>(hook)</p></td>
+<td><p>Registers a forward pre-hook on the module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_parameter</span></code>(name, param)</p></td>
+<td><p>Adds a parameter to the module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">requires_grad_</span></code>([requires_grad])</p></td>
+<td><p>Change if autograd should record operations on parameters in this module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_dict</span></code>([destination, prefix, keep_vars])</p></td>
+<td><p>Returns a dictionary containing a whole state of the module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(*args, **kwargs)</p></td>
+<td><p>Moves and/or casts the parameters and buffers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code>([mode])</p></td>
+<td><p>Sets the module in training mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code>(dst_type)</p></td>
+<td><p>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero_grad</span></code>()</p></td>
+<td><p>Sets gradients of all model parameters to zero.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 70%" />
+<col style="width: 30%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Z_regularizer</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>feature_importances</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>l1norm</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>l2norm</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>normalize_Z_weight</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>share_memory</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.kpytorch.deeppink.DeepPinkModel.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/deeppink.html#DeepPinkModel.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.deeppink.DeepPinkModel.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>NOTE: FEATURES CANNOT BE SHUFFLED</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.kpytorch.deeppink.DeepPinkModel.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/deeppink.html#DeepPinkModel.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.deeppink.DeepPinkModel.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps forward method, for compatibility
+with sklearn classes.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-knockpy.kpytorch.mrcgrad"></span><p>Gradient-based methods for solving MRC problems.
+Currently only used for group-knockoffs.</p>
+<dl class="py class">
+<dt id="knockpy.kpytorch.mrcgrad.MVRLoss">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.kpytorch.mrcgrad.</code><code class="sig-name descname">MVRLoss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">init_S</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">invSigma</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rec_prop</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">min_smoothing</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'mvr'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#MVRLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.MVRLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pytorch class to compute S-matrices for 
+(gaussian) MX knockoffs which minimizes the 
+trace of the feature-knockoff precision matrix
+(the inverse of the feature-knockoff 
+covariance/Grahm matrix, G).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Sigma</strong> – p x p numpy matrix. Must already</p>
+</dd>
+</dl>
+<p>be sorted by groups.
+:param groups: p length numpy array of groups. 
+These must already be sorted and correspond to 
+the Sigma.
+:param init_S: The initialization values for the S
+block-diagonal matrix. 
+- A p x p matrix. The block-diagonal of this matrix,
+as specified by groups, will be the initial values 
+for the S matrix.
+- A list of square numpy matrices, with the ith element
+corresponding to the block of the ith group in S.
+Default: Half of the identity.
+:param rec_prop: The proportion of data you are planning
+to recycle. (The optimal S matrix depends on the recycling
+proportion.)
+:param rec_prop: The proportion of knockoffs that will be
+recycled.
+:param smoothing: Calculate the loss as sum 1/(eigs + smoothing)
+as opposed to sum 1/eigs. This is helpful if fitting lasso 
+statistics on extremely degenerate covariance matrices. Over the 
+course of optimization, this smoothing parameter will go to 0.
+:param method: One of mvr or mmi.</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(*input, **kwargs)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
+<td><p>Adds a child module to the current module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply</span></code>(fn)</p></td>
+<td><p>Applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> recursively to every submodule (as returned by <code class="docutils literal notranslate"><span class="pre">.children()</span></code>) as well as self.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">buffers</span></code>([recurse])</p></td>
+<td><p>Returns an iterator over module buffers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">children</span></code>()</p></td>
+<td><p>Returns an iterator over immediate children modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cpu</span></code>()</p></td>
+<td><p>Moves all model parameters and buffers to the CPU.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cuda</span></code>([device])</p></td>
+<td><p>Moves all model parameters and buffers to the GPU.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">double</span></code>()</p></td>
+<td><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">double</span></code> datatype.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eval</span></code>()</p></td>
+<td><p>Sets the module in evaluation mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">extra_repr</span></code>()</p></td>
+<td><p>Set the extra representation of the module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>()</p></td>
+<td><p>Casts all floating point parameters and buffers to float datatype.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.kpytorch.mrcgrad.MVRLoss.forward" title="knockpy.kpytorch.mrcgrad.MVRLoss.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>([smoothing])</p></td>
+<td><p>Calculates trace of inverse grahm feature-knockoff matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">half</span></code>()</p></td>
+<td><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">half</span></code> datatype.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict[, strict])</p></td>
+<td><p>Copies parameters and buffers from <code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code> into this module and its descendants.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">modules</span></code>()</p></td>
+<td><p>Returns an iterator over all modules in the network.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_buffers</span></code>([prefix, recurse])</p></td>
+<td><p>Returns an iterator over module buffers, yielding both the name of the buffer as well as the buffer itself.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_children</span></code>()</p></td>
+<td><p>Returns an iterator over immediate children modules, yielding both the name of the module as well as the module itself.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_modules</span></code>([memo, prefix])</p></td>
+<td><p>Returns an iterator over all modules in the network, yielding both the name of the module as well as the module itself.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_parameters</span></code>([prefix, recurse])</p></td>
+<td><p>Returns an iterator over module parameters, yielding both the name of the parameter as well as the parameter itself.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code>([recurse])</p></td>
+<td><p>Returns an iterator over module parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.kpytorch.mrcgrad.MVRLoss.project" title="knockpy.kpytorch.mrcgrad.MVRLoss.project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project</span></code></a>(**kwargs)</p></td>
+<td><p>Project by scaling sqrt_S</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.kpytorch.mrcgrad.MVRLoss.pull_S" title="knockpy.kpytorch.mrcgrad.MVRLoss.pull_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pull_S</span></code></a>()</p></td>
+<td><p>Returns the S matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</p></td>
+<td><p>Registers a backward hook on the module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_buffer</span></code>(name, tensor)</p></td>
+<td><p>Adds a persistent buffer to the module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_hook</span></code>(hook)</p></td>
+<td><p>Registers a forward hook on the module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_pre_hook</span></code>(hook)</p></td>
+<td><p>Registers a forward pre-hook on the module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_parameter</span></code>(name, param)</p></td>
+<td><p>Adds a parameter to the module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">requires_grad_</span></code>([requires_grad])</p></td>
+<td><p>Change if autograd should record operations on parameters in this module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.kpytorch.mrcgrad.MVRLoss.scale_sqrt_S" title="knockpy.kpytorch.mrcgrad.MVRLoss.scale_sqrt_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_sqrt_S</span></code></a>(tol, num_iter)</p></td>
+<td><p>Scales sqrt_S such that 2 Sigma - S is PSD.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_dict</span></code>([destination, prefix, keep_vars])</p></td>
+<td><p>Returns a dictionary containing a whole state of the module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(*args, **kwargs)</p></td>
+<td><p>Moves and/or casts the parameters and buffers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code>([mode])</p></td>
+<td><p>Sets the module in training mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code>(dst_type)</p></td>
+<td><p>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.kpytorch.mrcgrad.MVRLoss.update_sqrt_S" title="knockpy.kpytorch.mrcgrad.MVRLoss.update_sqrt_S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_sqrt_S</span></code></a>()</p></td>
+<td><p>Updates sqrt_S using the block parameters</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero_grad</span></code>()</p></td>
+<td><p>Sets gradients of all model parameters to zero.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>share_memory</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.kpytorch.mrcgrad.MVRLoss.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#MVRLoss.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.MVRLoss.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates trace of inverse grahm feature-knockoff matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.kpytorch.mrcgrad.MVRLoss.project">
+<code class="sig-name descname">project</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#MVRLoss.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.MVRLoss.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project by scaling sqrt_S</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.kpytorch.mrcgrad.MVRLoss.pull_S">
+<code class="sig-name descname">pull_S</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#MVRLoss.pull_S"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.MVRLoss.pull_S" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the S matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.kpytorch.mrcgrad.MVRLoss.scale_sqrt_S">
+<code class="sig-name descname">scale_sqrt_S</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tol</span></em>, <em class="sig-param"><span class="n">num_iter</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#MVRLoss.scale_sqrt_S"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.MVRLoss.scale_sqrt_S" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales sqrt_S such that 2 Sigma - S is PSD.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.kpytorch.mrcgrad.MVRLoss.update_sqrt_S">
+<code class="sig-name descname">update_sqrt_S</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#MVRLoss.update_sqrt_S"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.MVRLoss.update_sqrt_S" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates sqrt_S using the block parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.kpytorch.mrcgrad.PSGDSolver">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.kpytorch.mrcgrad.</code><code class="sig-name descname">PSGDSolver</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">losscalc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lr</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">max_epochs</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">line_search_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">convergence_tol</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#PSGDSolver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.PSGDSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projected gradient descent to solve for MRC knockoffs.
+This will work for non-convex loss objectives as well,
+although it’s a heuristic optimization method.
+:param Sigma: p x p numpy array, the correlation matrix
+:param groups: p-length numpy array specifying groups
+:param losscalc: A pytorch class wrapping nn.module
+which contains the following methods:
+- .forward() which calculates the loss based on the
+internally stored S matrix.
+- .project() which ensures that both the internally-stored
+S matrix as well as (2*Sigma - S) are PSD.
+- .pull_S(), which returns the internally-stored S matrix.
+If None, creates a MVRLoss class. 
+:param lr: Initial learning rate (default 1e-2)
+:param verbose: if true, reports progress
+:param max_epochs: Maximum number of epochs in SGD
+:param tol: Mimimum eigenvalue allowed for PSD matrices
+:param line_search_iter: Number of line searches to do
+when scaling sqrt_S.
+:param convergence_tol: After each projection, we calculate
+improvement = 2/3 * ||prev_opt_S - opt_S||_1 + 1/3 * (improvement)
+When improvement &lt; convergence_tol, we return.
+:param kwargs: Passed to MVRLoss</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.kpytorch.mrcgrad.PSGDSolver.optimize" title="knockpy.kpytorch.mrcgrad.PSGDSolver.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a>()</p></td>
+<td><p>See __init__ for arguments.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 52%" />
+<col style="width: 48%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>cache_S</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.kpytorch.mrcgrad.PSGDSolver.optimize">
+<code class="sig-name descname">optimize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#PSGDSolver.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.PSGDSolver.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>See __init__ for arguments.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.kpytorch.mrcgrad.block_diag_sparse">
+<code class="sig-prename descclassname">knockpy.kpytorch.mrcgrad.</code><code class="sig-name descname">block_diag_sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">arrs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#block_diag_sparse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.block_diag_sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of 2D torch tensors, creates a sparse block-diagonal matrix
+See <a class="reference external" href="https://github.com/pytorch/pytorch/issues/31942">https://github.com/pytorch/pytorch/issues/31942</a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.kpytorch.mrcgrad.solve_mrc_psgd">
+<code class="sig-prename descclassname">knockpy.kpytorch.mrcgrad.</code><code class="sig-name descname">solve_mrc_psgd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'mvr'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/mrcgrad.html#solve_mrc_psgd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.mrcgrad.solve_mrc_psgd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the PSGDSolver class.
+:param Sigma: Covariance matrix
+:param groups: groups for group knockoffs
+:param method: MRC loss (mvr or mmi)
+:param init_kwargs: kwargs to pass to 
+PSGDSolver.
+:param optimize_kwargs: kwargs to pass 
+to optimizer method.
+:returns: opt_S</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="dgp.html" class="btn btn-neutral float-left" title="Utilities API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,856 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Utilities API Reference &mdash; knockpy 1.0.0dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Utilities API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dgp.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-knockpy.dgp">
+<span id="utilities-api-reference"></span><h1>Utilities API Reference<a class="headerlink" href="#module-knockpy.dgp" title="Permalink to this headline">¶</a></h1>
+<p>A collection of functions for generating synthetic datasets.</p>
+<dl class="py function">
+<dt id="knockpy.dgp.AR1">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">AR1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">a</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">b</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">rho</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#AR1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.AR1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates <cite>p</cite>-dimensional correlation matrix for
+AR(1) Gaussian process, where successive correlations
+are drawn from Beta(<cite>a</cite>,`b`) independelty. If <cite>rho</cite> is
+specified, then the process is stationary with correlation
+<cite>rho</cite>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.dgp.DGP">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">DGP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sigma</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">invSigma</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gibbs_graph</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#DGP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.DGP" title="Permalink to this definition">¶</a></dt>
+<dd><p>A utility class which creates a (random) data-generating process 
+for a design matrix X and a response y. If the parameters are
+not specified, they will be randomly generated during the
+<code class="docutils literal notranslate"><span class="pre">sample_data</span></code> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mu</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-shaped mean vector for X data</p>
+</dd>
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix for X data</p>
+</dd>
+<dt><strong>invSigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped precision matrix for X data</p>
+</dd>
+<dt><strong>beta</strong><span class="classifier">np.ndarray</span></dt><dd><p>coefficients used to generate y from X in a single 
+index or sparse additive model.</p>
+</dd>
+<dt><strong>gibbs_graph</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped matrix of coefficients for gibbs
+grid method.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>mu</strong><span class="classifier">np.ndarray</span></dt><dd><p>See above</p>
+</dd>
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p>See above</p>
+</dd>
+<dt><strong>invSigma</strong><span class="classifier">np.ndarray</span></dt><dd><p>See above</p>
+</dd>
+<dt><strong>beta</strong><span class="classifier">np.ndarray</span></dt><dd><p>See above</p>
+</dd>
+<dt><strong>gibbs_Graph</strong><span class="classifier">np.ndarray</span></dt><dd><p>See above</p>
+</dd>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">)</span></code>-shaped response vector</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.dgp.DGP.sample_data" title="knockpy.dgp.DGP.sample_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_data</span></code></a>([p, n, x_dist, method, y_dist, …])</p></td>
+<td><p>(Possibly) generates random data-generating parameters and then samples data using those parameters.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.dgp.DGP.sample_data">
+<code class="sig-name descname">sample_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">x_dist</span><span class="o">=</span><span class="default_value">'gaussian'</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'AR1'</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">'gaussian'</span></em>, <em class="sig-param"><span class="n">cond_mean</span><span class="o">=</span><span class="default_value">'linear'</span></em>, <em class="sig-param"><span class="n">coeff_size</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">coeff_dist</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sparsity</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sign_prob</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">iid_signs</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">corr_signals</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">df_t</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#DGP.sample_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.DGP.sample_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Possibly) generates random data-generating parameters
+and then samples data using those parameters. By default,
+(X, y) are jointly Gaussian and y is a linear response to
+X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>The number of data points</p>
+</dd>
+<dt><strong>p</strong><span class="classifier">int</span></dt><dd><p>The dimensionality of the data</p>
+</dd>
+<dt><strong>x_dist</strong><span class="classifier">str</span></dt><dd><p>Specifies the distribution of X. One of “Gaussian”, “blockt”, “ar1t”, or “gibbs”.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>How to generate the covariance matrix of X. One of
+“AR1”, “NestedAR1”, “partialcorr”, “factor”, 
+“blockequi”, “ver”, “qer”, “dirichlet”, or “uniformdot”.
+See the docs for each of these methods.</p>
+</dd>
+<dt><strong>y_dist</strong><span class="classifier">str</span></dt><dd><p>Specifies the distribution of y. One of “Gaussian” or “binomial”.</p>
+</dd>
+<dt><strong>cond_mean</strong><span class="classifier">str</span></dt><dd><p>How to calculate the conditional mean of y given X. Defaults to 
+“linear”. See <code class="docutils literal notranslate"><span class="pre">knockpy.dgp.sample_response</span></code> for more options.</p>
+</dd>
+<dt><strong>coeff_size: float</strong></dt><dd><p>Size of non-zero coefficients</p>
+</dd>
+<dt><strong>coeff_dist</strong><span class="classifier">str</span></dt><dd><p>Specifies the distribution of nonzero coefficients. Three options:
+- <code class="docutils literal notranslate"><span class="pre">None</span></code>: all coefficients have absolute value coeff_size.
+- <code class="docutils literal notranslate"><span class="pre">normal</span></code>: all nonzero coefficients are drawn from Normal(coeff_size, 1). 
+- <code class="docutils literal notranslate"><span class="pre">uniform</span></code>: nonzero coeffs are drawn from Unif(coeff_size/2, coeff_size).</p>
+</dd>
+<dt><strong>sparsity</strong><span class="classifier">float</span></dt><dd><p>Proportion of non-null coefficients. 
+Generates <code class="docutils literal notranslate"><span class="pre">np.floor(p*sparsity)</span></code> non-nulls.</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>A p-length array of integers from 1 to num_groups such that
+<code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite> is a member of group <cite>i</cite>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. Else, floor(sparsity * num_groups) groups will be 
+chosen to be non-null, where all elements of each group are non-null.</p>
+</dd>
+<dt><strong>sign_prob</strong><span class="classifier">float</span></dt><dd><p>The probability that each nonzero coefficient will be positive.</p>
+</dd>
+<dt><strong>iid_signs</strong><span class="classifier">bool</span></dt><dd><p>If True, the signs of the coeffs are assigned independently.
+Else, exactly sign_prob*sparsity*p coefficients will be positive.</p>
+</dd>
+<dt><strong>corr_signals</strong><span class="classifier">bool</span></dt><dd><p>If true, all of the nonzero coefficients will lie in a consecutive block.</p>
+</dd>
+<dt><strong>df_t</strong><span class="classifier">float</span></dt><dd><p>If the X variables are marginally t-distributed, the degrees of freedom.</p>
+</dd>
+<dt><strong>kwargs: dict</strong></dt><dd><p>keyword arguments to pass to method for generating the covariance matrix.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.DirichletCorr">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">DirichletCorr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">temp</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-06</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#DirichletCorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.DirichletCorr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a correlation matrix by sampling p eigenvalues
+from a dirichlet distribution whose <cite>p</cite> parameters are i.i.d.
+uniform [<cite>tol</cite>, <cite>temp</cite>] and generating a random covariance matrix
+with those eigenvalues.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.ErdosRenyi">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">ErdosRenyi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">delta</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">lower</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">upper</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#ErdosRenyi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.ErdosRenyi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly samples bernoulli flags as well as values
+for partial correlations to generate sparse square
+matrices. Follows <a class="reference external" href="https://arxiv.org/pdf/1908.11611.pdf">https://arxiv.org/pdf/1908.11611.pdf</a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.FactorModel">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">FactorModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">500</span></em>, <em class="sig-param"><span class="n">rank</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#FactorModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.FactorModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates random correlation matrix from a factor model 
+with dimension <cite>p</cite> and rank <cite>rank</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.NestedAR1">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">NestedAR1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">500</span></em>, <em class="sig-param"><span class="n">a</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">b</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">num_nests</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">nest_size</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#NestedAR1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.NestedAR1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates correlation matrix for AR(1) Gaussian process
+with hierarchical correlation structure.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.PartialCorr">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">PartialCorr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">rho</span><span class="o">=</span><span class="default_value">0.3</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#PartialCorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.PartialCorr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a correlation matrix of dimension <cite>p</cite> with partial correlation <cite>rho</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.UniformDot">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">UniformDot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">d</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.01</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#UniformDot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.UniformDot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Let U be a random <cite>d</cite> x <cite>p</cite> matrix with i.i.d. uniform
+entries. Then Sigma = <a href="#id1"><span class="problematic" id="id2">``</span></a>cov2corr``(U^T U)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.Wishart">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">Wishart</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">d</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.01</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#Wishart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.Wishart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Let W be a random <cite>d</cite> x <cite>p</cite> matrix with i.i.d. Gaussian
+entries. Then Sigma = <a href="#id3"><span class="problematic" id="id4">``</span></a>cov2corr``(W^T W).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.block_equi_graph">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">block_equi_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">3000</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">block_size</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">sparsity</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">rho</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">gamma</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">coeff_size</span><span class="o">=</span><span class="default_value">3.5</span></em>, <em class="sig-param"><span class="n">coeff_dist</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sign_prob</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">iid_signs</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">corr_signals</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#block_equi_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.block_equi_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples data according to a block-equicorrelated Gaussian design,
+where <code class="docutils literal notranslate"><span class="pre">rho</span></code> is the within-block correlation and <code class="docutils literal notranslate"><span class="pre">gamma</span> <span class="pre">*</span> <span class="pre">rho</span></code>
+is the between-block correlation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>The number of data points</p>
+</dd>
+<dt><strong>p</strong><span class="classifier">int</span></dt><dd><p>The dimensionality of the data</p>
+</dd>
+<dt><strong>block_size</strong><span class="classifier">int</span></dt><dd><p>The size of blocks. Defaults to 5.</p>
+</dd>
+<dt><strong>sparsity</strong><span class="classifier">float</span></dt><dd><p>The proportion of groups which are null. Defaults to 0.1</p>
+</dd>
+<dt><strong>rho</strong><span class="classifier">float</span></dt><dd><p>The within-group correlation</p>
+</dd>
+<dt><strong>gamma</strong><span class="classifier">float</span></dt><dd><p>The between-group correlation is <code class="docutils literal notranslate"><span class="pre">gamma</span> <span class="pre">*</span> <span class="pre">rho</span></code></p>
+</dd>
+<dt><strong>beta</strong><span class="classifier">np.ndarray</span></dt><dd><p>If supplied, the <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-shaped set of coefficients. Else,
+will be generated by calling 
+<code class="docutils literal notranslate"><span class="pre">knockpy.dgp.sample_sparse_coefficients.</span></code></p>
+</dd>
+<dt><strong>mu</strong><span class="classifier">np.ndarray</span></dt><dd><p>The <code class="docutils literal notranslate"><span class="pre">p</span></code>-dimensional mean of the covariates. Defaults to 0.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Args passed to <code class="docutils literal notranslate"><span class="pre">knockpy.dgp.sample_response</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This defaults to the same data-generating process as
+Dai and Barber 2016 (see <a class="reference external" href="https://arxiv.org/abs/1602.03589">https://arxiv.org/abs/1602.03589</a>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.construct_gibbs_grid">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">construct_gibbs_grid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">temp</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#construct_gibbs_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.construct_gibbs_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates gridlike <code class="docutils literal notranslate"><span class="pre">gibbs_graph</span></code> parameter for <code class="docutils literal notranslate"><span class="pre">sample_gibbs</span></code>.
+See <code class="docutils literal notranslate"><span class="pre">sample_gibbs</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.coords2num">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">coords2num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">w</span></em>, <em class="sig-param"><span class="n">gridwidth</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#coords2num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.coords2num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes coordinates of variable in a Gibbs grid, returns position</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.cov2blocks">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">cov2blocks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">V</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#cov2blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.cov2blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decomposes a PREORDERED block-diagonal matrix V into its blocks.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.create_correlation_tree">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">create_correlation_tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">corr_matrix</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'average'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#create_correlation_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.create_correlation_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates hierarchical clustering (correlation tree)
+from a correlation matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>corr_matrix</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped correlation matrix</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>the method of hierarchical clustering:
+‘single’, ‘average’, ‘fro’, or ‘complete’</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>link</strong><span class="classifier">np.ndarray</span></dt><dd><p>The <cite>link</cite> of the correlation tree, as in scipy</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.create_sparse_coefficients">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">create_sparse_coefficients</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">sparsity</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coeff_size</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">coeff_dist</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sign_prob</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">iid_signs</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">corr_signals</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#create_sparse_coefficients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.create_sparse_coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a set of sparse coefficients for single index or sparse additive models.
+p : int</p>
+<blockquote>
+<div><p>Dimensionality of coefficients</p>
+</div></blockquote>
+<dl class="simple">
+<dt>sparsity<span class="classifier">float</span></dt><dd><p>Proportion of non-null coefficients. Generates <code class="docutils literal notranslate"><span class="pre">np.floor(p*sparsity)</span></code> non-nulls.</p>
+</dd>
+<dt>coeff_size: float</dt><dd><p>Size of non-zero coefficients</p>
+</dd>
+<dt>groups<span class="classifier">np.ndarray</span></dt><dd><p>A p-length array of integers from 1 to num_groups such that
+<code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite> is a member of group <cite>i</cite>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. Else, floor(sparsity * num_groups) groups will be 
+chosen to be non-null, where all elements of each group are non-null.</p>
+</dd>
+<dt>sign_prob<span class="classifier">float</span></dt><dd><p>The probability that each nonzero coefficient will be positive.</p>
+</dd>
+<dt>iid_signs<span class="classifier">bool</span></dt><dd><p>If True, the signs of the coeffs are assigned independently.
+Else, exactly sign_prob*sparsity*p coefficients will be positive.</p>
+</dd>
+<dt>coeff_dist<span class="classifier">str</span></dt><dd><p>Specifies the distribution of nonzero coefficients. Three options:
+- <code class="docutils literal notranslate"><span class="pre">None</span></code>: all coefficients have absolute value coeff_size.
+- <code class="docutils literal notranslate"><span class="pre">normal</span></code>: all nonzero coefficients are drawn from Normal(coeff_size, 1). 
+- <code class="docutils literal notranslate"><span class="pre">uniform</span></code>: nonzero coeffs are drawn from Unif(coeff_size/2, coeff_size).</p>
+</dd>
+<dt>corr_signals<span class="classifier">bool</span></dt><dd><p>If true, all of the nonzero coefficients will lie in a consecutive block.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>beta</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-shaped array of sparse coefficients</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.graph2cliques">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">graph2cliques</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Q</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#graph2cliques"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.graph2cliques" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turns graph Q of connections into binary cliques for Gibbs grid</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.num2coords">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">num2coords</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span></em>, <em class="sig-param"><span class="n">gridwidth</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#num2coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.num2coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coordinates of variable i in a Gibbs grid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>Position of variable in ordering</p>
+</dd>
+<dt><strong>gridwidth</strong><span class="classifier">int</span></dt><dd><p>Width of the grid</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>length_coord, width_coord (coordinates)</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.sample_ar1t">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">sample_ar1t</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rhos</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">df_t</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#sample_ar1t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.sample_ar1t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples t-distributed variables according to a Markov chain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rhos</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p-1,</span> <span class="pre">)</span></code>-length array of correlations between consecutive
+variables.</p>
+</dd>
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>The number of data points to sample</p>
+</dd>
+<dt><strong>df_t</strong><span class="classifier">float</span></dt><dd><p>The degrees of freedom of the t variables</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.sample_block_tmvn">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">sample_block_tmvn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">blocks</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">df_t</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#sample_block_tmvn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.sample_block_tmvn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples a blocks of multivariate-t distributed variables
+according to a list of covariance matrices called <code class="docutils literal notranslate"><span class="pre">blocks</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>blocks</strong><span class="classifier">list</span></dt><dd><p>A list of square, symmetric numpy arrays. These are
+the covariance matrices for each block of variables.</p>
+</dd>
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>The number of data points to sample</p>
+</dd>
+<dt><strong>df_t</strong><span class="classifier">float</span></dt><dd><p>The degrees of freedom of the t-distribution</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The variables are scaled such that the marginal variance
+of each variable equals a diagonal element in one of the blocks.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.sample_gibbs">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">sample_gibbs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">gibbs_graph</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">temp</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">15</span></em>, <em class="sig-param"><span class="n">K</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">max_val</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#sample_gibbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.sample_gibbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples from a discrete Gibbs measure using a gibbs sampler.</p>
+<p>The joint likelihood for the <cite>p</cite>-dimensional data X1 through Xp
+is the product of all terms of the following form:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`np.exp(-1*gibbs_graph[i,j]*np.abs(Xi</span> <span class="pre">-</span> <span class="pre">Xj))`</span></code></p>
+</div></blockquote>
+<p>where <cite>gibbs_graph</cite> is assumed to be symmetric (and is usually
+sparse). Each feature takes values on an evenly spaced grid from
+<code class="docutils literal notranslate"><span class="pre">-1*max_val</span></code> to <code class="docutils literal notranslate"><span class="pre">max_val</span></code> with <code class="docutils literal notranslate"><span class="pre">K</span></code> values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>How many data points to sample</p>
+</dd>
+<dt><strong>p</strong><span class="classifier">int</span></dt><dd><p>Dimensionality of the data</p>
+</dd>
+<dt><strong>gibbs_graph</strong><span class="classifier">np.ndarray</span></dt><dd><p>A symmetric <code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped array. See likelihood equation.
+By default, this is corresponds to an undirected graphical
+model with a square grid (like an Ising model) with nonzero
+entries set to 1 or -1 with equal probability.</p>
+</dd>
+<dt><strong>temp</strong><span class="classifier">float</span></dt><dd><p>Governs the strength of interactions between features—see 
+the likelihood equation.</p>
+</dd>
+<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>Number of iterations in the Gibbs sampler; defaults to 15.</p>
+</dd>
+<dt><strong>K</strong><span class="classifier">int</span></dt><dd><p>Number of discrete values each sampled feature can take.</p>
+</dd>
+<dt><strong>max_val</strong><span class="classifier">float</span></dt><dd><p>The maximum absolute value each feature can take.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped array of data</p>
+</dd>
+<dt><strong>gibbs_graph</strong><span class="classifier">np.ndarray</span></dt><dd><p>The generated <cite>gibbs_graph</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.sample_response">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">sample_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">cond_mean</span><span class="o">=</span><span class="default_value">'linear'</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">'gaussian'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#sample_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.sample_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a design matrix X and coefficients beta, samples a response y.</p>
+<dl>
+<dt>X<span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt>beta<span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">)</span></code>-shaped coefficient vector</p>
+</dd>
+<dt>cond_mean<span class="classifier">str</span></dt><dd><p>How to calculate the conditional mean of y given X, denoted mu(X). 
+Six options:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>“linear” denotes <code class="docutils literal notranslate"><span class="pre">np.dot(X,</span> <span class="pre">beta)</span></code></p></li>
+<li><p>“cubic” denotes <code class="docutils literal notranslate"><span class="pre">np.dot(X**3,</span> <span class="pre">beta)</span> <span class="pre">-</span> <span class="pre">np.dot(X,</span> <span class="pre">beta)</span></code></p></li>
+</ol>
+<p>3. “trunclinear” <code class="docutils literal notranslate"><span class="pre">((X</span> <span class="pre">*</span> <span class="pre">beta</span> <span class="pre">&gt;=</span> <span class="pre">1).sum(axis</span> <span class="pre">=</span> <span class="pre">1))</span></code>
+Stands for truncated linear.
+4. “pairint”: pairs up non-null coefficients according to the
+order of beta, multiplies them and their beta values, then
+sums. “pairint” stands for pairwise-interactions.
+5. “cos”: <code class="docutils literal notranslate"><span class="pre">mu(X)</span> <span class="pre">=</span> <span class="pre">sign(beta)</span> <span class="pre">*</span> <span class="pre">(beta</span> <span class="pre">!=</span> <span class="pre">0)</span> <span class="pre">*</span> <span class="pre">np.cos(X)</span></code>
+6. “quadratic”: <code class="docutils literal notranslate"><span class="pre">mu(X)</span> <span class="pre">=</span> <span class="pre">np.dot(np.power(X,</span> <span class="pre">2),</span> <span class="pre">beta)</span></code></p>
+</div></blockquote>
+</dd>
+<dt>y_dist<span class="classifier">str</span></dt><dd><p>If “gaussian”, y is the conditional mean plus gaussian noise.
+If “binomial”, Pr(y=1) = softmax(cond_mean).</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-knockpy.utilities"></span><dl class="py function">
+<dt id="knockpy.utilities.apply_pool">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">apply_pool</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="n">constant_inputs</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">num_processes</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#apply_pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.apply_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawns num_processes processes to apply func to many different arguments.
+This wraps the multiprocessing.pool object plus the functools partial function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>func</strong><span class="classifier">function</span></dt><dd><p>An arbitrary function</p>
+</dd>
+<dt><strong>constant_inputs</strong><span class="classifier">dictionary</span></dt><dd><p>A dictionary of arguments to func which do not change in each
+of the processes spawned, defaults to {}.</p>
+</dd>
+<dt><strong>num_processes</strong><span class="classifier">int</span></dt><dd><p>The maximum number of processes spawned, defaults to 1.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Each key should correspond to an argument to func and should
+map to a list of different arguments.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>outputs</strong><span class="classifier">list</span></dt><dd><p>List of outputs for each input, in the order of the inputs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.blockdiag_to_blocks">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">blockdiag_to_blocks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">M</span></em>, <em class="sig-param"><span class="n">groups</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#blockdiag_to_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.blockdiag_to_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a square array <cite>M</cite>, returns a list of diagonal blocks of <cite>M</cite> as specified by <cite>groups</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>blocks</strong><span class="classifier">list</span></dt><dd><p>A list of square np.ndarrays. blocks[i] corresponds to group identified
+by the ith smallest unique value of <code class="docutils literal notranslate"><span class="pre">groups</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.calc_group_sizes">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">calc_group_sizes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groups</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#calc_group_sizes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.calc_group_sizes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of groups, finds the sizes of the groups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">)</span></code>-shaped array which takes m integer values from
+1 to m. If <code class="docutils literal notranslate"><span class="pre">groups[i]</span> <span class="pre">==</span> <span class="pre">j</span></code>, this indicates that coordinate
+<code class="docutils literal notranslate"><span class="pre">i</span></code> belongs to group <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p>
+</dd>
+<dt><strong>:param groups: p-length array of integers between 1 and m,</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>sizes</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">)</span></code>-length array of group sizes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.chol2inv">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">chol2inv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#chol2inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.chol2inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses cholesky decomp to get inverse of matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.cov2corr">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">cov2corr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">M</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#cov2corr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.cov2corr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rescales a p x p cov. matrix M to be a correlation matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.estimate_covariance">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">estimate_covariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">shrinkage</span><span class="o">=</span><span class="default_value">'ledoitwolf'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#estimate_covariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.estimate_covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates covariance matrix of X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>shrinkage</strong><span class="classifier">str</span></dt><dd><p>The type of shrinkage to apply during estimation. One of
+“ledoitwolf”, “graphicallasso”, or None (no shrinkage).</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float</span></dt><dd><p>If shrinkage is None but the minimum eigenvalue of the MLE
+is below tol, apply LedoitWolf shrinkage anyway.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped estimated covariance matrix of X</p>
+</dd>
+<dt><strong>invSigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped estimated precision matrix of X</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.fetch_group_nonnulls">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">fetch_group_nonnulls</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">non_nulls</span></em>, <em class="sig-param"><span class="n">groups</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#fetch_group_nonnulls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.fetch_group_nonnulls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines feature-level null hypotheses into group-level hypothesis.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.permute_matrix_by_groups">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">permute_matrix_by_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groups</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#permute_matrix_by_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.permute_matrix_by_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create indices which permute a (covariance) matrix according to a list of groups.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.preprocess_groups">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">preprocess_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groups</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#preprocess_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.preprocess_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps the m unique elements of a 1D “groups” array to the integers from 1 to m.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.random_permutation_inds">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">random_permutation_inds</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">length</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#random_permutation_inds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.random_permutation_inds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns indexes which will randomly permute/unpermute a numpy
+array of length <cite>length</cite>. Also returns indices which will
+undo this permutation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>inds</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(length,)</span></code>-shaped ndarray corresponding to a random permutation
+from 0 to <cite>length</cite>-1.</p>
+</dd>
+<dt><strong>rev_inds</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(length,)</span></code>-shaped ndarray such that for any <code class="docutils literal notranslate"><span class="pre">(length,)</span></code>-shaped 
+array called <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">x[inds][rev_inds]</span></code> equals <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.scale_until_PSD">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">scale_until_PSD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">tol</span></em>, <em class="sig-param"><span class="n">num_iter</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#scale_until_PSD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.scale_until_PSD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a binary search to find the largest <code class="docutils literal notranslate"><span class="pre">gamma</span></code> such that the minimum
+eigenvalue of <code class="docutils literal notranslate"><span class="pre">2*Sigma</span> <span class="pre">-</span> <span class="pre">gamma*S</span></code> is at least <code class="docutils literal notranslate"><span class="pre">tol</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>gamma * S</strong><span class="classifier">np.ndarray</span></dt><dd><p>See description.</p>
+</dd>
+<dt><strong>gamma</strong><span class="classifier">float</span></dt><dd><p>See description</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.utilities.shift_until_PSD">
+<code class="sig-prename descclassname">knockpy.utilities.</code><code class="sig-name descname">shift_until_PSD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">M</span></em>, <em class="sig-param"><span class="n">tol</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/utilities.html#shift_until_PSD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.utilities.shift_until_PSD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the identity until a p x p matrix M has eigenvalues of at least tol</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

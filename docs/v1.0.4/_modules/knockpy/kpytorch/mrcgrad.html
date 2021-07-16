@@ -1,0 +1,620 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>knockpy.kpytorch.mrcgrad &mdash; knockpy 1.0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>knockpy.kpytorch.mrcgrad</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for knockpy.kpytorch.mrcgrad</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Gradient-based methods for solving MRC problems.</span>
+<span class="sd">Currently only used for group-knockoffs.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="kn">from</span> <span class="nn">..constants</span> <span class="kn">import</span> <span class="n">GAMMA_VALS</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span><span class="p">,</span> <span class="n">mrc</span>
+
+
+<div class="viewcode-block" id="block_diag_sparse"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.block_diag_sparse">[docs]</a><span class="k">def</span> <span class="nf">block_diag_sparse</span><span class="p">(</span><span class="o">*</span><span class="n">arrs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given a list of 2D torch tensors, creates a sparse block-diagonal matrix</span>
+<span class="sd">    See https://github.com/pytorch/pytorch/issues/31942</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bad_args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arrs</span><span class="p">):</span>
+        <span class="c1"># if isinstance(arr, nn.Parameter):</span>
+        <span class="c1">#     arr = arr.data</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">bad_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bad_args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Args in </span><span class="si">{</span><span class="n">bad_args</span><span class="si">}</span><span class="s2"> positions must be 2D tensor&quot;</span><span class="p">)</span>
+
+    <span class="n">shapes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrs</span><span class="p">])</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">shapes</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">arrs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">arrs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+    <span class="p">)</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">rr</span><span class="p">,</span> <span class="n">cc</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shapes</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">r</span> <span class="p">:</span> <span class="n">r</span> <span class="o">+</span> <span class="n">rr</span><span class="p">,</span> <span class="n">c</span> <span class="p">:</span> <span class="n">c</span> <span class="o">+</span> <span class="n">cc</span><span class="p">]</span> <span class="o">=</span> <span class="n">arrs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">r</span> <span class="o">+=</span> <span class="n">rr</span>
+        <span class="n">c</span> <span class="o">+=</span> <span class="n">cc</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="MVRLoss"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.MVRLoss">[docs]</a><span class="k">class</span> <span class="nc">MVRLoss</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pytorch class to compute S-matrices for </span>
+<span class="sd">    (gaussian) MX knockoffs which minimizes the </span>
+<span class="sd">    trace of the feature-knockoff precision matrix</span>
+<span class="sd">    (the inverse of the feature-knockoff </span>
+<span class="sd">    covariance/Grahm matrix, G).</span>
+
+<span class="sd">    :param Sigma: p x p numpy matrix. Must already</span>
+<span class="sd">    be sorted by groups.</span>
+<span class="sd">    :param groups: p length numpy array of groups. </span>
+<span class="sd">    These must already be sorted and correspond to </span>
+<span class="sd">    the Sigma.</span>
+<span class="sd">    :param init_S: The initialization values for the S</span>
+<span class="sd">    block-diagonal matrix. </span>
+<span class="sd">    - A p x p matrix. The block-diagonal of this matrix,</span>
+<span class="sd">    as specified by groups, will be the initial values </span>
+<span class="sd">    for the S matrix.</span>
+<span class="sd">    - A list of square numpy matrices, with the ith element</span>
+<span class="sd">    corresponding to the block of the ith group in S.</span>
+<span class="sd">    Default: Half of the identity.</span>
+<span class="sd">    :param rec_prop: The proportion of data you are planning</span>
+<span class="sd">    to recycle. (The optimal S matrix depends on the recycling</span>
+<span class="sd">    proportion.)</span>
+<span class="sd">    :param rec_prop: The proportion of knockoffs that will be</span>
+<span class="sd">    recycled.</span>
+<span class="sd">    :param smoothing: Calculate the loss as sum 1/(eigs + smoothing)</span>
+<span class="sd">    as opposed to sum 1/eigs. This is helpful if fitting lasso </span>
+<span class="sd">    statistics on extremely degenerate covariance matrices. Over the </span>
+<span class="sd">    course of optimization, this smoothing parameter will go to 0.</span>
+<span class="sd">    :param method: One of mvr or maxent (mmi for backwards compatability).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">Sigma</span><span class="p">,</span>
+        <span class="n">groups</span><span class="p">,</span>
+        <span class="n">init_S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">invSigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">rec_prop</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">smoothing</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">min_smoothing</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mvr&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Groups MUST be sorted</span>
+        <span class="n">sorted_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">sorted_groups</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sigma and groups must be sorted prior to input&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Save sigma and groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_sizes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">utilities</span><span class="o">.</span><span class="n">calc_group_sizes</span><span class="p">(</span><span class="n">groups</span><span class="p">))</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+        <span class="c1"># Save inverse cov matrix, rec_prop</span>
+        <span class="k">if</span> <span class="n">invSigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">invSigma</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">chol2inv</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">invSigma</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+        <span class="c1"># Save recycling proportion and smoothing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">=</span> <span class="n">smoothing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_smoothing</span> <span class="o">=</span> <span class="n">min_smoothing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rec_prop</span> <span class="o">=</span> <span class="n">rec_prop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+
+        <span class="c1"># Make sure init_S is a numpy array</span>
+        <span class="k">if</span> <span class="n">init_S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If nothing provided, default to equicorrelated</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+            <span class="n">init_S</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">init_S</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="c1"># Check for correct number of blocks</span>
+            <span class="n">num_blocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">init_S</span><span class="p">)</span>
+            <span class="n">num_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">num_blocks</span> <span class="o">!=</span> <span class="n">num_groups</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Length of init_S </span><span class="si">{</span><span class="n">num_blocks</span><span class="si">}</span><span class="s2"> doesn&#39;t agree with num groups </span><span class="si">{</span><span class="n">num_groups</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">init_S</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">init_S</span><span class="p">)</span>
+
+        <span class="c1"># Find a good initial scaling</span>
+        <span class="n">best_gamma</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">best_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span><span class="p">:</span>
+            <span class="n">objective</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">mvr_loss</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">objective</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">maxent_loss</span>
+        <span class="k">for</span> <span class="n">gamma</span> <span class="ow">in</span> <span class="n">GAMMA_VALS</span><span class="p">:</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">objective</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rec_prop</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">init_S</span><span class="p">,)</span>
+            <span class="k">if</span> <span class="n">loss</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">loss</span> <span class="o">&lt;</span> <span class="n">best_loss</span><span class="p">:</span>
+                <span class="n">best_gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+                <span class="n">best_loss</span> <span class="o">=</span> <span class="n">loss</span>
+        <span class="n">init_S</span> <span class="o">=</span> <span class="n">best_gamma</span> <span class="o">*</span> <span class="n">init_S</span>
+
+        <span class="c1"># Create new blocks</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">blockdiag_to_blocks</span><span class="p">(</span><span class="n">init_S</span><span class="p">,</span> <span class="n">groups</span><span class="p">)</span>
+        <span class="c1"># Torch-ify and take sqrt</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+        <span class="c1"># Save</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">float</span><span class="p">())</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+
+        <span class="c1"># Register the blocks as parameters</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_parameter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;block</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_sqrt_S</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_sqrt_S</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MVRLoss.update_sqrt_S"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.MVRLoss.update_sqrt_S">[docs]</a>    <span class="k">def</span> <span class="nf">update_sqrt_S</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Updates sqrt_S using the block parameters &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_S</span> <span class="o">=</span> <span class="n">block_diag_sparse</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MVRLoss.pull_S"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.MVRLoss.pull_S">[docs]</a>    <span class="k">def</span> <span class="nf">pull_S</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the S matrix &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_sqrt_S</span><span class="p">()</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sqrt_S</span><span class="o">.</span><span class="n">t</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_S</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">S</span></div>
+
+<div class="viewcode-block" id="MVRLoss.forward"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.MVRLoss.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculates trace of inverse grahm feature-knockoff matrix&quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: This certainly works and is more efficient in a forward</span>
+        <span class="c1"># pass than taking the eigenvalues of both S and 2*Sigma - S.</span>
+        <span class="c1"># But perhaps the dot product makes the backprop less efficient?</span>
+
+        <span class="c1"># Infer smoothing</span>
+        <span class="k">if</span> <span class="n">smoothing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">smoothing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">smoothing</span>
+
+        <span class="c1"># Create schurr complement</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pull_S</span><span class="p">()</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rec_prop</span><span class="p">)</span> <span class="o">*</span> <span class="n">S</span>  <span class="c1"># Account for recycling calcing loss</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span>
+        <span class="n">G_schurr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">mm</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">mm</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span><span class="p">),</span> <span class="n">diff</span><span class="p">)</span>
+
+        <span class="c1"># Take eigenvalues</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">symeig</span><span class="p">(</span><span class="n">G_schurr</span><span class="p">,</span> <span class="n">eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span><span class="p">:</span>
+            <span class="n">inv_eigs</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">smoothing</span> <span class="o">+</span> <span class="n">eigvals</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span>
+            <span class="n">inv_eigs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">smoothing</span> <span class="o">+</span> <span class="n">eigvals</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">smoothing</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()),</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">inv_eigs</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MVRLoss.scale_sqrt_S"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.MVRLoss.scale_sqrt_S">[docs]</a>    <span class="k">def</span> <span class="nf">scale_sqrt_S</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Scales sqrt_S such that 2 Sigma - S is PSD.&quot;&quot;&quot;</span>
+
+        <span class="c1"># No gradients</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+
+            <span class="c1"># This shift only applies for</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">block</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">block</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+            <span class="c1"># Construct S</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pull_S</span><span class="p">()</span>
+            <span class="c1"># Find optimal scaling</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">S</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="n">num_iter</span>
+            <span class="p">)</span>
+            <span class="c1"># Scale blocks</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">block</span><span class="o">.</span><span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_sqrt_S</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MVRLoss.project"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.MVRLoss.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Project by scaling sqrt_S &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_sqrt_S</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PSGDSolver"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.PSGDSolver">[docs]</a><span class="k">class</span> <span class="nc">PSGDSolver</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Projected gradient descent to solve for MRC knockoffs.</span>
+<span class="sd">    This will work for non-convex loss objectives as well,</span>
+<span class="sd">    although it&#39;s a heuristic optimization method.</span>
+<span class="sd">    :param Sigma: p x p numpy array, the correlation matrix</span>
+<span class="sd">    :param groups: p-length numpy array specifying groups</span>
+<span class="sd">    :param losscalc: A pytorch class wrapping nn.module</span>
+<span class="sd">    which contains the following methods:</span>
+<span class="sd">    - .forward() which calculates the loss based on the</span>
+<span class="sd">    internally stored S matrix.</span>
+<span class="sd">    - .project() which ensures that both the internally-stored</span>
+<span class="sd">    S matrix as well as (2*Sigma - S) are PSD.</span>
+<span class="sd">    - .pull_S(), which returns the internally-stored S matrix.</span>
+<span class="sd">    If None, creates a MVRLoss class. </span>
+<span class="sd">    :param lr: Initial learning rate (default 1e-2)</span>
+<span class="sd">    :param verbose: if true, reports progress</span>
+<span class="sd">    :param max_epochs: Maximum number of epochs in SGD</span>
+<span class="sd">    :param tol: Mimimum eigenvalue allowed for PSD matrices</span>
+<span class="sd">    :param line_search_iter: Number of line searches to do</span>
+<span class="sd">    when scaling sqrt_S.</span>
+<span class="sd">    :param convergence_tol: After each projection, we calculate</span>
+<span class="sd">    improvement = 2/3 * ||prev_opt_S - opt_S||_1 + 1/3 * (improvement)</span>
+<span class="sd">    When improvement &lt; convergence_tol, we return.</span>
+<span class="sd">    :param kwargs: Passed to MVRLoss </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">Sigma</span><span class="p">,</span>
+        <span class="n">groups</span><span class="p">,</span>
+        <span class="n">losscalc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lr</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">max_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+        <span class="n">line_search_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">convergence_tol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="c1"># Add Sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opt_S</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Output initialization</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opt_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="c1"># Save parameters for optimization</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span> <span class="o">=</span> <span class="n">max_epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">line_search_iter</span> <span class="o">=</span> <span class="n">line_search_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convergence_tol</span> <span class="o">=</span> <span class="n">convergence_tol</span>
+
+        <span class="c1"># Sort by groups for ease of computation</span>
+        <span class="n">inds</span><span class="p">,</span> <span class="n">inv_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">permute_matrix_by_groups</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span> <span class="o">=</span> <span class="n">inds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inv_inds</span> <span class="o">=</span> <span class="n">inv_inds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sorted_Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">[</span><span class="n">inds</span><span class="p">][:,</span> <span class="n">inds</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sorted_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+        <span class="c1"># Loss calculator</span>
+        <span class="k">if</span> <span class="n">losscalc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span> <span class="o">=</span> <span class="n">losscalc</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span> <span class="o">=</span> <span class="n">MVRLoss</span><span class="p">(</span>
+                <span class="n">Sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sorted_Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sorted_groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Initialize cache of optimal S</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">init_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="p">(</span><span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">init_loss</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">init_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_S</span><span class="p">(</span><span class="n">init_loss</span><span class="p">)</span>
+
+        <span class="c1"># Initialize attributes which save losses over time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_losses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projected_losses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">improvements</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">cache_S</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_loss</span><span class="p">):</span>
+        <span class="c1"># Cache optimal solution</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prev_opt_S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_S</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prev_opt_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_loss</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt_loss</span> <span class="o">=</span> <span class="n">new_loss</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt_S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">pull_S</span><span class="p">()</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PSGDSolver.optimize"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.PSGDSolver.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        See __init__ for arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Optimizer</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">)</span>
+        <span class="n">improvement</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convergence_tol</span> <span class="o">+</span> <span class="mi">10</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span><span class="p">):</span>
+
+            <span class="c1"># Step 1: Calculate loss (trace of feature-knockoff precision)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loss of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2"> solver is NaN&quot;</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+            <span class="c1"># Step 2: Step along the graient</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">retain_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="c1"># Step 3: Reproject to be PSD</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_search_iter</span><span class="p">)</span>
+
+                <span class="c1"># If this is optimal after reprojecting, save</span>
+                <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                    <span class="n">new_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="p">(</span><span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_loss</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_loss</span> <span class="ow">and</span> <span class="n">new_loss</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cache_S</span><span class="p">(</span><span class="n">new_loss</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">prev_opt_S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_S</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">prev_opt_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_loss</span>
+
+                <span class="c1"># Cache projected loss</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">projected_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+                <span class="c1"># Calculate improvement</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_opt_loss</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_loss</span>
+                    <span class="n">l1diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt_S</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_opt_S</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">improvement</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">+</span> <span class="n">improvement</span> <span class="o">/</span> <span class="mi">3</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;L1 diff is </span><span class="si">{</span><span class="n">l1diff</span><span class="si">}</span><span class="s2">, loss diff=</span><span class="si">{</span><span class="n">diff</span><span class="si">}</span><span class="s2">, improvement is </span><span class="si">{</span><span class="n">improvement</span><span class="si">}</span><span class="s2">, best loss is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">opt_loss</span><span class="si">}</span><span class="s2"> at iter </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">improvements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">improvement</span><span class="p">)</span>
+
+                <span class="c1"># Break if improvement is small</span>
+                <span class="k">if</span> <span class="n">improvement</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">convergence_tol</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">min_smoothing</span><span class="p">:</span>
+                        <span class="n">improvement</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">convergence_tol</span>  <span class="c1"># Reset</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">min_smoothing</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">/</span> <span class="mi">10</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Nearing convergence, reducing smoothing to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">losscalc</span><span class="o">.</span><span class="n">smoothing</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="p">)</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converged at iteration </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+        <span class="c1"># Shift, scale, and return</span>
+        <span class="n">sorted_S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_S</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">sorted_S</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inv_inds</span><span class="p">][:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_inds</span><span class="p">]</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">line_search_iter</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">S</span></div></div>
+
+
+<div class="viewcode-block" id="solve_mrc_psgd"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.mrcgrad.solve_mrc_psgd">[docs]</a><span class="k">def</span> <span class="nf">solve_mrc_psgd</span><span class="p">(</span>
+    <span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mvr&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wraps the PSGDSolver class.</span>
+<span class="sd">    :param Sigma: Covariance matrix</span>
+<span class="sd">    :param groups: groups for group knockoffs</span>
+<span class="sd">    :param method: MRC loss (mvr or maxent)</span>
+<span class="sd">    :param init_kwargs: kwargs to pass to </span>
+<span class="sd">    PSGDSolver.</span>
+<span class="sd">    :param optimize_kwargs: kwargs to pass </span>
+<span class="sd">    to optimizer method.</span>
+<span class="sd">    :returns: opt_S</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">PSGDSolver</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">opt_S</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">opt_S</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v1.0.4
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../v1.0.3/index.html">v1.0.3</a></dd>
+      <dd><a href="mrcgrad.html">v1.0.4</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

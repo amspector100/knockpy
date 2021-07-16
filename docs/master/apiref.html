@@ -2212,7 +2212,7 @@ up to normalizing constant.
 <span id="s-matrix-computation"></span><h2>S-matrix computation<a class="headerlink" href="#module-knockpy.smatrix" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="knockpy.smatrix.compute_smatrix">
-<code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">compute_smatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">solver</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">how_approx</span><span class="o">=</span><span class="default_value">'blockdiag'</span></em>, <em class="sig-param"><span class="n">max_block</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">num_factors</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">num_processes</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">D</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">U</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#compute_smatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.compute_smatrix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">compute_smatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">solver</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">how_approx</span><span class="o">=</span><span class="default_value">'blockdiag'</span></em>, <em class="sig-param"><span class="n">max_block</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">num_factors</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">num_processes</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">line_search</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">D</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">U</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#compute_smatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.compute_smatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wraps a variety of S-matrix generation functions.
 For mvr, maxent, mmi, and sdp methods, this can use
 a block-diagonal approximation of Sigma if the dimension
@@ -2228,9 +2228,9 @@ is a member of group <cite>i</cite>. Defaults to <code class="docutils literal n
 </dd>
 <dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>Method for constructing S-matrix. One of mvr, maxent, mmi, sdp, equicorrelated, ci.</p>
 </dd>
-<dt><strong>solver</strong><span class="classifier">str</span></dt><dd><p>Method for solving mrc knockoffs. One of ‘cd’ (coordinate descent) 
-or ‘psgd’ (projected gradient descent). Coordinate descent is 
-highly recommended.</p>
+<dt><strong>solver</strong><span class="classifier">str</span></dt><dd><p>Method for solving for knockoffs. One of ‘cd’ (coordinate descent),
+‘sdp’ (default sdp solver), or ‘psgd’ (projected gradient descent). 
+Coordinate descent is recommended for MRC knockoffs.</p>
 </dd>
 <dt><strong>how_approx</strong><span class="classifier">str</span></dt><dd><p>How to approximate the covariance matrix to speed up computation. 
 - If ‘blockdiag’, approximates Sigma as a block-diagonal matrix.
@@ -2249,6 +2249,8 @@ if how_approx=’factor’. This is optional if Sigma is not None.</p>
 </dd>
 <dt><strong>U</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">k)</span></code>-shaped matrix for factor model. Usually k &lt;&lt; p. Only used 
 if how_approx=’factor’. This is optional if Sigma is not None.</p>
+</dd>
+<dt><strong>line_search</strong><span class="classifier">bool</span></dt><dd><p>If false, mrc methods do not do a line search after blockdiag approximation.</p>
 </dd>
 <dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>kwargs to pass to one of the wrapped S-matrix solvers.</p>
 </dd>
@@ -2469,7 +2471,7 @@ search to find the maximum gamma such that gamma * S is feasible.</p>
 
 <dl class="py function">
 <dt id="knockpy.mrc.solve_maxent">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_maxent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">choldate_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_maxent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_maxent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_maxent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">choldate_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_maxent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_maxent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes S-matrix used to generate maximum entropy
 knockoffs using coordinate descent.</p>
 <dl class="field-list simple">
@@ -2501,7 +2503,7 @@ Defaults to True</p>
 
 <dl class="py function">
 <dt id="knockpy.mrc.solve_maxent_factored">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_maxent_factored</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">U</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_maxent_factored"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_maxent_factored" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_maxent_factored</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">U</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_maxent_factored"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_maxent_factored" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes S-matrix used to generate maximum entropy
 knockoffs using coordinate descent assuming that
 the covariance matrix follows a factor model.
@@ -2543,13 +2545,17 @@ and exists only for backwards compatability.</p>
 
 <dl class="py function">
 <dt id="knockpy.mrc.solve_mvr">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mvr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rej_rate</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">choldate_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mvr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mvr" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mvr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rej_rate</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">choldate_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mvr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mvr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes S-matrix used to generate minimum variance-based
 reconstructability knockoffs using coordinate descent.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (regular knockoffs).</p>
 </dd>
 <dt><strong>tol</strong><span class="classifier">float</span></dt><dd><p>Minimum permissible eigenvalue of 2Sigma - S and S.</p>
 </dd>
@@ -2563,8 +2569,8 @@ instability. Defaults to 0.</p>
 </dd>
 <dt><strong>converge_tol</strong><span class="classifier">float</span></dt><dd><p>A parameter specifying the criteria for convergence.</p>
 </dd>
-<dt><strong>choldate_warning</strong><span class="classifier">bool</span></dt><dd><p>If True, will warn the user if choldate is not installed. 
-Defaults to True.</p>
+<dt><strong>choldate_warning</strong><span class="classifier">bool</span></dt><dd><p>If True and groups is None, will warn the user if choldate
+is not installed. Defaults to True.</p>
 </dd>
 </dl>
 </dd>
@@ -2609,15 +2615,6 @@ D and a p x k matrix U.</p>
 </dl>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="knockpy.mrc.solve_mvr_quadratic">
-<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mvr_quadratic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cn</span></em>, <em class="sig-param"><span class="n">cd</span></em>, <em class="sig-param"><span class="n">sj</span></em>, <em class="sig-param"><span class="n">i</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_eig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">acc_rate</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mvr_quadratic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mvr_quadratic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Solves a quadratic equation to find
-the optimal updates for the MVR S-matrix
-based off of cn and cd.
-See <a class="reference external" href="https://arxiv.org/pdf/2011.14625.pdf">https://arxiv.org/pdf/2011.14625.pdf</a></p>
 </dd></dl>
 
 <span class="target" id="module-knockpy.mac"></span><dl class="py function">
@@ -3160,7 +3157,7 @@ to optimizer method.
 <p>A collection of functions for generating synthetic datasets.</p>
 <dl class="py function">
 <dt id="knockpy.dgp.AR1">
-<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">AR1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">a</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">b</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">rho</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#AR1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.AR1" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">AR1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">a</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">b</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">max_corr</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">rho</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#AR1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.AR1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates <cite>p</cite>-dimensional correlation matrix for
 AR(1) Gaussian process, where successive correlations
 are drawn from Beta(<cite>a</cite>,`b`) independelty. If <cite>rho</cite> is
@@ -3391,7 +3388,7 @@ See <code class="docutils literal notranslate"><span class="pre">sample_gibbs</s
 
 <dl class="py function">
 <dt id="knockpy.dgp.create_correlation_tree">
-<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">create_correlation_tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">corr_matrix</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'average'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#create_correlation_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.create_correlation_tree" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">create_correlation_tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">corr_matrix</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'single'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#create_correlation_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.create_correlation_tree" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates hierarchical clustering (correlation tree)
 from a correlation matrix</p>
 <dl class="field-list simple">
@@ -3400,13 +3397,40 @@ from a correlation matrix</p>
 <dt><strong>corr_matrix</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped correlation matrix</p>
 </dd>
 <dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>the method of hierarchical clustering:
-‘single’, ‘average’, ‘fro’, or ‘complete’</p>
+‘single’, ‘average’, ‘fro’, or ‘complete’.
+Defaults to ‘single’.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>link</strong><span class="classifier">np.ndarray</span></dt><dd><p>The <cite>link</cite> of the correlation tree, as in scipy</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.dgp.create_grouping">
+<code class="sig-prename descclassname">knockpy.dgp.</code><code class="sig-name descname">create_grouping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">0.95</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/dgp.html#create_grouping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.dgp.create_grouping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a knockoff grouping from a covariance matrix
+using hierarchical clustering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix</p>
+</dd>
+<dt><strong>cutoff</strong><span class="classifier">np.ndarray</span></dt><dd><p>The correlation at which to “cut” the correlation tree.
+For method=’single’, cutoff=0.95 ensures that
+no two variables in different groups have absolute correlation
+greater than 0.95.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p><cite>(p,)</cite>-shaped array of groups for each variable</p>
 </dd>
 </dl>
 </dd>

@@ -1,0 +1,1161 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Knockoff Feature Statistics API Reference &mdash; knockpy 1.0.0dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Knockoff S-Matrix Generation API Reference" href="smatrix.html" />
+    <link rel="prev" title="Knockoff Sampler API Reference" href="ksamplers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kfilter.html">Knockoff Filter API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ksamplers.html">Knockoff Sampler API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Knockoff Feature Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="smatrix.html">Knockoff S-Matrix Generation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dgp.html">Utilities API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpytorch.html">Kpytorch API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Knockoff Feature Statistics API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/kstats.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-knockpy.knockoff_stats">
+<span id="knockoff-feature-statistics-api-reference"></span><h1>Knockoff Feature Statistics API Reference<a class="headerlink" href="#module-knockpy.knockoff_stats" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="knockpy.knockoff_stats.DeepPinkStatistic">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">DeepPinkStatistic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#DeepPinkStatistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.DeepPinkStatistic" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
+<td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.DeepPinkStatistic.fit" title="knockpy.knockoff_stats.DeepPinkStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
+<td><p>Wraps the FeatureStatistic class using DeepPINK to generate variable importances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
+<td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>(features, y)</p></td>
+<td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code>(features, y[, …])</p></td>
+<td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.DeepPinkStatistic.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_importance</span><span class="o">=</span><span class="default_value">'deeppink'</span></em>, <em class="sig-param"><span class="n">antisym</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">group_agg</span><span class="o">=</span><span class="default_value">'sum'</span></em>, <em class="sig-param"><span class="n">cv_score</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">train_kwargs</span><span class="o">=</span><span class="default_value">{'verbose': False}</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#DeepPinkStatistic.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.DeepPinkStatistic.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the FeatureStatistic class using DeepPINK to generate
+variable importances.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>feature_importance</strong><span class="classifier">str</span></dt><dd><p>Specifies how to create feature importances from <code class="docutils literal notranslate"><span class="pre">model</span></code>. 
+Four options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“deeppink”: Use the deeppink feature importance</p></li>
+</ul>
+<p>defined in <a class="reference external" href="https://arxiv.org/abs/1809.01185">https://arxiv.org/abs/1809.01185</a>
+- “unweighted”: Use the Z weights from the deeppink
+paper without weighting them using the layers from
+the MLP. Deeppink usually outperforms this feature
+importance (but not always).
+- “swap”: The default swap-statistic from 
+<a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a>
+- “swapint”: The swap-integral defined from
+<a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p>
+</div></blockquote>
+<p>Defaults to deeppink, which is often both the most powerful and 
+the most computationally efficient.</p>
+</dd>
+<dt><strong>antisym</strong><span class="classifier">str</span></dt><dd><p>The antisymmetric function used to create (ungrouped) feature
+statistics. Three options: 
+- “CD” (Difference of absolute vals of coefficients),
+- “SM” (signed maximum).
+- “SCD” (Simple difference of coefficients - NOT recommended)</p>
+</dd>
+<dt><strong>group_agg</strong><span class="classifier">str</span></dt><dd><p>For group knockoffs, specifies how to turn individual feature
+statistics into grouped feature statistics. Two options: 
+“sum” and “avg”.</p>
+</dd>
+<dt><strong>cv_score</strong><span class="classifier">bool</span></dt><dd><p>If true, score the feature statistic’s predictive accuracy
+using cross validation. This is extremely expensive for random
+forests.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to underlying RandomForest class</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.knockoff_stats.FeatureStatistic">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">FeatureStatistic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#FeatureStatistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.FeatureStatistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base knockoff feature statistic class, which can wrap any
+generic prediction algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model :</strong></dt><dd><p>An instance of a class with a “train” or “fit” method
+and a “predict” method.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>model :</strong></dt><dd><p>A (predictive) model class underlying the variable importance
+measures.</p>
+</dd>
+<dt><strong>inds</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-dimensional array of indices representing the random
+permutation applied to the concatenation of [X, Xk] before fitting
+<code class="docutils literal notranslate"><span class="pre">gl.</span></code></p>
+</dd>
+<dt><strong>rev_inds</strong><span class="classifier">np.ndarray:</span></dt><dd><p>Indices which reverse the effect of <code class="docutils literal notranslate"><span class="pre">inds.</span></code> In particular, if
+M is any <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2p)</span></code>-dimensional array, then <code class="docutils literal notranslate"><span class="pre">`M==M[:,</span> <span class="pre">inds][:,</span> <span class="pre">rev_inds]`</span></code></p>
+</dd>
+<dt><strong>score</strong><span class="classifier">float</span></dt><dd><p>A metric of the model’s performance, as defined by <code class="docutils literal notranslate"><span class="pre">score_type</span></code>.</p>
+</dd>
+<dt><strong>score_type</strong><span class="classifier">str</span></dt><dd><p>One of MSE, CVMSE, accuracy, or cvaccuracy. (cv stands for
+cross-validated)</p>
+</dd>
+<dt><strong>Z</strong><span class="classifier">np.ndarray</span></dt><dd><p>a <code class="docutils literal notranslate"><span class="pre">2p</span></code>-dimsional array of feature and knockoff importances. The
+first p coordinates correspond to features, the last p correspond
+to knockoffs.</p>
+</dd>
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.cv_score_model" title="knockpy.knockoff_stats.FeatureStatistic.cv_score_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code></a>(features, y, cv_score[, …])</p></td>
+<td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.fit" title="knockpy.knockoff_stats.FeatureStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
+<td><p>Trains the model and creates feature importances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.score_model" title="knockpy.knockoff_stats.FeatureStatistic.score_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code></a>(features, y[, y_dist])</p></td>
+<td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances" title="knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code></a>(features, y)</p></td>
+<td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances" title="knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code></a>(features, y[, …])</p></td>
+<td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.FeatureStatistic.cv_score_model">
+<code class="sig-name descname">cv_score_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">cv_score</span></em>, <em class="sig-param"><span class="n">logistic_flag</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#FeatureStatistic.cv_score_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.FeatureStatistic.cv_score_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.FeatureStatistic.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_importance</span><span class="o">=</span><span class="default_value">'swap'</span></em>, <em class="sig-param"><span class="n">antisym</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">group_agg</span><span class="o">=</span><span class="default_value">'avg'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#FeatureStatistic.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.FeatureStatistic.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains the model and creates feature importances.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>feature_importance</strong><span class="classifier">str</span></dt><dd><p>Specifies how to create feature importances from <code class="docutils literal notranslate"><span class="pre">model</span></code>. 
+Two options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“swap”: The default swap-statistic from</p></li>
+</ul>
+<p><a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a>.
+These are good measures of feature importance but
+slightly slower.
+- “swapint”: The swap-integral defined from
+<a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p>
+</div></blockquote>
+<p>Defaults to ‘swap’</p>
+</dd>
+<dt><strong>antisym</strong><span class="classifier">str</span></dt><dd><p>The antisymmetric function used to create (ungrouped) feature
+statistics. Three options: 
+- “CD” (Difference of absolute vals of coefficients),
+- “SM” (signed maximum).
+- “SCD” (Simple difference of coefficients - NOT recommended)</p>
+</dd>
+<dt><strong>group_agg</strong><span class="classifier">str</span></dt><dd><p>For group knockoffs, specifies how to turn individual feature
+statistics into grouped feature statistics. Two options: 
+“sum” and “avg”.</p>
+</dd>
+<dt><strong>**kwargs</strong><span class="classifier"><a href="#id1"><span class="problematic" id="id2">**</span></a>dict</span></dt><dd><p>kwargs to pass to the ‘train’ or ‘fit’ method of the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.FeatureStatistic.score_model">
+<code class="sig-name descname">score_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#FeatureStatistic.score_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.FeatureStatistic.score_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes mean-squared error of self.model on
+(features, y) when y is nonbinary, and computes
+1 - accuracy otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss</strong><span class="classifier">float</span></dt><dd><p>Either the MSE or one minus the accuracy of the model,
+depending on whether y is continuous or binary.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances">
+<code class="sig-name descname">swap_feature_importances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#FeatureStatistic.swap_feature_importances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.FeatureStatistic.swap_feature_importances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a model of the features and y, calculates feature importances
+as follows.</p>
+<p>For feature i, replace the feature with its knockoff and calculate
+the relative increase in the loss. Similarly, for knockoff i, 
+replace the knockoffs with its feature and calculate the relative
+increase in the loss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>features</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2p)</span></code>-shaped array of concatenated features and knockoffs,
+which must be permuted by <code class="docutils literal notranslate"><span class="pre">self.inds</span></code>.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>Z_swap</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-shaped array of variable importances such that
+Z_swap is in the same permuted as <code class="docutils literal notranslate"><span class="pre">features</span></code> initially were.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances">
+<code class="sig-name descname">swap_path_feature_importances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">step_size</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">max_lambda</span><span class="o">=</span><span class="default_value">5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#FeatureStatistic.swap_path_feature_importances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.FeatureStatistic.swap_path_feature_importances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see
+<a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.knockoff_stats.LassoStatistic">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">LassoStatistic</code><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#LassoStatistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.LassoStatistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lasso Statistic wrapper class</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
+<td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.LassoStatistic.fit" title="knockpy.knockoff_stats.LassoStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, zstat, use_pyglm, …])</p></td>
+<td><p>Wraps the FeatureStatistic class but uses cross-validated Lasso coefficients or Lasso path statistics as variable importances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
+<td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>(features, y)</p></td>
+<td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code>(features, y[, …])</p></td>
+<td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.LassoStatistic.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">zstat</span><span class="o">=</span><span class="default_value">'coef'</span></em>, <em class="sig-param"><span class="n">use_pyglm</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">group_lasso</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">antisym</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">group_agg</span><span class="o">=</span><span class="default_value">'avg'</span></em>, <em class="sig-param"><span class="n">cv_score</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">debias</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">Ginv</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#LassoStatistic.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.LassoStatistic.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the FeatureStatistic class but uses cross-validated Lasso
+coefficients or Lasso path statistics as variable importances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>zstat</strong><span class="classifier">str:</span></dt><dd><p>Two options for the variable importance measure:
+- If ‘coef’, uses to cross-validated (group) lasso coefficients.
+- If ‘lars_path’, uses the lambda value where each feature/knockoff
+enters the lasso path (meaning becomes nonzero).
+This defaults to coef.</p>
+</dd>
+<dt><strong>use_pyglm</strong><span class="classifier">bool</span></dt><dd><p>When fitting the group lasso, use the pyglm package if True (default).
+Else, use the group_lasso package.</p>
+</dd>
+<dt><strong>y_dist</strong><span class="classifier">str</span></dt><dd><p>One of “binomial” or “gaussian”</p>
+</dd>
+<dt><strong>group_lasso</strong><span class="classifier">bool</span></dt><dd><p>If True, use a true group lasso. Else just use the sklearn ungrouped
+lasso.</p>
+</dd>
+<dt><strong>antisym</strong><span class="classifier">str</span></dt><dd><p>The antisymmetric function used to create (ungrouped) feature
+statistics. Three options: 
+- “CD” (Difference of absolute vals of coefficients),
+- “SM” (signed maximum).
+- “SCD” (Simple difference of coefficients - NOT recommended)</p>
+</dd>
+<dt><strong>group_agg</strong><span class="classifier">str</span></dt><dd><p>For group knockoffs, specifies how to turn individual feature
+statistics into grouped feature statistics. Two options: 
+“sum” and “avg”.</p>
+</dd>
+<dt><strong>cv_score</strong><span class="classifier">bool</span></dt><dd><p>If true, score the feature statistic’s predictive accuracy
+using cross validation.</p>
+</dd>
+<dt><strong>debias</strong><span class="classifier">bool:</span></dt><dd><p>If true, debias the lasso. See <a class="reference external" href="https://arxiv.org/abs/1508.02757">https://arxiv.org/abs/1508.02757</a></p>
+</dd>
+<dt><strong>Ginv</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,</span> <span class="pre">2p)</span></code>-shaped precision matrix for the feature-knockoff 
+covariate distribution. This must be specified if <code class="docutils literal notranslate"><span class="pre">debias=True</span></code>.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to underlying Lasso classes</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.knockoff_stats.MargCorrStatistic">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">MargCorrStatistic</code><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#MargCorrStatistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.MargCorrStatistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lasso Statistic wrapper class</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
+<td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.MargCorrStatistic.fit" title="knockpy.knockoff_stats.MargCorrStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups])</p></td>
+<td><p>Wraps the FeatureStatistic class using marginal correlations  between X, Xk and y as variable importances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
+<td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>(features, y)</p></td>
+<td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code>(features, y[, …])</p></td>
+<td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.MargCorrStatistic.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#MargCorrStatistic.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.MargCorrStatistic.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the FeatureStatistic class using marginal correlations 
+between X, Xk and y as variable importances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to underlying <code class="docutils literal notranslate"><span class="pre">combine_Z_stats</span></code></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.knockoff_stats.OLSStatistic">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">OLSStatistic</code><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#OLSStatistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.OLSStatistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lasso Statistic wrapper class</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
+<td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.OLSStatistic.fit" title="knockpy.knockoff_stats.OLSStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, cv_score])</p></td>
+<td><p>Wraps the FeatureStatistic class with OLS coefs as variable importances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
+<td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>(features, y)</p></td>
+<td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code>(features, y[, …])</p></td>
+<td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.OLSStatistic.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cv_score</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#OLSStatistic.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.OLSStatistic.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the FeatureStatistic class with OLS coefs as variable importances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>cv_score</strong><span class="classifier">bool</span></dt><dd><p>If true, score the feature statistic’s predictive accuracy
+using cross validation.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to <code class="docutils literal notranslate"><span class="pre">combine_Z_stats</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.knockoff_stats.RandomForestStatistic">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">RandomForestStatistic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#RandomForestStatistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.RandomForestStatistic" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
+<td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.RandomForestStatistic.fit" title="knockpy.knockoff_stats.RandomForestStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, feature_importance, …])</p></td>
+<td><p>Wraps the FeatureStatistic class using a Random Forest to  generate variable importances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
+<td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>(features, y)</p></td>
+<td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code>(features, y[, …])</p></td>
+<td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.RandomForestStatistic.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_importance</span><span class="o">=</span><span class="default_value">'swap'</span></em>, <em class="sig-param"><span class="n">antisym</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">group_agg</span><span class="o">=</span><span class="default_value">'sum'</span></em>, <em class="sig-param"><span class="n">cv_score</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#RandomForestStatistic.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.RandomForestStatistic.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the FeatureStatistic class using a Random Forest to 
+generate variable importances.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>feature_importance</strong><span class="classifier">str</span></dt><dd><p>Specifies how to create feature importances from <code class="docutils literal notranslate"><span class="pre">model</span></code>. 
+Three options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“sklearn”: Use sklearn feature importances. These</p></li>
+</ul>
+<p>are very poor measures of feature importance, but
+very fast.
+- “swap”: The default swap-statistic from 
+<a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a>.
+These are good measures of feature importance but
+slightly slower.
+- “swapint”: The swap-integral defined from
+<a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p>
+</div></blockquote>
+<p>Defaults to ‘swap’</p>
+</dd>
+<dt><strong>antisym</strong><span class="classifier">str</span></dt><dd><p>The antisymmetric function used to create (ungrouped) feature
+statistics. Three options: 
+- “CD” (Difference of absolute vals of coefficients),
+- “SM” (signed maximum).
+- “SCD” (Simple difference of coefficients - NOT recommended)</p>
+</dd>
+<dt><strong>group_agg</strong><span class="classifier">str</span></dt><dd><p>For group knockoffs, specifies how to turn individual feature
+statistics into grouped feature statistics. Two options: 
+“sum” and “avg”.</p>
+</dd>
+<dt><strong>cv_score</strong><span class="classifier">bool</span></dt><dd><p>If true, score the feature statistic’s predictive accuracy
+using cross validation. This is extremely expensive for random
+forests.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to underlying RandomForest class</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="knockpy.knockoff_stats.RidgeStatistic">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">RidgeStatistic</code><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#RidgeStatistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.RidgeStatistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ridge statistic wrapper class</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, …])</p></td>
+<td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.RidgeStatistic.fit" title="knockpy.knockoff_stats.RidgeStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, antisym, group_agg, …])</p></td>
+<td><p>Wraps the FeatureStatistic class but uses cross-validated Ridge coefficients as variable importances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
+<td><p>Computes mean-squared error of self.model on (features, y) when y is nonbinary, and computes 1 - accuracy otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>(features, y)</p></td>
+<td><p>Given a model of the features and y, calculates feature importances as follows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swap_path_feature_importances</span></code>(features, y[, …])</p></td>
+<td><p>Similar to <code class="docutils literal notranslate"><span class="pre">swap_feature_importances</span></code>; see <a class="reference external" href="http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf">http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf</a></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_stats.RidgeStatistic.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">antisym</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">group_agg</span><span class="o">=</span><span class="default_value">'avg'</span></em>, <em class="sig-param"><span class="n">cv_score</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#RidgeStatistic.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.RidgeStatistic.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the FeatureStatistic class but uses cross-validated Ridge
+coefficients as variable importances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>antisym</strong><span class="classifier">str</span></dt><dd><p>The antisymmetric function used to create (ungrouped) feature
+statistics. Three options: 
+- “CD” (Difference of absolute vals of coefficients),
+- “SM” (signed maximum).
+- “SCD” (Simple difference of coefficients - NOT recommended)</p>
+</dd>
+<dt><strong>group_agg</strong><span class="classifier">str</span></dt><dd><p>For group knockoffs, specifies how to turn individual feature
+statistics into grouped feature statistics. Two options: 
+“sum” and “avg”.</p>
+</dd>
+<dt><strong>cv_score</strong><span class="classifier">bool</span></dt><dd><p>If true, score the feature statistic’s predictive accuracy
+using cross validation.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to underlying Lasso classes</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.calc_lars_path">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">calc_lars_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#calc_lars_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.calc_lars_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates locations at which X/knockoffs enter lasso 
+model when regressed on y.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>kwargs for <code class="docutils literal notranslate"><span class="pre">sklearn.linear_model.lars_path</span></code></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>Z</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-shaped array indicating the lasso path statistic
+for each variable. (This means the maximum lambda such that
+the lasso coefficient on variable j is nonzero.)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.calc_mse">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">calc_mse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#calc_mse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.calc_mse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets MSE of a model</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.combine_Z_stats">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">combine_Z_stats</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Z</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">antisym</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">group_agg</span><span class="o">=</span><span class="default_value">'sum'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#combine_Z_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.combine_Z_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given Z scores (variable importances), returns (grouped) feature statistics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Z</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-shaped numpy array of Z-statistics. The first p values
+correspond to true features, and the last p correspond to knockoffs
+(in the same order as the true features).</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>antisym</strong><span class="classifier">str</span></dt><dd><p>The antisymmetric function used to create (ungrouped) feature
+statistics. Three options: 
+- “CD” (Difference of absolute vals of coefficients),
+- “SM” (signed maximum).
+- “SCD” (Simple difference of coefficients - NOT recommended)</p>
+</dd>
+<dt><strong>group_agg</strong><span class="classifier">str</span></dt><dd><p>For group knockoffs, specifies how to turn individual feature
+statistics into grouped feature statistics. Two options: 
+“sum” and “avg”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.data_dependent_threshhold">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">data_dependent_threshhold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">W</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#data_dependent_threshhold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.data_dependent_threshhold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate data-dependent threshhold given W statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>p-length numpy array of feature statistics OR (p, batch_length) 
+shaped array.</p>
+</dd>
+<dt><strong>fdr</strong><span class="classifier">float</span></dt><dd><p>desired level of false discovery rate control</p>
+</dd>
+<dt><strong>offset</strong><span class="classifier">int</span></dt><dd><p>If offset = 0, control the modified FDR.
+If offset = 1 (default), controls the FDR exactly.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>T</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>The data-dependent threshhold. Either a float or a (batch_length,) 
+dimensional array.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.fit_group_lasso">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">fit_group_lasso</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">use_pyglm</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">group_lasso</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#fit_group_lasso"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.fit_group_lasso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits cross-validated ridge on [X, Xk] and y.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>use_pyglm</strong><span class="classifier">bool</span></dt><dd><p>When fitting the group lasso, use the pyglm package if True (default).
+Else, use the group_lasso package.</p>
+</dd>
+<dt><strong>y_dist</strong><span class="classifier">str</span></dt><dd><p>One of “binomial” or “gaussian”</p>
+</dd>
+<dt><strong>group_lasso</strong><span class="classifier">bool</span></dt><dd><p>If True, use a true group lasso. Else just use the sklearn ungrouped
+lasso.</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>kwargs for eventual (group) lasso model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>gl</strong><span class="classifier">pyglm/sklearn/group_lasso model</span></dt><dd><p>The model fit through cross-validation; one of many types.</p>
+</dd>
+<dt><strong>inds</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-dimensional array of indices representing the random
+permutation applied to the concatenation of [X, Xk] before fitting
+<code class="docutils literal notranslate"><span class="pre">gl.</span></code></p>
+</dd>
+<dt><strong>rev_inds</strong><span class="classifier">np.ndarray:</span></dt><dd><p>Indices which reverse the effect of <code class="docutils literal notranslate"><span class="pre">inds.</span></code> In particular, if
+M is any <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2p)</span></code>-dimensional array, then <code class="docutils literal notranslate"><span class="pre">`M==M[:,</span> <span class="pre">inds][:,</span> <span class="pre">rev_inds]`</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.fit_lasso">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">fit_lasso</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_lars</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#fit_lasso"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.fit_lasso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits cross-validated lasso on [X, Xk] and y.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix.</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>y_dist</strong><span class="classifier">str</span></dt><dd><p>One of “binomial” or “gaussian”</p>
+</dd>
+<dt><strong>use_lars</strong><span class="classifier">bool</span></dt><dd><p>If True, uses a LARS-based solver for Gaussian data.
+If False, uses a gradient based solver (default).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>kwargs for sklearn model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>gl</strong><span class="classifier">sklearn.linear_model.LassoCV/LassoLarsCV/LogisticRegressionCV</span></dt><dd><p>The sklearn model fit through cross-validation.</p>
+</dd>
+<dt><strong>inds</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-dimensional array of indices representing the random
+permutation applied to the concatenation of [X, Xk] before fitting
+<code class="docutils literal notranslate"><span class="pre">gl.</span></code></p>
+</dd>
+<dt><strong>rev_inds</strong><span class="classifier">np.ndarray:</span></dt><dd><p>Indices which reverse the effect of <code class="docutils literal notranslate"><span class="pre">inds.</span></code> In particular, if
+M is any <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2p)</span></code>-dimensional array, then <code class="docutils literal notranslate"><span class="pre">`M==M[:,</span> <span class="pre">inds][:,</span> <span class="pre">rev_inds]`</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.fit_ridge">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">fit_ridge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Xk</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#fit_ridge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.fit_ridge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits cross-validated ridge on [X, Xk] and y.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>y_dist</strong><span class="classifier">str</span></dt><dd><p>One of “binomial” or “gaussian”</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>kwargs for sklearn model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>gl</strong><span class="classifier">sklearn.linear_model.RidgeCV/LogisticRegressionCV</span></dt><dd><p>The sklearn model fit through cross-validation.</p>
+</dd>
+<dt><strong>inds</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-dimensional array of indices representing the random
+permutation applied to the concatenation of [X, Xk] before fitting
+<code class="docutils literal notranslate"><span class="pre">gl.</span></code></p>
+</dd>
+<dt><strong>rev_inds</strong><span class="classifier">np.ndarray:</span></dt><dd><p>Indices which reverse the effect of <code class="docutils literal notranslate"><span class="pre">inds.</span></code> In particular, if
+M is any <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2p)</span></code>-dimensional array, then <code class="docutils literal notranslate"><span class="pre">`M==M[:,</span> <span class="pre">inds][:,</span> <span class="pre">rev_inds]`</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.parse_logistic_flag">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">parse_logistic_flag</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#parse_logistic_flag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.parse_logistic_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether y_dist is binomial</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.parse_y_dist">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">parse_y_dist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#parse_y_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.parse_y_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if y is binary; else assumes it is continuous</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.knockoff_stats.use_reg_lasso">
+<code class="sig-prename descclassname">knockpy.knockoff_stats.</code><code class="sig-name descname">use_reg_lasso</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groups</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#use_reg_lasso"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_stats.use_reg_lasso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses whether or not to use group lasso</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="smatrix.html" class="btn btn-neutral float-right" title="Knockoff S-Matrix Generation API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ksamplers.html" class="btn btn-neutral float-left" title="Knockoff Sampler API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

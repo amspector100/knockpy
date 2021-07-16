@@ -544,11 +544,6 @@
 
     <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Parse some kwargs/defaults</span>
-    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
-    <span class="n">cv</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cv&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-    <span class="n">learning_rate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">y_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
@@ -589,18 +584,19 @@
     <span class="c1"># Fit pyglm model using warm starts</span>
     <span class="k">if</span> <span class="n">use_pyglm</span><span class="p">:</span>
 
+        <span class="c1"># Change defaults forkwargs</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;max_iter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;cv&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cv&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;learning_rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">l1_regs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">reg_vals</span><span class="p">]</span>
-
         <span class="n">gl</span> <span class="o">=</span> <span class="n">GLMCV</span><span class="p">(</span>
             <span class="n">distr</span><span class="o">=</span><span class="n">y_dist</span><span class="p">,</span>
-            <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
             <span class="n">group</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
             <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
-            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
             <span class="n">reg_lambda</span><span class="o">=</span><span class="n">l1_regs</span><span class="p">,</span>
-            <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
             <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;cdfast&quot;</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
         <span class="n">gl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
@@ -615,35 +611,33 @@
         <span class="k">for</span> <span class="n">group_reg</span><span class="p">,</span> <span class="n">l1_reg</span> <span class="ow">in</span> <span class="n">reg_vals</span><span class="p">:</span>
 
             <span class="c1"># Fit logistic/gaussian group lasso</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">use_pyglm</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
-                    <span class="n">gl</span> <span class="o">=</span> <span class="n">GroupLasso</span><span class="p">(</span>
-                        <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
-                        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
-                        <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
-                        <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
-                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">elif</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
-                    <span class="n">gl</span> <span class="o">=</span> <span class="n">LogisticGroupLasso</span><span class="p">(</span>
-                        <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
-                        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
-                        <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
-                        <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
-                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+                <span class="n">gl</span> <span class="o">=</span> <span class="n">GroupLasso</span><span class="p">(</span>
+                    <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
+                    <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
+                    <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
+                <span class="n">gl</span> <span class="o">=</span> <span class="n">LogisticGroupLasso</span><span class="p">(</span>
+                    <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
+                    <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
+                    <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
 
-                <span class="n">gl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-                <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">calc_mse</span><span class="p">(</span><span class="n">gl</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">gl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">calc_mse</span><span class="p">(</span><span class="n">gl</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 
-            <span class="c1"># Score, possibly select</span>
-            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
-                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
-                <span class="n">best_gl</span> <span class="o">=</span> <span class="n">gl</span>
+        <span class="c1"># Score, possibly select</span>
+        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+            <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
+            <span class="n">best_gl</span> <span class="o">=</span> <span class="n">gl</span>
 
     <span class="n">warnings</span><span class="o">.</span><span class="n">resetwarnings</span><span class="p">()</span>
 

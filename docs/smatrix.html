@@ -1,0 +1,582 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Knockoff S-Matrix Generation API Reference &mdash; knockpy 1.0.0dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utilities API Reference" href="dgp.html" />
+    <link rel="prev" title="Knockoff Feature Statistics API Reference" href="kstats.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kfilter.html">Knockoff Filter API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ksamplers.html">Knockoff Sampler API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kstats.html">Knockoff Feature Statistics API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Knockoff S-Matrix Generation API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-knockpy.mac">MAC-Minimizing Knockoffs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minimum-reconstructability-knockoffs">Minimum Reconstructability Knockoffs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-knockpy.smatrix">API Rerefence: knockpy.smatrix</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dgp.html">Utilities API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpytorch.html">Kpytorch API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Knockoff S-Matrix Generation API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/smatrix.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="knockoff-s-matrix-generation-api-reference">
+<h1>Knockoff S-Matrix Generation API Reference<a class="headerlink" href="#knockoff-s-matrix-generation-api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-knockpy.mac">
+<span id="mac-minimizing-knockoffs"></span><h2>MAC-Minimizing Knockoffs<a class="headerlink" href="#module-knockpy.mac" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="knockpy.mac.calc_min_group_eigenvalue">
+<code class="sig-prename descclassname">knockpy.mac.</code><code class="sig-name descname">calc_min_group_eigenvalue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mac.html#calc_min_group_eigenvalue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mac.calc_min_group_eigenvalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the minimum “group” eigenvalue of a covariance 
+matrix Sigma: see Dai and Barber 2016. This is useful for
+constructing equicorrelated (group) knockoffs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mac.solve_SDP">
+<code class="sig-prename descclassname">knockpy.mac.</code><code class="sig-name descname">solve_SDP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mac.html#solve_SDP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mac.solve_SDP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves ungrouped SDP to create S-matrix for MAC-minimizing knockoffs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True, prints updates during optimization.</p>
+</dd>
+<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>Number of iterations in a final binary search to account for
+numerical errors and ensure 2Sigma - S is PSD.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float</span></dt><dd><p>Minimum permissible eigenvalue of 2Sigma - S and S.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped diagonal S-matrix used to generate knockoffs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mac.solve_equicorrelated">
+<code class="sig-prename descclassname">knockpy.mac.</code><code class="sig-name descname">solve_equicorrelated</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mac.html#solve_equicorrelated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mac.solve_equicorrelated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the block diagonal matrix S using the 
+equicorrelated method described by Dai and Barber 2016.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (regular knockoffs).</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float</span></dt><dd><p>Minimum permissible eigenvalue of 2Sigma - S and S.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped (block) diagonal matrix used to generate knockoffs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mac.solve_group_SDP">
+<code class="sig-prename descclassname">knockpy.mac.</code><code class="sig-name descname">solve_group_SDP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">objective</span><span class="o">=</span><span class="default_value">'abs'</span></em>, <em class="sig-param"><span class="n">norm_type</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mac.html#solve_group_SDP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mac.solve_group_SDP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the MAC-minimizng SDP formulation for group knockoffs:
+extends Barer and Candes 2015/ Candes et al 2018.</p>
+<dl>
+<dt>Sigma<span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt>groups<span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (regular knockoffs).</p>
+</dd>
+<dt>verbose<span class="classifier">bool</span></dt><dd><p>If True, prints updates during optimization.</p>
+</dd>
+<dt>objective<span class="classifier">str</span></dt><dd><p>How to optimize the S matrix for group knockoffs. 
+There are several options:
+- ‘abs’: minimize sum(abs(Sigma - S))
+- ‘pnorm’: minimize Lp-th matrix norm.
+- ‘norm’: minimize different type of matrix norm
+(see norm_type below).</p>
+</dd>
+<dt>norm_type<span class="classifier">str or int</span></dt><dd><ul class="simple">
+<li><p>When objective == ‘pnorm’, a float specifying which Lp-th matrix norm</p></li>
+</ul>
+<p>to use. Can be any float &gt;= 1. 
+- When objective == ‘norm’, can be ‘fro’, ‘nuc’, np.inf, or 1.</p>
+</dd>
+<dt>num_iter<span class="classifier">int</span></dt><dd><p>Number of iterations in a final binary search to account for
+numerical errors and ensure 2Sigma - S is PSD.</p>
+</dd>
+<dt>tol<span class="classifier">float</span></dt><dd><p>Minimum permissible eigenvalue of 2Sigma - S and S.</p>
+</dd>
+<dt>kwargs<span class="classifier">dict</span></dt><dd><p>Keyword arguments to pass to the <code class="docutils literal notranslate"><span class="pre">cvxpy.Problem.solve()</span></code> method.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped (block) diagonal matrix used to generate knockoffs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="minimum-reconstructability-knockoffs">
+<h2>Minimum Reconstructability Knockoffs<a class="headerlink" href="#minimum-reconstructability-knockoffs" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-knockpy.mrc"></span><p>Methods for minimum-reconstructability knockoffs.</p>
+<dl class="py function">
+<dt id="knockpy.mrc.mmi_loss">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">mmi_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#mmi_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.mmi_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the log determinant of the feature-knockoff covariance
+matrix, which is inversely related to the mutual information
+between X and XK.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped S-matrix used to generate knockoffs</p>
+</dd>
+<dt><strong>smoothing</strong><span class="classifier">float</span></dt><dd><p>Add <code class="docutils literal notranslate"><span class="pre">smoothing</span></code> to all eigenvalues of the feature-knockoff
+precision matrix before taking the log determinant
+to avoid numerical instability. Defaults to 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>loss</strong><span class="classifier">float</span></dt><dd><p>The MMI loss for Sigma and S.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mrc.mvr_loss">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">mvr_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#mvr_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.mvr_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes minimum variance-based reconstructability
+loss for knockoffs, e.g., the trace of the feature-knockoff
+precision matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped S-matrix used to generate knockoffs</p>
+</dd>
+<dt><strong>smoothing</strong><span class="classifier">float</span></dt><dd><p>Add <code class="docutils literal notranslate"><span class="pre">smoothing</span></code> to all eigenvalues of the feature-knockoff
+precision matrix before inverting to avoid numerical
+instability. Defaults to 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>loss</strong><span class="classifier">float</span></dt><dd><p>The MVR loss for Sigma and S.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mrc.solve_ciknock">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_ciknock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_ciknock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_ciknock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes S-matrix used to generate conditional independence
+knockoffs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float</span></dt><dd><p>Minimum permissible eigenvalue of 2Sigma - S and S.</p>
+</dd>
+<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>The number of iterations in the binary search to ensure
+S is feasible.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped (block) diagonal matrix used to generate knockoffs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>When the S-matrix corresponding to conditional independence knockoffs
+is not feasible, this computes that S matrix and then does a binary 
+search to find the maximum gamma such that gamma * S is feasible.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mrc.solve_mmi">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mmi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">0.0001</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mmi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mmi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes S-matrix used to generate minimum mutual information
+knockoffs using coordinate descent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float</span></dt><dd><p>Minimum permissible eigenvalue of 2Sigma - S and S.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True, prints updates during optimization.</p>
+</dd>
+<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>The number of coordinate descent iterations. Defaults to 10.</p>
+</dd>
+<dt><strong>smoothing</strong><span class="classifier">float</span></dt><dd><p>Add <code class="docutils literal notranslate"><span class="pre">smoothing</span></code> to all eigenvalues of the feature-knockoff
+precision matrix before inverting to avoid numerical
+instability. Defaults to 0.</p>
+</dd>
+<dt><strong>converge_tol</strong><span class="classifier">float</span></dt><dd><p>A parameter specifying the criteria for convergence.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped (block) diagonal matrix used to generate knockoffs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.mrc.solve_mvr">
+<code class="sig-prename descclassname">knockpy.mrc.</code><code class="sig-name descname">solve_mvr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_iter</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rej_rate</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">converge_tol</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/mrc.html#solve_mvr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.mrc.solve_mvr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes S-matrix used to generate minimum variance-based
+reconstructability knockoffs using coordinate descent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of X</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float</span></dt><dd><p>Minimum permissible eigenvalue of 2Sigma - S and S.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True, prints updates during optimization.</p>
+</dd>
+<dt><strong>num_iter</strong><span class="classifier">int</span></dt><dd><p>The number of coordinate descent iterations. Defaults to 10.</p>
+</dd>
+<dt><strong>smoothing</strong><span class="classifier">float</span></dt><dd><p>Add <code class="docutils literal notranslate"><span class="pre">smoothing</span></code> to all eigenvalues of the feature-knockoff
+precision matrix before inverting to avoid numerical
+instability. Defaults to 0.</p>
+</dd>
+<dt><strong>converge_tol</strong><span class="classifier">float</span></dt><dd><p>A parameter specifying the criteria for convergence.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped (block) diagonal matrix used to generate knockoffs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-knockpy.smatrix">
+<span id="api-rerefence-knockpy-smatrix"></span><h2>API Rerefence: knockpy.smatrix<a class="headerlink" href="#module-knockpy.smatrix" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="knockpy.smatrix.compute_smatrix">
+<code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">compute_smatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">solver</span><span class="o">=</span><span class="default_value">'cd'</span></em>, <em class="sig-param"><span class="n">max_block</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">num_processes</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#compute_smatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.compute_smatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps a variety of S-matrix generation functions.
+For mvr, mmi, and sdp methods, this uses a block-diagonal
+approximation of Sigma if the dimension of Sigma exceeds
+max_block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd></dd>
+<dt><strong>``(p, p)``-shaped covariance matrix of X</strong></dt><dd></dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (regular knockoffs).</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>Method for constructing S-matrix. One of mvr, mmi, sdp, equicorrelated, ci.</p>
+</dd>
+<dt><strong>solver</strong><span class="classifier">str</span></dt><dd><p>Method for solving mrc knockoffs. One of ‘cd’ (coordinate descent) 
+or ‘psgd’ (projected gradient descent). Coordinate descent is 
+highly recommended.</p>
+</dd>
+<dt><strong>max_block</strong><span class="classifier">int</span></dt><dd><p>The maximum size of a block in a block-diagonal approximation of Sigma.</p>
+</dd>
+<dt><strong>num_processes</strong><span class="classifier">int</span></dt><dd><p>Number of parallel process to use if Sigma is approximated as
+a block-diagonal matrix.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>kwargs to pass to one of the wrapped S-matrix solvers.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped (block) diagonal matrix used to generate knockoffs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.smatrix.divide_computation">
+<code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">divide_computation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">max_block</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#divide_computation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.divide_computation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximates a correlation matrix Sigma as a block-diagonal matrix
+using hierarchical clustering. Roughly follows the R knockoff package.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.smatrix.merge_groups">
+<code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">merge_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">max_block</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#merge_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.merge_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges groups of variables together while ensuring all new groups
+have size less than max_block.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="knockpy.smatrix.parse_method">
+<code class="sig-prename descclassname">knockpy.smatrix.</code><code class="sig-name descname">parse_method</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span></em>, <em class="sig-param"><span class="n">groups</span></em>, <em class="sig-param"><span class="n">p</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/smatrix.html#parse_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.smatrix.parse_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decides which method to use to create the knockoff S matrix</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dgp.html" class="btn btn-neutral float-right" title="Utilities API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="kstats.html" class="btn btn-neutral float-left" title="Knockoff Feature Statistics API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

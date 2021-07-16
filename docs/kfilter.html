@@ -1,0 +1,444 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Knockoff Filter API Reference &mdash; knockpy 1.0.0dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Knockoff Sampler API Reference" href="ksamplers.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Knockoff Filter API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ksamplers.html">Knockoff Sampler API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kstats.html">Knockoff Feature Statistics API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="smatrix.html">Knockoff S-Matrix Generation API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dgp.html">Utilities API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpytorch.html">Kpytorch API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Knockoff Filter API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/kfilter.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-knockpy.knockoff_filter">
+<span id="knockoff-filter-api-reference"></span><h1>Knockoff Filter API Reference<a class="headerlink" href="#module-knockpy.knockoff_filter" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="knockpy.knockoff_filter.KnockoffFilter">
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.knockoff_filter.</code><code class="sig-name descname">KnockoffFilter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fstat</span><span class="o">=</span><span class="default_value">'lasso'</span></em>, <em class="sig-param"><span class="n">ksampler</span><span class="o">=</span><span class="default_value">'gaussian'</span></em>, <em class="sig-param"><span class="n">fstat_kwargs</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">knockoff_kwargs</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_filter.html#KnockoffFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_filter.KnockoffFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs knockoff-based inference, from start to finish.</p>
+<p>This wraps both the <code class="docutils literal notranslate"><span class="pre">knockoffs.KnockoffSampler</span></code> and 
+<code class="docutils literal notranslate"><span class="pre">knockoff_stats.FeatureStatistic</span></code> classes.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>fstat</strong><span class="classifier">str or knockpy.knockoff_stats.FeatureStatistic</span></dt><dd><p>The feature statistic to use in the knockoff filter.
+This may also be a string identifier, including:
+- ‘lasso’ or ‘lcd’: cross-validated lasso coefficients differences 
+- ‘lsm’: signed maximum of the lasso path statistic as</p>
+<blockquote>
+<div><p>in Barber and Candes 2015</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>‘dlasso’: Cross-validated debiased lasso coefficients</p></li>
+<li><p>‘ridge’: Cross validated ridge coefficients</p></li>
+<li><p>‘ols’: Ordinary least squares coefficients</p></li>
+<li><p>‘margcorr’: marginal correlations between features and response</p></li>
+<li><p>‘deeppink’: The deepPINK statistic as in Lu et al. 2018</p></li>
+<li><p>‘randomforest’: A random forest with swap importances</p></li>
+</ul>
+</dd>
+<dt><strong>ksampler</strong><span class="classifier">str or knockpy.knockoffs.KnockoffSampler</span></dt><dd><p>The knockoff sampler to use in the knockoff filter.
+This may also be a string identifier, including:
+- ‘gaussian’: Gaussian Model-X knockoffs
+- ‘fx’: Fixed-X knockoffs
+- ‘metro’: Generic metropolized knockoff sampler.
+- ‘artk’: t-tailed Markov chain
+- ‘blockt’: Blocks of t-distributed 
+- ‘gibbs_grid’: Discrete gibbs grid
+An alternative to specifying the ksampler is to simply pass
+in a knockoff matrix during the <code class="docutils literal notranslate"><span class="pre">forward</span></code> call.</p>
+</dd>
+<dt><strong>fstat_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Kwargs to pass to the feature statistic <code class="docutils literal notranslate"><span class="pre">fit</span></code> function,
+excluding the required arguments, defaults to {}</p>
+</dd>
+<dt><strong>knockoff_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Kwargs for instantiating the knockoff sampler argument if
+the ksampler argument is a string identifier. This can be
+the empt dict for some identifiers such as “gaussian” or “fx”,
+but additional keyword arguments are required for complex samplers
+such as the “metro” identifier. Defaults to {}</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Here we fit the KnockoffFilter on fake data from a Gaussian
+linear model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fake data-generating process for Gaussian linear model</span>
+<span class="kn">import</span> <span class="nn">knockpy</span> <span class="k">as</span> <span class="nn">kpy</span>
+<span class="n">dgprocess</span> <span class="o">=</span> <span class="n">kpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">DGP</span><span class="p">()</span>
+<span class="n">dgprocess</span><span class="o">.</span><span class="n">sample_data</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+<span class="c1"># LCD statistic with Gaussian MX knockoffs</span>
+<span class="c1"># This uses LedoitWolf covariance estimation by default.</span>
+<span class="kn">from</span> <span class="nn">knockpy.knockoff_filter</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span> 
+<span class="n">kfilter</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span> 
+    <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lcd&#39;</span><span class="p">,</span> 
+    <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> 
+    <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span><span class="s2">&quot;mvr&quot;</span><span class="p">},</span> 
+<span class="p">)</span>
+<span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">dgprocess</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">dgprocess</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fstat</strong><span class="classifier">knockpy.knockoff_stats.FeatureStatistic</span></dt><dd><p>The feature statistics to use for inference. This inherits
+from <code class="docutils literal notranslate"><span class="pre">knockoff_stats.FeatureStatistic</span></code>.</p>
+</dd>
+<dt><strong>ksampler</strong><span class="classifier">knockpy.knockoffs.KnockoffSampler</span></dt><dd><p>The knockoff sampler to use during inference. This eventually
+inherits from <code class="docutils literal notranslate"><span class="pre">knockoffs.KnockoffSampler</span></code>.</p>
+</dd>
+<dt><strong>fstat_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of kwargs to pass to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> call of <code class="docutils literal notranslate"><span class="pre">self.fstat</span></code>.</p>
+</dd>
+<dt><strong>knockoff_kwargs</strong><span class="classifier">dict</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">ksampler</span></code> is not yet initialized, kwargs to pass to <code class="docutils literal notranslate"><span class="pre">ksampler</span></code>.</p>
+</dd>
+<dt><strong>Z</strong><span class="classifier">np.ndarray</span></dt><dd><p>a <code class="docutils literal notranslate"><span class="pre">2p</span></code>-dimsional array of feature and knockoff importances. The
+first p coordinates correspond to features, the last p correspond
+to knockoffs.</p>
+</dd>
+<dt><strong>W</strong><span class="classifier">np.ndarray</span></dt><dd><p>an array of feature statistics. This is <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-dimensional
+for regular knockoffs and <code class="docutils literal notranslate"><span class="pre">(num_groups,)</span></code>-dimensional for
+group knockoffs.</p>
+</dd>
+<dt><strong>S</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped knockoff S-matrix used to generate knockoffs.</p>
+</dd>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
+</dd>
+<dt><strong>rejections</strong><span class="classifier">np.ndarray</span></dt><dd><p>a <code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-shaped boolean array where rejections[j] == 1 iff the
+the knockoff filter rejects the jth feature.</p>
+</dd>
+<dt><strong>G</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(2p,</span> <span class="pre">2p)</span></code>-shaped feature-knockoff covariance matrix</p>
+</dd>
+<dt><strong>threshold</strong><span class="classifier">float</span></dt><dd><p>the knockoff data-dependent threshold used to select variables</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_filter.KnockoffFilter.forward" title="knockpy.knockoff_filter.KnockoffFilter.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>(X, y[, Xk, mu, Sigma, groups, fdr, …])</p></td>
+<td><p>Runs the knockoff filter; returns whether each feature was rejected.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_filter.KnockoffFilter.make_selections" title="knockpy.knockoff_filter.KnockoffFilter.make_selections"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_selections</span></code></a>(W, fdr)</p></td>
+<td><p>” Calculate data dependent threshhold and selections</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs" title="knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
+<td><p>Samples knockoffs during <code class="docutils literal notranslate"><span class="pre">forward</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="knockpy.knockoff_filter.KnockoffFilter.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">Xk</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sigma</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">fstat_kwargs</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">knockoff_kwargs</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">shrinkage</span><span class="o">=</span><span class="default_value">'ledoitwolf'</span></em>, <em class="sig-param"><span class="n">recycle_up_to</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_filter.html#KnockoffFilter.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_filter.KnockoffFilter.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the knockoff filter; returns whether each feature was rejected.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
+</dd>
+<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped knockoff matrix. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, this will construct
+knockoffs using <code class="docutils literal notranslate"><span class="pre">self.ksampler</span></code>.</p>
+</dd>
+<dt><strong>mu</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">)</span></code>-shaped mean of the features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, this defaults to
+the empirical mean of the features.</p>
+</dd>
+<dt><strong>Sigma</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,</span> <span class="pre">p)</span></code>-shaped covariance matrix of the features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, this
+is estimated using the <code class="docutils literal notranslate"><span class="pre">shrinkage</span></code> option. This is ignored for
+fixed-X knockoffs.</p>
+</dd>
+<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
+num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
+is a member of group <cite>i</cite>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (regular knockoffs).</p>
+</dd>
+<dt><strong>fdr</strong><span class="classifier">float</span></dt><dd><p>The desired level of false discovery rate control.</p>
+</dd>
+<dt><strong>fstat_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to the feature statistic <code class="docutils literal notranslate"><span class="pre">fit</span></code> function,
+excluding the required arguments.</p>
+</dd>
+<dt><strong>knockoff_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs for instantiating the knockoff sampler argument if
+the ksampler argument is a string identifier. This can be
+the empty dict for some identifiers such as “gaussian” or “fx”,
+but additional keyword arguments are required for complex samplers
+such as the “metro” identifier. Defaults to {}</p>
+</dd>
+<dt><strong>shrinkage</strong><span class="classifier">str</span></dt><dd><p>Shrinkage method if estimating the covariance matrix. Defaults to 
+“LedoitWolf.” Other options are “MLE” and “glasso” (graphical lasso).</p>
+</dd>
+<dt><strong>recycle_up_to</strong><span class="classifier">int or float</span></dt><dd><dl>
+<dt>Three options:</dt><dd><ul class="simple">
+<li><p>if <code class="docutils literal notranslate"><span class="pre">None</span></code>, does nothing.</p></li>
+<li><p>if an integer &gt; 1, uses the first “recycle_up_to”</p></li>
+</ul>
+<p>rows of X as the the first “recycle_up_to” rows of knockoffs.
+- if a float between 0 and 1 (inclusive), interpreted
+as the proportion of rows to recycle.</p>
+</dd>
+</dl>
+<p>For more on recycling, see <a class="reference external" href="https://arxiv.org/abs/1602.03574">https://arxiv.org/abs/1602.03574</a></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.knockoff_filter.KnockoffFilter.make_selections">
+<code class="sig-name descname">make_selections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">W</span></em>, <em class="sig-param"><span class="n">fdr</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_filter.html#KnockoffFilter.make_selections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_filter.KnockoffFilter.make_selections" title="Permalink to this definition">¶</a></dt>
+<dd><p>” Calculate data dependent threshhold and selections</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs">
+<code class="sig-name descname">sample_knockoffs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_filter.html#KnockoffFilter.sample_knockoffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples knockoffs during <code class="docutils literal notranslate"><span class="pre">forward</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ksamplers.html" class="btn btn-neutral float-right" title="Knockoff Sampler API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.dgp &mdash; knockpy 1.0.3 documentation</title>
+  <title>knockpy.dgp &mdash; knockpy 1.1.0 documentation</title>
   
 
   
@@ -62,6 +62,10 @@
           
             
             
+              <div class="version">
+                1.1.0
+              </div>
+            
           
 
           
@@ -88,6 +92,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
 
@@ -213,7 +218,7 @@
     <span class="k">return</span> <span class="n">V</span></div>
 
 
-<div class="viewcode-block" id="AR1"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.AR1">[docs]</a><span class="k">def</span> <span class="nf">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AR1"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.AR1">[docs]</a><span class="k">def</span> <span class="nf">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">max_corr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generates `p`-dimensional correlation matrix for</span>
 <span class="sd">    AR(1) Gaussian process, where successive correlations</span>
@@ -224,7 +229,9 @@
 
     <span class="c1"># Generate rhos, take log to make multiplication easier</span>
     <span class="k">if</span> <span class="n">rho</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">))</span>
+        <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+            <span class="n">stats</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">),</span> <span class="n">max_corr</span>
+        <span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;rho </span><span class="si">{</span><span class="n">rho</span><span class="si">}</span><span class="s2"> must be a correlation between -1 and 1&quot;</span><span class="p">)</span>
@@ -314,7 +321,7 @@
 <span class="sd">    Generates random correlation matrix from a factor model </span>
 <span class="sd">    with dimension `p` and rank `rank`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">diag_entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">diag_entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
     <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
     <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">diag_entries</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">noise</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">V</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">cov2corr</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
@@ -514,7 +521,7 @@
     <span class="c1"># Possibly change the absolute values of beta</span>
     <span class="k">if</span> <span class="n">coeff_dist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span><span class="p">:</span>
-            <span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="n">beta</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="o">*</span> <span class="n">beta_nonzeros</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">coeff_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="o">*</span> <span class="n">beta_nonzeros</span>
         <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;uniform&quot;</span><span class="p">:</span>
             <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_dist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;dsliu2020&quot;</span><span class="p">:</span>
@@ -1062,7 +1069,10 @@
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ver&quot;</span><span class="p">:</span>
+                <span class="n">max_corr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;max_corr&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># enforce maximum corr</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">ErdosRenyi</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">max_corr</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">max_corr</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;qer&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span> <span class="o">=</span> <span class="n">ErdosRenyi</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1128,7 +1138,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">invSigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span></div></div>
 
 
-<div class="viewcode-block" id="create_correlation_tree"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.create_correlation_tree">[docs]</a><span class="k">def</span> <span class="nf">create_correlation_tree</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;average&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="create_correlation_tree"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.create_correlation_tree">[docs]</a><span class="k">def</span> <span class="nf">create_correlation_tree</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;single&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Creates hierarchical clustering (correlation tree)</span>
 <span class="sd">    from a correlation matrix</span>
 
@@ -1138,7 +1148,8 @@
 <span class="sd">        ``(p, p)``-shaped correlation matrix</span>
 <span class="sd">    method : str</span>
 <span class="sd">        the method of hierarchical clustering:</span>
-<span class="sd">        &#39;single&#39;, &#39;average&#39;, &#39;fro&#39;, or &#39;complete&#39;</span>
+<span class="sd">        &#39;single&#39;, &#39;average&#39;, &#39;fro&#39;, or &#39;complete&#39;.</span>
+<span class="sd">        Defaults to &#39;single&#39;.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1168,6 +1179,34 @@
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">link</span></div>
+
+<div class="viewcode-block" id="create_grouping"><a class="viewcode-back" href="../../apiref.html#knockpy.dgp.create_grouping">[docs]</a><span class="k">def</span> <span class="nf">create_grouping</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Creates a knockoff grouping from a covariance matrix</span>
+<span class="sd">    using hierarchical clustering.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Sigma : np.ndarray</span>
+<span class="sd">        ``(p, p)``-shaped covariance matrix</span>
+<span class="sd">    cutoff : np.ndarray</span>
+<span class="sd">        The correlation at which to &quot;cut&quot; the correlation tree.</span>
+<span class="sd">        For method=&#39;single&#39;, cutoff=0.95 ensures that</span>
+<span class="sd">        no two variables in different groups have absolute correlation</span>
+<span class="sd">        greater than 0.95.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    groups : np.ndarray</span>
+<span class="sd">        `(p,)`-shaped array of groups for each variable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="c1"># Create correlation tree</span>
+    <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">cov2corr</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="n">create_correlation_tree</span><span class="p">(</span>
+        <span class="n">corr_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">fcluster</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">cutoff</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s2">&quot;distance&quot;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

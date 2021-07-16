@@ -1,0 +1,597 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>knockpy.knockoff_filter &mdash; knockpy 1.0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> knockpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">knockpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>knockpy.knockoff_filter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for knockpy.knockoff_filter</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">constants</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">mrc</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">knockoffs</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">metro</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">knockoff_stats</span> <span class="k">as</span> <span class="n">kstats</span>
+
+
+<div class="viewcode-block" id="KnockoffFilter"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_filter.KnockoffFilter">[docs]</a><span class="k">class</span> <span class="nc">KnockoffFilter</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs knockoff-based inference, from start to finish.</span>
+
+<span class="sd">    This wraps both the ``knockoffs.KnockoffSampler`` and </span>
+<span class="sd">    ``knockoff_stats.FeatureStatistic`` classes.</span>
+
+<span class="sd">    Parameters </span>
+<span class="sd">    ----------</span>
+<span class="sd">    fstat : str or knockpy.knockoff_stats.FeatureStatistic</span>
+<span class="sd">        The feature statistic to use in the knockoff filter.</span>
+<span class="sd">        This may also be a string identifier, including:</span>
+<span class="sd">        - &#39;lasso&#39; or &#39;lcd&#39;: cross-validated lasso coefficients differences </span>
+<span class="sd">        - &#39;lsm&#39;: signed maximum of the lasso path statistic as </span>
+<span class="sd">            in Barber and Candes 2015</span>
+<span class="sd">        - &#39;dlasso&#39;: Cross-validated debiased lasso coefficients</span>
+<span class="sd">        - &#39;ridge&#39;: Cross validated ridge coefficients</span>
+<span class="sd">        - &#39;ols&#39;: Ordinary least squares coefficients</span>
+<span class="sd">        - &#39;margcorr&#39;: marginal correlations between features and response</span>
+<span class="sd">        - &#39;deeppink&#39;: The deepPINK statistic as in Lu et al. 2018</span>
+<span class="sd">        - &#39;randomforest&#39;: A random forest with swap importances</span>
+<span class="sd">    ksampler : str or knockpy.knockoffs.KnockoffSampler</span>
+<span class="sd">        The knockoff sampler to use in the knockoff filter.</span>
+<span class="sd">        This may also be a string identifier, including:</span>
+<span class="sd">        - &#39;gaussian&#39;: Gaussian Model-X knockoffs</span>
+<span class="sd">        - &#39;fx&#39;: Fixed-X knockoffs</span>
+<span class="sd">        - &#39;metro&#39;: Generic metropolized knockoff sampler.</span>
+<span class="sd">        - &#39;artk&#39;: t-tailed Markov chain</span>
+<span class="sd">        - &#39;blockt&#39;: Blocks of t-distributed </span>
+<span class="sd">        - &#39;gibbs_grid&#39;: Discrete gibbs grid</span>
+<span class="sd">        An alternative to specifying the ksampler is to simply pass</span>
+<span class="sd">        in a knockoff matrix during the ``forward`` call.</span>
+<span class="sd">    fstat_kwargs : dict</span>
+<span class="sd">        Kwargs to pass to the feature statistic ``fit`` function,</span>
+<span class="sd">        excluding the required arguments, defaults to {} </span>
+<span class="sd">    knockoff_kwargs : dict</span>
+<span class="sd">        Kwargs for instantiating the knockoff sampler argument if</span>
+<span class="sd">        the ksampler argument is a string identifier. This can be</span>
+<span class="sd">        the empt dict for some identifiers such as &quot;gaussian&quot; or &quot;fx&quot;,</span>
+<span class="sd">        but additional keyword arguments are required for complex samplers</span>
+<span class="sd">        such as the &quot;metro&quot; identifier. Defaults to {}</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fstat : knockpy.knockoff_stats.FeatureStatistic</span>
+<span class="sd">        The feature statistics to use for inference. This inherits</span>
+<span class="sd">        from ``knockoff_stats.FeatureStatistic``.</span>
+<span class="sd">    ksampler : knockpy.knockoffs.KnockoffSampler</span>
+<span class="sd">        The knockoff sampler to use during inference. This eventually</span>
+<span class="sd">        inherits from ``knockoffs.KnockoffSampler``.</span>
+<span class="sd">    fstat_kwargs : dict</span>
+<span class="sd">        Dictionary of kwargs to pass to the ``fit`` call of ``self.fstat``.</span>
+<span class="sd">    knockoff_kwargs : dict</span>
+<span class="sd">        If ``ksampler`` is not yet initialized, kwargs to pass to ``ksampler``.</span>
+<span class="sd">    Z : np.ndarray</span>
+<span class="sd">        a ``2p``-dimsional array of feature and knockoff importances. The</span>
+<span class="sd">        first p coordinates correspond to features, the last p correspond</span>
+<span class="sd">        to knockoffs.</span>
+<span class="sd">    W : np.ndarray</span>
+<span class="sd">        an array of feature statistics. This is ``(p,)``-dimensional</span>
+<span class="sd">        for regular knockoffs and ``(num_groups,)``-dimensional for</span>
+<span class="sd">        group knockoffs.</span>
+<span class="sd">    S : np.ndarray</span>
+<span class="sd">        the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs.</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped design matrix</span>
+<span class="sd">    Xk : np.ndarray</span>
+<span class="sd">        the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">    groups : np.ndarray</span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">        is a member of group `i`. Defaults to None (regular knockoffs).</span>
+<span class="sd">    rejections : np.ndarray</span>
+<span class="sd">        a ``(p,)``-shaped boolean array where rejections[j] == 1 iff the</span>
+<span class="sd">        the knockoff filter rejects the jth feature.</span>
+<span class="sd">    G : np.ndarray</span>
+<span class="sd">        the ``(2p, 2p)``-shaped feature-knockoff covariance matrix</span>
+<span class="sd">    threshold : float</span>
+<span class="sd">        the knockoff data-dependent threshold used to select variables</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Here we fit the KnockoffFilter on fake data from a Gaussian</span>
+<span class="sd">    linear model: ::</span>
+
+<span class="sd">        # Fake data-generating process for Gaussian linear model</span>
+<span class="sd">        import knockpy as kpy</span>
+<span class="sd">        dgprocess = kpy.dgp.DGP()</span>
+<span class="sd">        dgprocess.sample_data(n=500, p=500, sparsity=0.1)</span>
+
+<span class="sd">        # LCD statistic with Gaussian MX knockoffs</span>
+<span class="sd">        # This uses LedoitWolf covariance estimation by default.</span>
+<span class="sd">        from knockpy.knockoff_filter import KnockoffFilter </span>
+<span class="sd">        kfilter = KnockoffFilter( </span>
+<span class="sd">            fstat=&#39;lcd&#39;, </span>
+<span class="sd">            ksampler=&#39;gaussian&#39;, </span>
+<span class="sd">            knockoff_kwargs={&quot;method&quot;:&quot;mvr&quot;}, </span>
+<span class="sd">        )</span>
+<span class="sd">        rejections = kfilter.forward(X=dgprocess.X, y=dgprocess.y)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">fstat_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{},</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">### Parse feature statistic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span> <span class="o">=</span> <span class="n">fstat_kwargs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fstat</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">fstat</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="c1"># Save feature statistic if class-based</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fstat</span><span class="p">,</span> <span class="n">kstats</span><span class="o">.</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="c1"># Else parse flags</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;lasso&quot;</span> <span class="ow">or</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;lcd&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">LassoStatistic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;lsm&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">LassoStatistic</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">[</span><span class="s2">&quot;zstat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;lars_path&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">[</span><span class="s2">&quot;antisym&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sm&quot;</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;dlasso&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">LassoStatistic</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">[</span><span class="s2">&quot;debias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;ridge&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">RidgeStatistic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;ols&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">OLSStatistic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;margcorr&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">MargCorrStatistic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;randomforest&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">RandomForestStatistic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">fstat</span> <span class="o">==</span> <span class="s2">&quot;deeppink&quot;</span><span class="p">:</span>
+            <span class="n">fstat</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">DeepPinkStatistic</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized fstat </span><span class="si">{</span><span class="n">fstat</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fstat</span> <span class="o">=</span> <span class="n">fstat</span>
+
+        <span class="c1">### Preprocessing for knockoffs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span> <span class="o">=</span> <span class="n">knockoff_kwargs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ksampler</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">=</span> <span class="n">ksampler</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ksampler</span><span class="p">,</span> <span class="n">knockoffs</span><span class="o">.</span><span class="n">KnockoffSampler</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="n">ksampler</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ksampler</span><span class="p">,</span> <span class="n">knockoffs</span><span class="o">.</span><span class="n">FXSampler</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">==</span> <span class="s2">&quot;fx&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Initialize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="KnockoffFilter.sample_knockoffs"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs">[docs]</a>    <span class="k">def</span> <span class="nf">sample_knockoffs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Samples knockoffs during ``forward``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If we have already computed S, signal this</span>
+        <span class="c1"># because this is expensive</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;S&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="s2">&quot;S&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span>
+
+        <span class="c1"># Possibly initialize ksampler</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Args common to all ksamplers except fx</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;Sigma&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="n">knockoffs</span><span class="o">.</span><span class="n">GaussianSampler</span><span class="p">(</span>
+                    <span class="n">groups</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">==</span> <span class="s2">&quot;fx&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="n">knockoffs</span><span class="o">.</span><span class="n">FXSampler</span><span class="p">(</span>
+                    <span class="n">X</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">==</span> <span class="s2">&quot;artk&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="n">metro</span><span class="o">.</span><span class="n">ARTKSampler</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">,)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">==</span> <span class="s2">&quot;blockt&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="n">metro</span><span class="o">.</span><span class="n">BlockTSampler</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">,)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">==</span> <span class="s2">&quot;metro&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="n">metro</span><span class="o">.</span><span class="n">MetropolizedKnockoffSampler</span><span class="p">(</span>
+                    <span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span> <span class="o">==</span> <span class="s2">&quot;gibbs_grid&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span> <span class="o">=</span> <span class="n">metro</span><span class="o">.</span><span class="n">GibbsGridSampler</span><span class="p">(</span>
+                    <span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized ksampler string </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">Xk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span><span class="o">.</span><span class="n">sample_knockoffs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ksampler</span><span class="o">.</span><span class="n">fetch_S</span><span class="p">()</span>
+
+        <span class="c1"># Possibly use recycling</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycle_up_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Split</span>
+            <span class="n">rec_Xk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recycle_up_to</span><span class="p">]</span>
+            <span class="n">new_Xk</span> <span class="o">=</span> <span class="n">Xk</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">recycle_up_to</span> <span class="p">:]</span>
+            <span class="c1"># Combine</span>
+            <span class="n">Xk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">rec_Xk</span><span class="p">,</span> <span class="n">new_Xk</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span> <span class="o">=</span> <span class="n">Xk</span>
+
+        <span class="c1"># Construct the feature-knockoff covariance matrix, or estimate</span>
+        <span class="c1"># it if construction is not possible</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">]),</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">]),</span>
+                <span class="p">],</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># Handle errors where Ginv is exactly low rank</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Ginv</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">chol2inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The feature-knockoff covariance matrix is low rank.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Ginv</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ginv</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_covariance</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span></div>
+
+<div class="viewcode-block" id="KnockoffFilter.make_selections"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_filter.KnockoffFilter.make_selections">[docs]</a>    <span class="k">def</span> <span class="nf">make_selections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">fdr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot; Calculate data dependent threshhold and selections &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">kstats</span><span class="o">.</span><span class="n">data_dependent_threshhold</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="n">fdr</span><span class="p">)</span>
+        <span class="n">selected_flags</span> <span class="o">=</span> <span class="p">(</span><span class="n">W</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">selected_flags</span></div>
+
+<div class="viewcode-block" id="KnockoffFilter.forward"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_filter.KnockoffFilter.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">Xk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">Sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fdr</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+        <span class="n">fstat_kwargs</span><span class="o">=</span><span class="p">{},</span>
+        <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{},</span>
+        <span class="n">shrinkage</span><span class="o">=</span><span class="s2">&quot;ledoitwolf&quot;</span><span class="p">,</span>
+        <span class="n">num_factors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">recycle_up_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the knockoff filter; returns whether each feature was rejected.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            ``(n, p)``-shaped design matrix</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">        Xk : np.ndarray</span>
+<span class="sd">            ``(n, p)``-shaped knockoff matrix. If ``None``, this will construct</span>
+<span class="sd">            knockoffs using ``self.ksampler``.</span>
+<span class="sd">        mu : np.ndarray</span>
+<span class="sd">            ``(p, )``-shaped mean of the features. If ``None``, this defaults to</span>
+<span class="sd">            the empirical mean of the features.</span>
+<span class="sd">        Sigma : np.ndarray</span>
+<span class="sd">            ``(p, p)``-shaped covariance matrix of the features. If ``None``, this</span>
+<span class="sd">            is estimated using the ``shrinkage`` option. This is ignored for</span>
+<span class="sd">            fixed-X knockoffs.</span>
+<span class="sd">        groups : np.ndarray</span>
+<span class="sd">            For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">            num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
+<span class="sd">            is a member of group `i`. Defaults to ``None`` (regular knockoffs). </span>
+<span class="sd">        fdr : float</span>
+<span class="sd">            The desired level of false discovery rate control.</span>
+<span class="sd">        fstat_kwargs : dict</span>
+<span class="sd">            Extra kwargs to pass to the feature statistic ``fit`` function,</span>
+<span class="sd">            excluding the required arguments.</span>
+<span class="sd">        knockoff_kwargs : dict</span>
+<span class="sd">            Extra kwargs for instantiating the knockoff sampler argument if</span>
+<span class="sd">            the ksampler argument is a string identifier. This can be</span>
+<span class="sd">            the empty dict for some identifiers such as &quot;gaussian&quot; or &quot;fx&quot;,</span>
+<span class="sd">            but additional keyword arguments are required for complex samplers</span>
+<span class="sd">            such as the &quot;metro&quot; identifier. Defaults to {}</span>
+<span class="sd">        shrinkage : str</span>
+<span class="sd">            Shrinkage method if estimating the covariance matrix. Defaults to </span>
+<span class="sd">            &quot;LedoitWolf.&quot; Other options are &quot;MLE&quot; and &quot;glasso&quot; (graphical lasso).</span>
+<span class="sd">        num_factors : int</span>
+<span class="sd">            If num_factors is not ``None`` and Sigma is estimated,</span>
+<span class="sd">            assumes that the ground-truth Sigma is a factor model </span>
+<span class="sd">            with rank ``num_factors`` to speed up computation.</span>
+<span class="sd">        recycle_up_to : int or float</span>
+<span class="sd">            Three options:</span>
+<span class="sd">                - if ``None``, does nothing.</span>
+<span class="sd">                - if an integer &gt; 1, uses the first &quot;recycle_up_to&quot;</span>
+<span class="sd">                rows of X as the the first &quot;recycle_up_to&quot; rows of knockoffs</span>
+<span class="sd">                - if a float between 0 and 1 (inclusive), interpreted</span>
+<span class="sd">                as the proportion of rows to recycle. </span>
+<span class="sd">            For more on recycling, see https://arxiv.org/abs/1602.03574</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Preliminaries - infer covariance matrix for MX</span>
+        <span class="k">if</span> <span class="n">Sigma</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span><span class="p">:</span>
+            <span class="n">Sigma</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_covariance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="n">shrinkage</span><span class="p">)</span>
+            <span class="c1"># Possible factor model approximation</span>
+            <span class="k">if</span> <span class="n">num_factors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">Sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_factor</span><span class="p">(</span>
+                    <span class="n">Sigma</span><span class="p">,</span> <span class="n">num_factors</span><span class="o">=</span><span class="n">num_factors</span>
+                <span class="p">)</span>
+                <span class="n">Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="s1">&#39;how_approx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;factor&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span><span class="p">:</span>
+            <span class="n">Sigma</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+        <span class="c1"># Save objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span> <span class="o">=</span> <span class="n">Xk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fstat_kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">fstat_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">knockoff_kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">knockoff_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1"># Save n, p, groups</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Parse recycle_up_to</span>
+        <span class="k">if</span> <span class="n">recycle_up_to</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">recycle_up_to</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">recycle_up_to</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">recycle_up_to</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">recycle_up_to</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">recycle_up_to</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recycle_up_to</span> <span class="o">=</span> <span class="n">recycle_up_to</span>
+
+        <span class="c1"># Sample knockoffs</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_knockoffs</span><span class="p">()</span>
+
+        <span class="c1"># As an edge case, pass Ginv to debiased lasso</span>
+        <span class="k">if</span> <span class="s2">&quot;debias&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">[</span><span class="s2">&quot;debias&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">[</span><span class="s2">&quot;Ginv&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ginv</span>
+
+        <span class="c1"># Feature statistics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fstat</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">X</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span>
+        <span class="p">)</span>
+        <span class="c1"># Inherit some attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fstat</span><span class="o">.</span><span class="n">Z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fstat</span><span class="o">.</span><span class="n">W</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fstat</span><span class="o">.</span><span class="n">score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fstat</span><span class="o">.</span><span class="n">score_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rejections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_selections</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">fdr</span><span class="p">)</span>
+
+        <span class="c1"># Return</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rejections</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Asher Spector
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v1.0.3
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="knockoff_filter.html">v1.0.3</a></dd>
+      <dd><a href="../../../v1.0.4/index.html">v1.0.4</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

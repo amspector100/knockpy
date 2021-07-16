@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.mac &mdash; knockpy 1.0.3 documentation</title>
+  <title>knockpy.mac &mdash; knockpy 1.1.0 documentation</title>
   
 
   
@@ -62,6 +62,10 @@
           
             
             
+              <div class="version">
+                1.1.0
+              </div>
+            
           
 
           
@@ -88,6 +92,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
 
@@ -170,6 +175,11 @@
     <span class="n">DSDP_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="n">DSDP_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">choldate</span>
+    <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1"># Options for group SDP solver</span>
 <span class="n">OBJECTIVE_OPTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;abs&quot;</span><span class="p">,</span> <span class="s2">&quot;pnorm&quot;</span><span class="p">,</span> <span class="s2">&quot;norm&quot;</span><span class="p">]</span>
@@ -387,7 +397,7 @@
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">mineig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;After SDP, mineig is </span><span class="si">{</span><span class="n">mineig</span><span class="si">}</span><span class="s2"> after </span><span class="si">{</span><span class="n">num_iter</span><span class="si">}</span><span class="s2"> line search iters. Gamma is </span><span class="si">{</span><span class="n">gamma</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;After SDP, mineig is </span><span class="si">{</span><span class="n">mineig</span><span class="si">}</span><span class="s2"> after </span><span class="si">{</span><span class="n">num_iter</span><span class="si">}</span><span class="s2"> line search iters.&quot;</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">S</span></div>
@@ -558,11 +568,6 @@
 
     <span class="c1"># Scale to make this PSD using binary search</span>
     <span class="n">S</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">mineig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;After SDP, mineig is </span><span class="si">{</span><span class="n">mineig</span><span class="si">}</span><span class="s2"> after </span><span class="si">{</span><span class="n">num_iter</span><span class="si">}</span><span class="s2"> line search iters. Gamma is </span><span class="si">{</span><span class="n">gamma</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
 
     <span class="c1"># Return unsorted S value</span>
     <span class="k">return</span> <span class="n">S</span></div>

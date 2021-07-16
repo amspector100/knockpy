@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.knockoff_filter &mdash; knockpy 1.0.3 documentation</title>
+  <title>knockpy.knockoff_filter &mdash; knockpy 1.1.0 documentation</title>
   
 
   
@@ -62,6 +62,10 @@
           
             
             
+              <div class="version">
+                1.1.0
+              </div>
+            
           
 
           
@@ -88,6 +92,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
 
@@ -410,6 +415,7 @@
         <span class="n">fstat_kwargs</span><span class="o">=</span><span class="p">{},</span>
         <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{},</span>
         <span class="n">shrinkage</span><span class="o">=</span><span class="s2">&quot;ledoitwolf&quot;</span><span class="p">,</span>
+        <span class="n">num_factors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">recycle_up_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -449,11 +455,15 @@
 <span class="sd">        shrinkage : str</span>
 <span class="sd">            Shrinkage method if estimating the covariance matrix. Defaults to </span>
 <span class="sd">            &quot;LedoitWolf.&quot; Other options are &quot;MLE&quot; and &quot;glasso&quot; (graphical lasso).</span>
+<span class="sd">        num_factors : int</span>
+<span class="sd">            If num_factors is not ``None`` and Sigma is estimated,</span>
+<span class="sd">            assumes that the ground-truth Sigma is a factor model </span>
+<span class="sd">            with rank ``num_factors`` to speed up computation.</span>
 <span class="sd">        recycle_up_to : int or float</span>
 <span class="sd">            Three options:</span>
 <span class="sd">                - if ``None``, does nothing.</span>
 <span class="sd">                - if an integer &gt; 1, uses the first &quot;recycle_up_to&quot;</span>
-<span class="sd">                rows of X as the the first &quot;recycle_up_to&quot; rows of knockoffs.</span>
+<span class="sd">                rows of X as the the first ``recycle_up_to`` rows of knockoffs</span>
 <span class="sd">                - if a float between 0 and 1 (inclusive), interpreted</span>
 <span class="sd">                as the proportion of rows to recycle. </span>
 <span class="sd">            For more on recycling, see https://arxiv.org/abs/1602.03574</span>
@@ -462,8 +472,21 @@
         <span class="c1"># Preliminaries - infer covariance matrix for MX</span>
         <span class="k">if</span> <span class="n">Sigma</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span><span class="p">:</span>
             <span class="n">Sigma</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_covariance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="n">shrinkage</span><span class="p">)</span>
+            <span class="c1"># Possible factor model approximation</span>
+            <span class="k">if</span> <span class="n">num_factors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">Sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_factor</span><span class="p">(</span>
+                    <span class="n">Sigma</span><span class="p">,</span> <span class="n">num_factors</span><span class="o">=</span><span class="n">num_factors</span>
+                <span class="p">)</span>
+                <span class="n">Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="s1">&#39;how_approx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;factor&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mx</span><span class="p">:</span>
             <span class="n">Sigma</span> <span class="o">=</span> <span class="kc">None</span>
+
 
         <span class="c1"># Save objects</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>

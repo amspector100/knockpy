@@ -434,7 +434,7 @@
     <span class="n">mineig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
 
     <span class="c1"># Parse none strng</span>
-    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">shrinkage</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">shrinkage</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">shrinkage</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;mle&#39;</span><span class="p">:</span>
         <span class="n">shrinkage</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># Possibly shrink Sigma</span>
