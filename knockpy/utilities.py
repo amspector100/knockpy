@@ -12,7 +12,7 @@ def preprocess_groups(groups):
     """
     Maps the m unique elements of a 1D "groups" array to the integers from 1 to m.
     """
-    unique_vals = np.unique(groups)
+    unique_vals = np.sort(np.unique(groups))
     conversion = {unique_vals[i]: i for i in range(unique_vals.shape[0])}
     return np.array([conversion[x] + 1 for x in groups])
 

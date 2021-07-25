@@ -82,7 +82,7 @@ class KStatVal(unittest.TestCase):
             X, Xk, y, groups=groups, **fstat_kwargs,
         )
         W = fstat.W
-        T = data_dependent_threshhold(W, fdr=0.2)
+        T = data_dependent_threshhold(W, fdr=0.2)        
 
         # Test L2 norm
         m = np.unique(groups).shape[0]
@@ -107,6 +107,9 @@ class KStatVal(unittest.TestCase):
             power >= min_power,
             msg=f"Power {power} for {fstat_name} in equicor case (n={n},p={p},rho={rho}, y_dist {y_dist}, grouped={group_features}) should be > {min_power}. W stats are {W}, beta is {beta}",
         )
+
+        # Test symmetric property of null W
+        
 
 
 class TestFeatureStatistics(KStatVal):

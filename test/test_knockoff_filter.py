@@ -39,7 +39,7 @@ class TestFdrControl(unittest.TestCase):
         S=None,
         infer_sigma=False,
         test_grouped=True,
-        S_method="sdp",
+        S_method="mvr",
         **kwargs,
     ):
 
@@ -83,7 +83,7 @@ class TestFdrControl(unittest.TestCase):
             if not test_grouped and np.all(groups==groups2):
                 continue
 
-            # Solve SDP
+            # Solve for S matrix
             if S is None and not fixedX and not infer_sigma:
                 ksampler = knockpy.knockoffs.GaussianSampler(
                     X=X0, Sigma=Sigma, groups=groups, method=S_method,
@@ -143,13 +143,24 @@ class TestFdrControl(unittest.TestCase):
                     fdr=q,
                     **filter_kwargs,
                 )
-                del knockoff_filter
+
+                # Check null W-statistics are symmetric
+                pos_prop = (knockoff_filter.W[~group_nonnulls] > 0).mean() 
+                pos_prop_se = np.sqrt(pos_prop * (1 - pos_prop) / (1 - group_nonnulls).sum())
+                Zstat = (pos_prop - 0.5) / pos_prop_se
+                pval = 1 - stats.norm.cdf(Zstat)
+                self.assertTrue(
+                    pval >= 0.001,
+                    msg=f"MX filter null W-stats have pos_prob {pos_prop} with p={p} and pval={pval}",
+                )
 
                 # Calculate fdp
                 fdp = np.sum(selections * (1 - group_nonnulls)) / max(
                     1, np.sum(selections)
                 )
                 fdps.append(fdp)
+
+                del knockoff_filter
 
             fdps = np.array(fdps)
             fdr = fdps.mean()
