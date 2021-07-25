@@ -91,7 +91,9 @@ def combine_Z_stats(Z, groups=None, antisym="cd", group_agg="sum"):
             f"Unexpected shape {Z.shape} for Z statistics (expected ({2*p},))"
         )
     if groups is None:
-        groups = np.arange(1, p + 1, 1)
+        groups = np.arange(1, p + 1)
+    else:
+        groups = utilities.preprocess_groups(groups)
 
     antisym = str(antisym).lower()
     # Absolute coefficient differences
@@ -1283,10 +1285,6 @@ class RandomForestStatistic(FeatureStatistic):
         p = X.shape[1]
         features = np.concatenate([X, Xk], axis=1)
 
-        # Randomize coordinates to make sure everything is symmetric
-        self.inds, self.rev_inds = utilities.random_permutation_inds(2 * p)
-        features = features[:, self.inds]
-
         # By default, all variables are their own group
         if groups is None:
             groups = np.arange(0, p, 1)
@@ -1302,7 +1300,8 @@ class RandomForestStatistic(FeatureStatistic):
         else:
             self.model = ensemble.RandomForestClassifier(**kwargs)
 
-        # Fit model, get Z statistics
+        # Fit model, get Z statistics.
+        # Note this does the randomization of features by itself.
         self.model.fit(features, y)
         feature_importance = str(feature_importance).lower()
         if feature_importance == "default":
@@ -1406,22 +1405,17 @@ class DeepPinkStatistic(FeatureStatistic):
         p = X.shape[1]
         features = np.concatenate([X, Xk], axis=1)
 
-        # Randomize coordinates to make sure everything is symmetric
-        self.inds = np.arange(0, 2 * p, 1)
-        self.rev_inds = np.arange(0, 2 * p, 1)
-
         # By default, all variables are their own group
         if groups is None:
-            groups = np.arange(0, p, 1)
+            groups = np.arange(1, p+1)
         self.groups = groups
 
         # Parse y_dist, hidden_sizes, initialize model
         y_dist = parse_y_dist(y)
         if "hidden_sizes" not in kwargs:
             kwargs["hidden_sizes"] = [min(n, p)]
-        self.model = deeppink.DeepPinkModel(
-            p=p, inds=self.inds, rev_inds=self.inds, **kwargs
-        )
+        self.model = deeppink.DeepPinkModel(p=p, **kwargs)
+
         # Train model
         self.model.train()
         self.model = deeppink.train_deeppink(self.model, features, y, **train_kwargs)
@@ -1430,7 +1424,7 @@ class DeepPinkStatistic(FeatureStatistic):
         # Get Z statistics
         feature_importance = str(feature_importance).lower()
         if feature_importance == "deeppink":
-            self.Z = self.model.feature_importances()
+            self.Z = self.model.feature_importances(weight_scores=True)
         elif feature_importance == "unweighted":
             self.Z = self.model.feature_importances(weight_scores=False)
         elif feature_importance == "swap":
