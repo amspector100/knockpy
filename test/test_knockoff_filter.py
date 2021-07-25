@@ -145,7 +145,7 @@ class TestFdrControl(unittest.TestCase):
                 )
 
                 # Check null W-statistics are symmetric
-                pos_prop = (knockoff_filter.W[~group_nonnulls] > 0).mean() 
+                pos_prop = (knockoff_filter.W[group_nonnulls == 0] > 0).mean() 
                 pos_prop_se = np.sqrt(pos_prop * (1 - pos_prop) / (1 - group_nonnulls).sum())
                 Zstat = (pos_prop - 0.5) / pos_prop_se
                 pval = 1 - stats.norm.cdf(Zstat)

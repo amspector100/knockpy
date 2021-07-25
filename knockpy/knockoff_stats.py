@@ -1285,9 +1285,13 @@ class RandomForestStatistic(FeatureStatistic):
         p = X.shape[1]
         features = np.concatenate([X, Xk], axis=1)
 
+        # Randomize coordinates to make sure everything is symmetric
+        self.inds, self.rev_inds = utilities.random_permutation_inds(2 * p)
+        features = features[:, self.inds]
+
         # By default, all variables are their own group
         if groups is None:
-            groups = np.arange(0, p, 1)
+            groups = np.arange(1, p+1)
         self.groups = groups
 
         # Parse y_dist, initialize model
@@ -1383,10 +1387,9 @@ class DeepPinkStatistic(FeatureStatistic):
             "sum" and "avg".
         cv_score : bool
             If true, score the feature statistic's predictive accuracy
-            using cross validation. This is extremely expensive for random
-            forests.
+            using cross validation. This is extremely expensive for deeppink.
         kwargs : dict
-            Extra kwargs to pass to underlying RandomForest class
+            Extra kwargs to pass to underlying deeppink class (in kpytorch)
 
         Returns
         -------
@@ -1404,6 +1407,11 @@ class DeepPinkStatistic(FeatureStatistic):
         n = X.shape[0]
         p = X.shape[1]
         features = np.concatenate([X, Xk], axis=1)
+
+        # The deeppink model class will shuffle statistics,
+        # but for compatability we create indices anyway
+        self.inds = np.arange(2*p)
+        self.rev_inds = self.inds
 
         # By default, all variables are their own group
         if groups is None:
