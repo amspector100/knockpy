@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; knockpy 1.1.0 documentation</title>
+  <title>API Reference &mdash; knockpy 1.1.1 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -476,10 +476,9 @@ statistics into grouped feature statistics. Two options:
 “sum” and “avg”.</p>
 </dd>
 <dt><strong>cv_score</strong><span class="classifier">bool</span></dt><dd><p>If true, score the feature statistic’s predictive accuracy
-using cross validation. This is extremely expensive for random
-forests.</p>
+using cross validation. This is extremely expensive for deeppink.</p>
 </dd>
-<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to underlying RandomForest class</p>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>Extra kwargs to pass to underlying deeppink class (in kpytorch)</p>
 </dd>
 </dl>
 </dd>
@@ -2733,7 +2732,7 @@ set of classes and methods which rely on <code class="docutils literal notransla
 for automatic differentation.</p>
 <span class="target" id="module-knockpy.kpytorch.deeppink"></span><dl class="py class">
 <dt id="knockpy.kpytorch.deeppink.DeepPinkModel">
-<em class="property">class </em><code class="sig-prename descclassname">knockpy.kpytorch.deeppink.</code><code class="sig-name descname">DeepPinkModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">inds</span></em>, <em class="sig-param"><span class="n">rev_inds</span></em>, <em class="sig-param"><span class="n">hidden_sizes</span><span class="o">=</span><span class="default_value">[64]</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">'gaussian'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/deeppink.html#DeepPinkModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.deeppink.DeepPinkModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">knockpy.kpytorch.deeppink.</code><code class="sig-name descname">DeepPinkModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">hidden_sizes</span><span class="o">=</span><span class="default_value">[64]</span></em>, <em class="sig-param"><span class="n">y_dist</span><span class="o">=</span><span class="default_value">'gaussian'</span></em>, <em class="sig-param"><span class="n">normalize_Z</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/deeppink.html#DeepPinkModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.deeppink.DeepPinkModel" title="Permalink to this definition">¶</a></dt>
 <dd><p class="rubric">Methods</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -2775,7 +2774,7 @@ for automatic differentation.</p>
 <td><p>Casts all floating point parameters and buffers to float datatype.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#knockpy.kpytorch.deeppink.DeepPinkModel.forward" title="knockpy.kpytorch.deeppink.DeepPinkModel.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>(features)</p></td>
-<td><p>NOTE: FEATURES CANNOT BE SHUFFLED</p></td>
+<td><p>Note: features are now shuffled</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">half</span></code>()</p></td>
 <td><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">half</span></code> datatype.</p></td>
@@ -2845,19 +2844,13 @@ for automatic differentation.</p>
 <col style="width: 30%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>Z_regularizer</strong></p></td>
+<tr class="row-odd"><td><p><strong>feature_importances</strong></p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><strong>feature_importances</strong></p></td>
+<tr class="row-even"><td><p><strong>l1norm</strong></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><strong>l1norm</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>l2norm</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>normalize_Z_weight</strong></p></td>
+<tr class="row-odd"><td><p><strong>l2norm</strong></p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><strong>share_memory</strong></p></td>
@@ -2868,7 +2861,7 @@ for automatic differentation.</p>
 <dl class="py method">
 <dt id="knockpy.kpytorch.deeppink.DeepPinkModel.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/kpytorch/deeppink.html#DeepPinkModel.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#knockpy.kpytorch.deeppink.DeepPinkModel.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>NOTE: FEATURES CANNOT BE SHUFFLED</p>
+<dd><p>Note: features are now shuffled</p>
 </dd></dl>
 
 <dl class="py method">

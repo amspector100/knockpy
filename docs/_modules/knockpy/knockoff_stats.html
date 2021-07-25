@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.knockoff_stats &mdash; knockpy 1.1.0 documentation</title>
+  <title>knockpy.knockoff_stats &mdash; knockpy 1.1.1 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -251,7 +251,9 @@
             <span class="sa">f</span><span class="s2">&quot;Unexpected shape </span><span class="si">{</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> for Z statistics (expected (</span><span class="si">{</span><span class="mi">2</span><span class="o">*</span><span class="n">p</span><span class="si">}</span><span class="s2">,))&quot;</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">preprocess_groups</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
 
     <span class="n">antisym</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">antisym</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="c1"># Absolute coefficient differences</span>
@@ -1449,7 +1451,7 @@
 
         <span class="c1"># By default, all variables are their own group</span>
         <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
 
         <span class="c1"># Parse y_dist, initialize model</span>
@@ -1462,7 +1464,8 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">RandomForestClassifier</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="c1"># Fit model, get Z statistics</span>
+        <span class="c1"># Fit model, get Z statistics.</span>
+        <span class="c1"># Note this does the randomization of features by itself.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="n">feature_importance</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">feature_importance</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
@@ -1544,10 +1547,9 @@
 <span class="sd">            &quot;sum&quot; and &quot;avg&quot;.</span>
 <span class="sd">        cv_score : bool</span>
 <span class="sd">            If true, score the feature statistic&#39;s predictive accuracy</span>
-<span class="sd">            using cross validation. This is extremely expensive for random</span>
-<span class="sd">            forests.</span>
+<span class="sd">            using cross validation. This is extremely expensive for deeppink.</span>
 <span class="sd">        kwargs : dict</span>
-<span class="sd">            Extra kwargs to pass to underlying RandomForest class</span>
+<span class="sd">            Extra kwargs to pass to underlying deeppink class (in kpytorch)</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1566,22 +1568,22 @@
         <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="c1"># Randomize coordinates to make sure everything is symmetric</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># The deeppink model class will shuffle statistics,</span>
+        <span class="c1"># but for compatability we create indices anyway</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inds</span>
 
         <span class="c1"># By default, all variables are their own group</span>
         <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
 
         <span class="c1"># Parse y_dist, hidden_sizes, initialize model</span>
         <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;hidden_sizes&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;hidden_sizes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">deeppink</span><span class="o">.</span><span class="n">DeepPinkModel</span><span class="p">(</span>
-            <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">deeppink</span><span class="o">.</span><span class="n">DeepPinkModel</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
         <span class="c1"># Train model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">deeppink</span><span class="o">.</span><span class="n">train_deeppink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">train_kwargs</span><span class="p">)</span>
@@ -1590,7 +1592,7 @@
         <span class="c1"># Get Z statistics</span>
         <span class="n">feature_importance</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">feature_importance</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;deeppink&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_importances</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_importances</span><span class="p">(</span><span class="n">weight_scores</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;unweighted&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_importances</span><span class="p">(</span><span class="n">weight_scores</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">feature_importance</span> <span class="o">==</span> <span class="s2">&quot;swap&quot;</span><span class="p">:</span>

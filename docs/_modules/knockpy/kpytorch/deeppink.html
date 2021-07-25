@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>knockpy.kpytorch.deeppink &mdash; knockpy 1.1.0 documentation</title>
+  <title>knockpy.kpytorch.deeppink &mdash; knockpy 1.1.1 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -166,11 +166,12 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span>
 
 
 <span class="k">def</span> <span class="nf">create_batches</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">batchsize</span><span class="p">):</span>
 
-    <span class="c1"># Create random indices</span>
+    <span class="c1"># Create random indices to reorder datapoints</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
@@ -185,22 +186,29 @@
 
 
 <div class="viewcode-block" id="DeepPinkModel"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.deeppink.DeepPinkModel">[docs]</a><span class="k">class</span> <span class="nc">DeepPinkModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span><span class="p">,</span> <span class="n">hidden_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">64</span><span class="p">],</span> <span class="n">y_dist</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">hidden_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">64</span><span class="p">],</span> <span class="n">y_dist</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">normalize_Z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adapted from https://arxiv.org/pdf/1809.01185.pdf.</span>
 
-<span class="sd">        Module has two components:</span>
+<span class="sd">        The module has two components:</span>
 <span class="sd">        1. A sparse linear layer with dimension 2*p to p.</span>
 <span class="sd">        However, there are only 2*p weights (each feature</span>
 <span class="sd">        and knockoff points only to their own unique node).</span>
 <span class="sd">        This is (maybe?) followed by a ReLU activation.</span>
-<span class="sd">        2. A MLP </span>
+<span class="sd">        2. A multilayer perceptron (MLP)</span>
 
-<span class="sd">        :param p: The dimensionality of the data</span>
-<span class="sd">        :param hidden_sizes: A list of hidden sizes</span>
-<span class="sd">        for the mlp layer(s). Defaults to [64], which </span>
-<span class="sd">        means there will be one two hidden layers </span>
-<span class="sd">        (one p -&gt; 64, one p -&gt; 128). </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p : int</span>
+<span class="sd">            The dimensionality of the data</span>
+<span class="sd">        hidden_sizes: list</span>
+<span class="sd">            A list of hidden sizes for the mlp layer(s). </span>
+<span class="sd">            Defaults to [64].</span>
+<span class="sd">        normalize_Z : bool</span>
+<span class="sd">            If True, the first sparse linear layer is normalized</span>
+<span class="sd">            so the weights for each feature/knockoff pair have an</span>
+<span class="sd">            l1 norm of 1. This can modestly improve power in some</span>
+<span class="sd">            settings.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -209,6 +217,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y_dist</span> <span class="o">=</span> <span class="n">y_dist</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm_Z_weight</span> <span class="o">=</span> <span class="n">normalize_Z</span>
+
+        <span class="c1"># Save indices/reverse indices to prevent violations of FDR control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ko_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rev_inds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">:]</span>
 
         <span class="c1"># Create MLP layers</span>
         <span class="n">mlp_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">hidden_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
@@ -225,30 +239,33 @@
         <span class="c1"># Then create MLP</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">mlp_layers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">normalize_Z_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_fetch_Z_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="c1"># First normalize</span>
-        <span class="n">normalizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">])</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="p">:]</span>
+        <span class="c1"># Possibly don&#39;t normalize</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_Z_weight</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span>
+
+        <span class="c1"># Else normalize, first construct denominator            </span>
+        <span class="n">normalizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_inds</span><span class="p">])</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ko_inds</span><span class="p">]</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">])</span> <span class="o">/</span> <span class="n">normalizer</span><span class="p">,</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="p">:])</span> <span class="o">/</span> <span class="n">normalizer</span><span class="p">,</span>
-            <span class="p">],</span>
-            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="c1"># Normalize</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_inds</span><span class="p">])</span> <span class="o">/</span> <span class="n">normalizer</span>
+        <span class="n">Ztilde</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ko_inds</span><span class="p">])</span> <span class="o">/</span> <span class="n">normalizer</span>
+        <span class="c1"># Concatenate and reshuffle</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">Z</span><span class="p">,</span> <span class="n">Ztilde</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">]</span>
 
 <div class="viewcode-block" id="DeepPinkModel.forward"><a class="viewcode-back" href="../../../apiref.html#knockpy.kpytorch.deeppink.DeepPinkModel.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        NOTE: FEATURES CANNOT BE SHUFFLED</span>
+<span class="sd">        Note: features are now shuffled</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># First layer: pairwise weights (and sum)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
             <span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-        <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_Z_weight</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">features</span>
-        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="p">:]</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inds</span><span class="p">]</span> <span class="c1"># shuffle features to prevent FDR violations</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_Z_weight</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">features</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_inds</span><span class="p">]</span> <span class="o">-</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ko_inds</span><span class="p">]</span>
 
         <span class="c1"># Apply MLP</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span><span class="p">(</span><span class="n">features</span><span class="p">)</span></div>
@@ -275,11 +292,6 @@
         <span class="n">out</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_weight</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">out</span>
 
-    <span class="k">def</span> <span class="nf">Z_regularizer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="n">normZ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_Z_weight</span><span class="p">()</span>
-        <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">normZ</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-
     <span class="k">def</span> <span class="nf">feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight_scores</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
@@ -297,8 +309,9 @@
                 <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
 
             <span class="c1"># Multiply by Z weights</span>
-            <span class="n">feature_imp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_Z_weight</span><span class="p">()[</span><span class="mi">0</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">]</span> <span class="o">*</span> <span class="n">W</span>
-            <span class="n">knockoff_imp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_Z_weight</span><span class="p">()[</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">W</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_Z_weight</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">feature_imp</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_inds</span><span class="p">]</span> <span class="o">*</span> <span class="n">W</span>
+            <span class="n">knockoff_imp</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ko_inds</span><span class="p">]</span> <span class="o">*</span> <span class="n">W</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">feature_imp</span><span class="p">,</span> <span class="n">knockoff_imp</span><span class="p">])</span></div>
 
 
@@ -352,7 +365,6 @@
             <span class="c1"># Add l1 and l2 regularization</span>
             <span class="n">loss</span> <span class="o">+=</span> <span class="n">lambda1</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">l1norm</span><span class="p">()</span>
             <span class="n">loss</span> <span class="o">+=</span> <span class="n">lambda2</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">l2norm</span><span class="p">()</span>
-            <span class="n">loss</span> <span class="o">+=</span> <span class="n">lambda1</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">Z_regularizer</span><span class="p">()</span>
 
             <span class="c1"># Step</span>
             <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
