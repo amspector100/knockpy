@@ -377,3 +377,19 @@ class KnockoffFilter:
 
         # Return
         return self.rejections
+
+    def plot(
+        self,
+        labels=None
+    ):
+        # Import matplotlib
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError as err:
+            raise ImportError(
+                f"matplotlib is required for plotting, but importing it raised {err}."
+            )
+
+
+
+
