@@ -3,7 +3,13 @@ import warnings
 import numpy as np
 import scipy as sp
 import unittest
-from .context import knockpy
+
+# for regular pytest calls
+try:
+    from .context import knockpy
+# for running directly with python
+except ImportError:
+    from context import knockpy
 from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
 
 try:
@@ -1155,4 +1161,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    import pytest
+    import sys
+    pytest.main(sys.argv)
+    #unittest.main()

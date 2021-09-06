@@ -2,8 +2,12 @@ import numpy as np
 import unittest
 import sklearn.naive_bayes
 import sklearn.neural_network
-from .context import knockpy
-
+# for regular pytest calls
+try:
+    from .context import knockpy
+# for running directly with python
+except ImportError:
+    from context import knockpy
 from knockpy import knockoff_stats as kstats
 from knockpy import utilities, dgp
 from knockpy.knockoff_stats import data_dependent_threshhold
@@ -532,7 +536,7 @@ class TestFeatureStatistics(KStatVal):
         self.check_kstat_fit(
             fstat=kstats.RidgeStatistic(),
             fstat_name="Sklearn ridge",
-            n=160,
+            n=200,
             p=100,
             rho=0.7,
             coeff_size=5,
@@ -546,7 +550,7 @@ class TestFeatureStatistics(KStatVal):
         self.check_kstat_fit(
             fstat=kstats.RidgeStatistic(),
             fstat_name="Sklearn ridge",
-            n=160,
+            n=200,
             p=100,
             rho=0.7,
             coeff_size=5,
@@ -561,7 +565,7 @@ class TestFeatureStatistics(KStatVal):
         self.check_kstat_fit(
             fstat=kstats.RidgeStatistic(),
             fstat_name="Sklearn ridge",
-            n=150,
+            n=200,
             p=100,
             rho=0.7,
             coeff_size=5,
@@ -879,4 +883,7 @@ class TestDataThreshhold(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    import pytest
+    import sys
+    pytest.main(sys.argv)
+    #unittest.main()

@@ -242,35 +242,35 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
     features = features[:, inds]
 
     # Fit lasso
-    warnings.filterwarnings("ignore")
-    if y_dist == "gaussian":
-        if not use_lars:
-            gl = linear_model.LassoCV(
-                alphas=DEFAULT_REG_VALS,
-                cv=cv,
-                verbose=False,
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        if y_dist == "gaussian":
+            if not use_lars:
+                gl = linear_model.LassoCV(
+                    alphas=DEFAULT_REG_VALS,
+                    cv=cv,
+                    verbose=False,
+                    max_iter=max_iter,
+                    tol=tol,
+                    **kwargs,
+                ).fit(features, y)
+            elif use_lars:
+                gl = linear_model.LassoLarsCV(
+                    cv=cv, verbose=False, max_iter=max_iter, **kwargs,
+                ).fit(features, y)
+        elif y_dist == "binomial":
+            gl = linear_model.LogisticRegressionCV(
+                Cs=1 / DEFAULT_REG_VALS,
+                penalty="l1",
                 max_iter=max_iter,
                 tol=tol,
+                cv=cv,
+                verbose=False,
+                solver="liblinear",
                 **kwargs,
             ).fit(features, y)
-        elif use_lars:
-            gl = linear_model.LassoLarsCV(
-                cv=cv, verbose=False, max_iter=max_iter, **kwargs,
-            ).fit(features, y)
-    elif y_dist == "binomial":
-        gl = linear_model.LogisticRegressionCV(
-            Cs=1 / DEFAULT_REG_VALS,
-            penalty="l1",
-            max_iter=max_iter,
-            tol=tol,
-            cv=cv,
-            verbose=False,
-            solver="liblinear",
-            **kwargs,
-        ).fit(features, y)
-    else:
-        raise ValueError(f"y_dist must be one of gaussian, binomial, not {y_dist}")
-    warnings.resetwarnings()
+        else:
+            raise ValueError(f"y_dist must be one of gaussian, binomial, not {y_dist}")
 
     return gl, inds, rev_inds
 
@@ -319,21 +319,21 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
     features = features[:, inds]
 
     # Fit lasso
-    warnings.filterwarnings("ignore")
-    if y_dist == "gaussian":
-        ridge = linear_model.RidgeCV(
-            alphas=DEFAULT_REG_VALS,
-            store_cv_values=True,
-            scoring="neg_mean_squared_error",
-            **kwargs,
-        ).fit(features, y)
-    elif y_dist == "binomial":
-        ridge = linear_model.LogisticRegressionCV(
-            Cs=1 / DEFAULT_REG_VALS, penalty="l2", solver="liblinear", **kwargs,
-        ).fit(features, y)
-    else:
-        raise ValueError(f"y_dist must be one of gaussian, binomial, not {y_dist}")
-    warnings.resetwarnings()
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        if y_dist == "gaussian":
+            ridge = linear_model.RidgeCV(
+                alphas=DEFAULT_REG_VALS,
+                store_cv_values=True,
+                scoring="neg_mean_squared_error",
+                **kwargs,
+            ).fit(features, y)
+        elif y_dist == "binomial":
+            ridge = linear_model.LogisticRegressionCV(
+                Cs=1 / DEFAULT_REG_VALS, penalty="l2", solver="liblinear", **kwargs,
+            ).fit(features, y)
+        else:
+            raise ValueError(f"y_dist must be one of gaussian, binomial, not {y_dist}")
 
     return ridge, inds, rev_inds
 
@@ -385,8 +385,6 @@ def fit_group_lasso(
         M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```
     """
 
-    warnings.filterwarnings("ignore")
-
     if y_dist is None:
         y_dist = parse_y_dist(y)
 
@@ -425,64 +423,64 @@ def fit_group_lasso(
     reg_vals = kwargs.pop("reg_vals", [(x, x) for x in DEFAULT_REG_VALS])
 
     # Fit pyglm model using warm starts
-    if use_pyglm:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        if use_pyglm:
 
-        # Change defaults forkwargs
-        kwargs['max_iter'] = kwargs.pop("max_iter", 100)
-        kwargs['tol'] = kwargs.pop("tol", 1e-2)
-        kwargs['cv'] = kwargs.pop("cv", 5)
-        kwargs['learning_rate'] = kwargs.pop("learning_rate", 2)
-        l1_regs = [x[0] for x in reg_vals]
-        gl = GLMCV(
-            distr=y_dist,
-            group=doubled_groups,
-            alpha=1.0,
-            reg_lambda=l1_regs,
-            solver="cdfast",
-            **kwargs
-        )
-        gl.fit(features, y)
-
-        # Pull score, rename
-        best_score = -1 * calc_mse(gl, features, y)
-        best_gl = gl
-
-    # Fit model
-    if not use_pyglm:
-        best_gl = None
-        best_score = -1 * np.inf
-        for group_reg, l1_reg in reg_vals:
-
-            # Fit logistic/gaussian group lasso
+            # Change defaults forkwargs
+            kwargs['max_iter'] = kwargs.pop("max_iter", 100)
             kwargs['tol'] = kwargs.pop("tol", 1e-2)
-            if y_dist.lower() == "gaussian":
-                gl = GroupLasso(
-                    groups=doubled_groups,
-                    group_reg=group_reg,
-                    l1_reg=l1_reg,
-                    **kwargs,
-                )
-            elif y_dist.lower() == "binomial":
-                gl = LogisticGroupLasso(
-                    groups=doubled_groups,
-                    group_reg=group_reg,
-                    l1_reg=l1_reg,
-                    **kwargs,
-                )
-            else:
-                raise ValueError(
-                    f"y_dist must be one of gaussian, binomial, not {y_dist}"
-                )
+            kwargs['cv'] = kwargs.pop("cv", 5)
+            kwargs['learning_rate'] = kwargs.pop("learning_rate", 2)
+            l1_regs = [x[0] for x in reg_vals]
+            gl = GLMCV(
+                distr=y_dist,
+                group=doubled_groups,
+                alpha=1.0,
+                reg_lambda=l1_regs,
+                solver="cdfast",
+                **kwargs
+            )
+            gl.fit(features, y)
 
-            gl.fit(features, y.reshape(n, 1))
-            score = -1 * calc_mse(gl, features, y.reshape(n, 1))
-
-        # Score, possibly select
-        if score > best_score:
-            best_score = score
+            # Pull score, rename
+            best_score = -1 * calc_mse(gl, features, y)
             best_gl = gl
 
-    warnings.resetwarnings()
+        # Fit model
+        else:
+            best_gl = None
+            best_score = -1 * np.inf
+            for group_reg, l1_reg in reg_vals:
+
+                # Fit logistic/gaussian group lasso
+                kwargs['tol'] = kwargs.pop("tol", 1e-2)
+                if y_dist.lower() == "gaussian":
+                    gl = GroupLasso(
+                        groups=doubled_groups,
+                        group_reg=group_reg,
+                        l1_reg=l1_reg,
+                        **kwargs,
+                    )
+                elif y_dist.lower() == "binomial":
+                    gl = LogisticGroupLasso(
+                        groups=doubled_groups,
+                        group_reg=group_reg,
+                        l1_reg=l1_reg,
+                        **kwargs,
+                    )
+                else:
+                    raise ValueError(
+                        f"y_dist must be one of gaussian, binomial, not {y_dist}"
+                    )
+
+                gl.fit(features, y.reshape(n, 1))
+                score = -1 * calc_mse(gl, features, y.reshape(n, 1))
+
+            # Score, possibly select
+            if score > best_score:
+                best_score = score
+                best_gl = gl
 
     return best_gl, inds, rev_inds
 
