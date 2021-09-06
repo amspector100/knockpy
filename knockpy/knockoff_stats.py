@@ -128,6 +128,33 @@ def combine_Z_stats(Z, groups=None, antisym="cd", group_agg="sum"):
     # Return
     return W_group
 
+def compute_residual_variance(X, Xk, y):
+    """
+    Estimates sigma2 using residual variance of y
+    given [X, Xk]. Uses a penalized linear model
+    if n < 2p + 10.
+
+    Returns
+    -------
+    sigma2 : float
+        Estimated residual variance
+    """
+    # Use (penalized) linear model to predict y
+    n, p = X.shape
+    if n - 2 * p > 10:
+        model = linear_model.LinearRegression()
+    else:
+        model = linear_model.Lasso(
+            alpha=0.1 * np.sqrt(np.log(p) / n)
+        )
+    # Concatenating features shows no preference between X, Xk
+    features = np.concatenate([X, Xk], axis=1)
+    perm_inds, _ = utilities.random_permutation_inds(2 * p)
+    features = features[:, perm_inds]
+    model.fit(features, y)
+    resid = np.power(model.predict(features) - y, 2).sum()
+    return resid / (n - np.sum(model.coef_ != 0))
+
 
 # ------------------------------ Lasso Stuff ---------------------------------------#
 def calc_lars_path(X, Xk, y, groups=None, **kwargs):
@@ -995,7 +1022,13 @@ class LassoStatistic(FeatureStatistic):
             ``(2p, 2p)``-shaped precision matrix for the feature-knockoff 
             covariate distribution. This must be specified if ``debias=True``.
         kwargs : dict
-            Extra kwargs to pass to underlying Lasso classes
+            Extra kwargs to pass to underlying Lasso classes.
+
+        Notes
+        -----
+        When not using the group lasso, one can specify choice(s) of 
+        regularization parameter using the ``alphas`` keyword argument.
+        Otherwise, use the ``reg_vals`` keyword argument.
 
         Returns
         -------

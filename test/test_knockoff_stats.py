@@ -899,6 +899,31 @@ class TestDataThreshhold(unittest.TestCase):
             err_msg=f"Incorrect data dependent threshhold (batched): Ts should be {expected}, not {Ts}",
         )
 
+class TestHelpers(unittest.TestCase):
+    """ tests miscallaneous helper functions """
+
+    def test_resid_variance_estimation(self):
+
+        # Create fake data and knockoffs in low and high-dimensional setting
+        p = 100
+        for n in [int(p / 2), int(2 * p) + 5, int(3 * p)]:      
+            dgprocess = knockpy.dgp.DGP()
+            dgprocess.sample_data(n=n, p=p, sparsity=0.1)
+            if n > 2 * p:
+                ksampler = knockpy.knockoffs.FXSampler(X=dgprocess.X)
+            else:
+                ksampler = knockpy.knockoffs.GaussianSampler(
+                    X=dgprocess.X, Sigma=dgprocess.Sigma
+                )
+            ksampler.sample_knockoffs()
+            # Compute residual variance
+            hat_sigma2 = kstats.compute_residual_variance(
+                dgprocess.X, ksampler.Xk, dgprocess.y
+            )
+            self.assertTrue(
+                hat_sigma2 < 1.5 and hat_sigma2 > 0.66,
+                f"Resid. var. est is poor: hat_sigma2={hat_sigma2} (target=1) for n={n}, p={p}"
+            )
 
 if __name__ == "__main__":
     import pytest

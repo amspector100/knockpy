@@ -359,6 +359,17 @@ class TestKnockoffFilter(TestFdrControl):
             filter_kwargs={"ksampler": "fx"},
         )
 
+        # Scenario 1: AR1, recycle, lsm
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=150,
+            p=50,
+            method="AR1",
+            sparsity=0.1,
+            y_dist="gaussian",
+            filter_kwargs={"ksampler": "fx", "fstat": "lsm"},
+        )
+
     @pytest.mark.slow
     def test_deeppink_control(self):
         if not TORCH_AVAILABLE:

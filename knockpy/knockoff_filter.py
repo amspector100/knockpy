@@ -19,6 +19,7 @@ class KnockoffFilter:
     ----------
     fstat : str or knockpy.knockoff_stats.FeatureStatistic
         The feature statistic to use in the knockoff filter.
+        Defaults to a lasso statistic.
         This may also be a string identifier, including:
         - 'lasso' or 'lcd': cross-validated lasso coefficients differences 
         - 'lsm': signed maximum of the lasso path statistic as 
@@ -29,6 +30,8 @@ class KnockoffFilter:
         - 'margcorr': marginal correlations between features and response
         - 'deeppink': The deepPINK statistic as in Lu et al. 2018
         - 'randomforest': A random forest with swap importances
+        Note that when using FX knockoffs, the lcd statistic does not use
+        cross-validation and sets ``alphas = sigma2 * sqrt(log(p) / n).``
     ksampler : str or knockpy.knockoffs.KnockoffSampler
         The knockoff sampler to use in the knockoff filter.
         This may also be a string identifier, including:
@@ -225,12 +228,6 @@ class KnockoffFilter:
                 axis=1,
             )
             self.Ginv = None
-            # Handle errors where Ginv is exactly low rank
-            # try:
-            #     self.Ginv = utilities.chol2inv(self.G)
-            # except np.linalg.LinAlgError:
-            #     warnings.warn("The feature-knockoff covariance matrix is low rank.")
-            #     self.Ginv = None
         else:
             self.G, self.Ginv = utilities.estimate_covariance(
                 np.concatenate([self.X, self.Xk], axis=1)
@@ -359,6 +356,19 @@ class KnockoffFilter:
         # Sample knockoffs
         if self.Xk is None:
             self.Xk = self.sample_knockoffs()
+
+        # When using FX knockoffs and lcd statistic,
+        # we cannot use cross-validation. Thus, we pick
+        # a default regularization parameter
+        if not self._mx and isinstance(
+            self.fstat, kstats.LassoStatistic
+        ):
+            if self.fstat_kwargs.get('zstat', 'coef') != 'lars_path':
+                hatsigma2 = kstats.compute_residual_variance(
+                    self.X, self.Xk, self.y
+                )
+                self.fstat_kwargs['alphas'] = hatsigma2 * np.sqrt(np.log(p)/n)
+
 
         # As an edge case, pass Ginv to debiased lasso
         if "debias" in self.fstat_kwargs:
