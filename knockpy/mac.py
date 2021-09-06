@@ -60,14 +60,14 @@ def calc_min_group_eigenvalue(Sigma, groups, tol=DEFAULT_TOL, verbose=False):
         D[full_inds] = sqrt_inv_group_sigma
 
     # Test to make sure this is positive definite
-    min_d_eig = np.linalg.eigh(D)[0].min()
+    min_d_eig = utilities.calc_mineig(D)
     if min_d_eig < -1 * tol:
         raise ValueError(f"Minimum eigenvalue of block matrix D is {min_d_eig}")
 
     # Find minimum eigenvalue
     DSig = np.dot(D, Sigma)
     DSigD = np.dot(DSig, D)
-    gamma = min(2 * np.linalg.eigh(DSigD)[0].min(), 1)
+    gamma = min(2 * utilities.calc_mineig(DSigD), 1)
 
     # Warn if imaginary
     if np.imag(gamma) > tol:
@@ -105,7 +105,8 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
     if groups is None:
         groups = np.arange(1, p + 1, 1)
     if np.all(groups == np.arange(1, p + 1, 1)):
-        gamma = min(2 * np.linalg.eigh(Sigma)[0].min(), 1)
+        gamma = min(2 * utilities.calc_mineig(Sigma), 1.0)
+        print(f"gamma={gamma}")
         S = gamma * np.eye(p)
     else:
         gamma = calc_min_group_eigenvalue(Sigma, groups, tol=tol, verbose=verbose)
@@ -179,7 +180,7 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     # Constants
     TestIfCorrMatrix(Sigma)
     p = Sigma.shape[0]
-    maxtol = np.linalg.eigh(Sigma)[0].min() / 10
+    maxtol = utilities.calc_mineig(Sigma) / 10
     if tol > maxtol and verbose:
         warnings.warn(
             f"Reducing SDP tol from {tol} to {maxtol}, otherwise SDP would be infeasible"
@@ -235,7 +236,7 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     # Scale to make this PSD using binary search
     S, gamma = utilities.scale_until_PSD(Sigma, S, tol, num_iter)
     if verbose:
-        mineig = np.linalg.eigh(2 * Sigma - S)[0].min()
+        mineig = utilities.calc_mineig(2 * Sigma - S)
         print(
             f"After SDP, mineig is {mineig} after {num_iter} line search iters."
         )
@@ -313,7 +314,7 @@ def solve_group_SDP(
             "Using norm objective and norm_type = 2 can lead to strange behavior: consider using Frobenius norm"
         )
     # Find minimum tolerance, possibly warn user if lower than they specified
-    maxtol = np.linalg.eigh(Sigma)[0].min() / 1.1
+    maxtol = utilities.calc_mineig(Sigma) / 1.1
     if tol > maxtol and verbose:
         warnings.warn(
             f"Reducing SDP tol from {tol} to {maxtol}, otherwise SDP would be infeasible"

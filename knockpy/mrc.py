@@ -188,7 +188,7 @@ def solve_mvr_factored(
     # Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062
     Sigma = np.diag(D) + np.dot(U, U.T)
     diag_Sigma = np.diag(Sigma)
-    mineig = np.linalg.eigh(Sigma)[0].min()
+    mineig = utilities.calc_mineig(Sigma)
     if mineig < 0:
         raise ValueError("D + UU^T is not PSD")
 
@@ -286,7 +286,7 @@ def _solve_mvr_ungrouped(
 
     # Initialize values
     decayed_improvement = 10
-    min_eig = np.linalg.eigh(V)[0].min()
+    min_eig = utilities.calc_mineig(V)
     S = min_eig * np.eye(p)
     L = np.linalg.cholesky(2 * V - S + smoothing * np.eye(p))
 
@@ -510,7 +510,7 @@ def _solve_mvr_grouped(
 
     # Initialize values
     decayed_improvement = 10
-    min_eig = np.linalg.eigh(Sigma)[0].min()
+    min_eig = utilities.calc_mineig(Sigma)
     S = mac.solve_equicorrelated(Sigma, groups)/2
     Q, R = np.linalg.qr(2 * Sigma - S + smoothing * np.eye(p))
 
@@ -852,7 +852,7 @@ def _solve_maxent_sdp_factored(
     # Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062
     Sigma = np.diag(D) + np.dot(U, U.T)
     diag_Sigma = np.diag(Sigma)
-    mineig = np.linalg.eigh(Sigma)[0].min()
+    mineig = utilities.calc_mineig(Sigma)
     if mineig < 0:
         raise ValueError("D + UU^T is not PSD")
 
@@ -1018,7 +1018,7 @@ def _solve_maxent_sdp_cd(
 
     # Initialize values
     decayed_improvement = 1
-    mineig = np.linalg.eigh(V)[0].min()
+    mineig = utilities.calc_mineig(V)
     if solve_sdp:
         S = 0.01 * mineig * np.eye(p)
     else:

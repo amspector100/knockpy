@@ -1,7 +1,8 @@
 import warnings
 import numpy as np
 import scipy as sp
-from scipy.sparse.linalg import eigsh
+import scipy.sparse.linalg
+from scipy.sparse.linalg import eigs, eigsh
 import sklearn.covariance
 import itertools
 from multiprocessing import Pool
@@ -89,13 +90,33 @@ def chol2inv(X):
     triang = np.linalg.inv(np.linalg.cholesky(X))
     return np.dot(triang.T, triang)
 
+def calc_mineig(M):
+    """ 
+    Calculates the minimum eigenvalue of a square symmetric matrix M
+    """
+    if M.shape[0] < 1500:
+        return np.linalg.eigh(M)[0].min()
+    else:
+        try:
+            return eigsh(
+                M, 
+                1,
+                which='SA',
+                return_eigenvectors=False,
+                maxiter=1000,
+                tol=1e-5
+            )[0]
+        except scipy.sparse.linalg.eigen.arpack.ArpackNoConvergence:
+            return np.linalg.eigh(M)[0].min()
+
+
 
 def shift_until_PSD(M, tol):
     """ Add the identity until a p x p matrix M has eigenvalues of at least tol"""
     p = M.shape[0]
-    mineig = np.linalg.eigh(M)[0].min()
+    mineig = calc_mineig(M)
     if mineig < tol:
-        M += (tol - mineig) * np.eye(p)
+        M = M + (tol - mineig) * np.eye(p)
 
     return M
 
@@ -120,16 +141,16 @@ def scale_until_PSD(Sigma, S, tol, num_iter):
         S = shift_until_PSD(S, tol)
 
     # Binary search to find minimum gamma
-    lower_bound = 0
-    upper_bound = 1
+    lower_bound = 0 # max feasible gamma
+    upper_bound = 1 # min infeasible gamma
     for j in range(num_iter):
         gamma = (lower_bound + upper_bound) / 2
         V = 2 * Sigma - gamma * S
-        mineig = np.linalg.eigh(V)[0].min()
-        if mineig < tol:
-            upper_bound = gamma
-        else:
+        try:
+            np.linalg.cholesky(V - tol * np.eye(V.shape[0]))
             lower_bound = gamma
+        except np.linalg.LinAlgError:
+            upper_bound = gamma
 
     # Scale S properly, be a bit conservative
     S = lower_bound * S
@@ -272,7 +293,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         ``(p, p)``-shaped estimated precision matrix of X
     """
     Sigma = np.cov(X.T)
-    mineig = np.linalg.eigh(Sigma)[0].min()
+    mineig = calc_mineig(Sigma)
 
     # Parse none strng
     if str(shrinkage).lower() == "none" or str(shrinkage).lower() == 'mle':

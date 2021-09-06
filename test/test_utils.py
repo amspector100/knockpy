@@ -85,19 +85,20 @@ class TestUtils(unittest.TestCase):
 
         # Random symmetric matrix, will have highly neg eigs
         np.random.seed(110)
-        X = np.random.randn(100, 100)
-        X = (X.T + X) / 2
+        for p in [100, 1600]:
+            X = np.random.randn(p, p)
+            X = (X.T + X) / 2
 
-        # Force pos definite
-        tol = 1e-3
-        posX = utilities.shift_until_PSD(X, tol=tol)
-        mineig = np.linalg.eigh(posX)[0].min()
+            # Force pos definite
+            tol = 1e-3
+            posX = utilities.shift_until_PSD(X, tol=tol)
+            mineig = np.linalg.eigh(posX)[0].min()
 
-        # Make sure the difference between the tolerance and is small
-        self.assertTrue(
-            mineig >= tol - 1e-5,  # Acct for num. errors in eigval calc
-            msg="Minimum eigenvalue is not greater than or equal to tolerance",
-        )
+            # Make sure the difference between the tolerance and is small
+            self.assertTrue(
+                mineig >= tol - 1e-4,  # Acct for num. errors in eigval calc
+                msg=f"Minimum eigenvalue {mineig} is not greater than or equal to tolerance {tol}",
+            )
 
     def test_chol2inv(self):
 

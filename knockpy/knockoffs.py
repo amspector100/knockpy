@@ -46,13 +46,12 @@ class KnockoffSampler:
         """
 
         # Check PSD condition
-        min_eig1 = np.linalg.eigh(2 * Sigma - S)[0].min()
-        if self.verbose:
-            print(f"Minimum eigenvalue of S is {np.linalg.eigh(S)[0].min()}")
-            print(f"Minimum eigenvalue of 2Sigma - S is {min_eig1}")
-        if min_eig1 < -1e-6:
+        try:
+            np.linalg.cholesky(2 * Sigma - S)
+        except np.linalg.LinAlgError:
+            min_eig = utilities.calc_mineig(2 * Sigma - S)
             raise np.linalg.LinAlgError(
-                f"Minimum eigenvalue of 2Sigma - S is {min_eig1}, meaning FDR control violations are extremely likely"
+                f"Minimum eigenvalue of 2Sigma - S is {min_eig}, meaning FDR control violations are extremely likely"
             )
 
     def many_ks_tests(self, sample1s, sample2s):
@@ -134,35 +133,19 @@ def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies, verbos
     Vk = 2 * S - np.dot(S, invSigma_S)
 
     # Account for numerical errors
-    min_eig = np.linalg.eigh(Vk)[0].min()
-    if min_eig < sample_tol and verbose:
+    try:
+        Lk = np.linalg.cholesky(Vk)
+    except np.linalg.LinAlgError:
+        min_eig = utilities.calc_mineig(Vk)
         warnings.warn(
-            f"Minimum eigenvalue of Vk is {min_eig}, under tolerance {sample_tol}"
+            f"Minimum eigenvalue of Vk is {min_eig}, cholesky decomp failed, FDR violations possible"
         )
         Vk = shift_until_PSD(Vk, sample_tol)
+        Lk = np.linalg.cholesky(Vk)
 
     # ...and sample MX knockoffs!
-    knockoffs = stats.multivariate_normal.rvs(mean=np.zeros(p), cov=Vk, size=copies * n)
-
-    # Account for case when n * copies == 1
-    if n * copies == 1:
-        knockoffs = knockoffs.reshape(-1, 1)
-
-    # (Save this for testing later)
-    first_row = knockoffs[0, 0:n].copy()
-
-    # Some annoying reshaping...
-    knockoffs = knockoffs.flatten(order="C")
-    knockoffs = knockoffs.reshape(p, n, copies, order="F")
+    knockoffs = np.dot(Lk, np.random.randn(n, p, copies)) # result is (p, n, copies)
     knockoffs = np.transpose(knockoffs, [1, 0, 2])
-
-    # (Test we have reshaped correctly)
-    new_first_row = knockoffs[0, 0:n, 0]
-    np.testing.assert_array_almost_equal(
-        first_row,
-        new_first_row,
-        err_msg="Critical error - reshaping failed in knockoff generator",
-    )
 
     # Add mu
     mu_k = np.expand_dims(mu_k, axis=2)
@@ -276,9 +259,17 @@ class GaussianSampler(KnockoffSampler):
     def fetch_S(self):
         return self.S
 
-    def sample_knockoffs(self):
-        """ Samples knockoffs. returns n x p knockoff matrix."""
-        self.check_PSD_condition(self.Sigma, self.S)
+    def sample_knockoffs(self, check_psd=False):
+        """ Samples knockoffs. returns n x p knockoff matrix.
+
+        Parameters
+        ----------
+        check_psd : bool
+            If True, will check and enforce that S is a valid S-matrix.
+            Defalts to False.
+        """
+        if check_psd: 
+            self.check_PSD_condition(self.Sigma, self.S)
         self.Xk = produce_MX_gaussian_knockoffs(
             X=self.X,
             mu=self.mu,
@@ -379,9 +370,17 @@ class FXSampler(KnockoffSampler):
         """ Rescales S to the same scale as the initial X input """
         return self.S
 
-    def sample_knockoffs(self):
-        """ Samples knockoffs. returns n x p knockoff matrix."""
-        self.check_PSD_condition(self.Sigma, self.S)
+    def sample_knockoffs(self, check_psd=False):
+        """ Samples knockoffs. returns n x p knockoff matrix.
+
+        Parameters
+        ----------
+        check_psd : bool
+            If True, will check and enforce that S is a valid S-matrix.
+            Defalts to False.
+        """
+        if check_psd:
+            self.check_PSD_condition(self.Sigma, self.S)
         self.Xk = produce_FX_knockoffs(
             X=self.X, invSigma=self.invSigma, S=self.S, copies=1,
         )[:, :, 0]

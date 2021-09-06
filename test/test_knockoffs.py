@@ -995,7 +995,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
             ksampler = knockoffs.GaussianSampler(
                 X=X, Sigma=corr_matrix, S=S_bad, verbose=False
             )
-            ksampler.sample_knockoffs()
+            ksampler.sample_knockoffs(check_psd=True)
 
         self.assertRaisesRegex(
             np.linalg.LinAlgError,
