@@ -181,8 +181,9 @@ class MVRLoss(nn.Module):
         G_schurr = self.Sigma - torch.mm(torch.mm(diff, self.invSigma), diff)
 
         # Take eigenvalues
-        eigvals = torch.symeig(G_schurr, eigenvectors=True)
-        eigvals = eigvals[0]
+        eigvals = torch.linalg.eigvalsh(
+            G_schurr, UPLO="U"
+        )
         if self.method == "mvr":
             inv_eigs = 1 / (smoothing + eigvals)
         elif self.method == "maxent":

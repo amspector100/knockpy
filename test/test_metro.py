@@ -36,7 +36,8 @@ class TestMetroProposal(unittest.TestCase):
         n = 5
         p = 200
         dgprocess = dgp.DGP()
-        X, _, _, Q, V = dgprocess.sample_data(method="AR1", rho=0.1, n=n, p=p)
+        X, _, _, _, V = dgprocess.sample_data(method="AR1", rho=0.1, n=n, p=p)
+        Q = np.linalg.inv(V)
 
         # Metro sampler, proposal params
         metro_sampler = metro.MetropolizedKnockoffSampler(
@@ -90,7 +91,8 @@ class TestMetroSample(unittest.TestCase):
         n = 30000
         p = 8
         dgprocess = dgp.DGP()
-        X, _, _, Q, V = dgprocess.sample_data(method="AR1", n=n, p=p)
+        X, _, _, _, V = dgprocess.sample_data(method="AR1", n=n, p=p)
+        Q = np.linalg.inv(V)
         ksampler = knockpy.knockoffs.GaussianSampler(X=X, Sigma=V, method="mvr")
         S = ksampler.fetch_S()
 
