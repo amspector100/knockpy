@@ -112,7 +112,7 @@ class MVRLoss(nn.Module):
         # Make sure init_S is a numpy array
         if init_S is None:
             # If nothing provided, default to equicorrelated
-            scale = min(1, 2 * np.linalg.eigh(Sigma)[0].min())
+            scale = min(1, 2 * utilities.calc_mineig(Sigma))
             init_S = scale * np.eye(self.p)
         elif isinstance(init_S, list):
             # Check for correct number of blocks
@@ -142,7 +142,7 @@ class MVRLoss(nn.Module):
         blocks = utilities.blockdiag_to_blocks(init_S, groups)
         # Torch-ify and take sqrt
         blocks = [torch.from_numpy(block) for block in blocks]
-        blocks = [torch.cholesky(block) for block in blocks]
+        blocks = [torch.linalg.cholesky(block) for block in blocks]
         # Save
         self.blocks = [nn.Parameter(block.float()) for block in blocks]
 
@@ -181,8 +181,9 @@ class MVRLoss(nn.Module):
         G_schurr = self.Sigma - torch.mm(torch.mm(diff, self.invSigma), diff)
 
         # Take eigenvalues
-        eigvals = torch.symeig(G_schurr, eigenvectors=True)
-        eigvals = eigvals[0]
+        eigvals = torch.linalg.eigvalsh(
+            G_schurr, UPLO="U"
+        )
         if self.method == "mvr":
             inv_eigs = 1 / (smoothing + eigvals)
         elif self.method == "maxent":

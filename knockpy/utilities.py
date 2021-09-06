@@ -1,7 +1,8 @@
 import warnings
 import numpy as np
 import scipy as sp
-from scipy.sparse.linalg import eigsh
+import scipy.sparse.linalg
+from scipy.sparse.linalg import eigs, eigsh
 import sklearn.covariance
 import itertools
 from multiprocessing import Pool
@@ -78,24 +79,54 @@ def calc_group_sizes(groups):
 
 
 ### Matrix helpers for S-matrix computation
-def cov2corr(M):
-    """ Rescales a p x p cov. matrix M to be a correlation matrix """
+def cov2corr(M, invM=None):
+    """ 
+    Rescales a p x p cov. matrix M to be a correlation matrix.
+    If invM is not None, also rescales invM to be the inverse
+    of M.
+     """
     scale = np.sqrt(np.diag(M))
-    return M / np.outer(scale, scale)
+    if invM is None:
+        return M / np.outer(scale, scale)
+    outer = np.outer(scale, scale)
+    return M / outer, invM * outer
 
 
 def chol2inv(X):
     """ Uses cholesky decomp to get inverse of matrix """
-    triang = np.linalg.inv(np.linalg.cholesky(X))
-    return np.dot(triang.T, triang)
+    triang = np.linalg.cholesky(X)
+    tinv, _ = scipy.linalg.lapack.dtrtri(
+        c=triang, lower=True, overwrite_c=False
+    )
+    return np.dot(tinv.T, tinv)
+
+def calc_mineig(M):
+    """ 
+    Calculates the minimum eigenvalue of a square symmetric matrix M
+    """
+    if M.shape[0] < 1500:
+        return np.linalg.eigh(M)[0].min()
+    else:
+        try:
+            return eigsh(
+                M, 
+                1,
+                which='SA',
+                return_eigenvectors=False,
+                maxiter=1000,
+                tol=1e-5
+            )[0]
+        except scipy.sparse.linalg.eigen.arpack.ArpackNoConvergence:
+            return np.linalg.eigh(M)[0].min()
+
 
 
 def shift_until_PSD(M, tol):
     """ Add the identity until a p x p matrix M has eigenvalues of at least tol"""
     p = M.shape[0]
-    mineig = np.linalg.eigh(M)[0].min()
+    mineig = calc_mineig(M)
     if mineig < tol:
-        M += (tol - mineig) * np.eye(p)
+        M = M + (tol - mineig) * np.eye(p)
 
     return M
 
@@ -120,16 +151,16 @@ def scale_until_PSD(Sigma, S, tol, num_iter):
         S = shift_until_PSD(S, tol)
 
     # Binary search to find minimum gamma
-    lower_bound = 0
-    upper_bound = 1
+    lower_bound = 0 # max feasible gamma
+    upper_bound = 1 # min infeasible gamma
     for j in range(num_iter):
         gamma = (lower_bound + upper_bound) / 2
         V = 2 * Sigma - gamma * S
-        mineig = np.linalg.eigh(V)[0].min()
-        if mineig < tol:
-            upper_bound = gamma
-        else:
+        try:
+            np.linalg.cholesky(V - tol * np.eye(V.shape[0]))
             lower_bound = gamma
+        except np.linalg.LinAlgError:
+            upper_bound = gamma
 
     # Scale S properly, be a bit conservative
     S = lower_bound * S
@@ -272,7 +303,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         ``(p, p)``-shaped estimated precision matrix of X
     """
     Sigma = np.cov(X.T)
-    mineig = np.linalg.eigh(Sigma)[0].min()
+    mineig = calc_mineig(Sigma)
 
     # Parse none strng
     if str(shrinkage).lower() == "none" or str(shrinkage).lower() == 'mle':
@@ -294,11 +325,10 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         # Fit shrinkage. Sometimes the Graphical Lasso raises errors
         # so we handle these here.
         try:
-            warnings.filterwarnings("ignore")
-            ShrinkEst.fit(X)
-            warnings.resetwarnings()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                ShrinkEst.fit(X)
         except FloatingPointError:
-            warnings.resetwarnings()
             warnings.warn(f"Graphical lasso failed, LedoitWolf matrix")
             ShrinkEst = sklearn.covariance.LedoitWolf()
             ShrinkEst.fit(X)
@@ -309,7 +339,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         return Sigma, invSigma
 
     # Else return empirical estimate
-    return Sigma, chol2inv(Sigma)
+    return Sigma, None
 
 
 ### Multiprocessing helper

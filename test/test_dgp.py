@@ -2,8 +2,12 @@ import numpy as np
 import scipy as sp
 import unittest
 import pytest
-from .context import knockpy
-
+# for regular pytest calls
+try:
+    from .context import knockpy
+# for running directly with python
+except ImportError:
+    from context import knockpy
 
 from knockpy import dgp
 
@@ -465,13 +469,12 @@ class TestSampleData(unittest.TestCase):
             err_msg=f"random unifdot generation {Sigma} unexpectedly deviates from the {expected}",
         )
 
-    @pytest.mark.slow
     def test_dirichlet_matrices(self):
         """ Simple test that ensures there are no errors, we get corr matrix 
 		with expected eigenvalues"""
 
         # Try one with low temp
-        p = 2000
+        p = 300
         temp = 0.1
         np.random.seed(110)
         dgprocess = dgp.DGP()
@@ -619,8 +622,8 @@ class TestSampleData(unittest.TestCase):
         # Check that we get a decent correlation matrix
         # with the right type of Q matrix
         np.random.seed(110)
-        n = 150000
-        p = 9
+        n = 60000
+        p = 4
         dgprocess = dgp.DGP()
         X,_,_,_,V = dgprocess.sample_data(n=n, p=p, method="ising", x_dist="gibbs",)
         gibbs_graph = dgprocess.gibbs_graph
@@ -700,4 +703,7 @@ class TestGroupings(unittest.TestCase):
         )
 
 if __name__ == "__main__":
-    unittest.main()
+    import pytest
+    import sys
+    pytest.main(sys.argv)
+    #unittest.main()

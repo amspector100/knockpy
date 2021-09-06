@@ -3,7 +3,13 @@ import warnings
 import numpy as np
 import scipy as sp
 import unittest
-from .context import knockpy
+
+# for regular pytest calls
+try:
+    from .context import knockpy
+# for running directly with python
+except ImportError:
+    from context import knockpy
 from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
 
 try:
@@ -995,7 +1001,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
             ksampler = knockoffs.GaussianSampler(
                 X=X, Sigma=corr_matrix, S=S_bad, verbose=False
             )
-            ksampler.sample_knockoffs()
+            ksampler.sample_knockoffs(check_psd=True)
 
         self.assertRaisesRegex(
             np.linalg.LinAlgError,
@@ -1155,4 +1161,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    import pytest
+    import sys
+    pytest.main(sys.argv)
+    #unittest.main()

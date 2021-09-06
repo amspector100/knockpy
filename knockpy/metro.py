@@ -245,10 +245,10 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
             # This is more numerically stable for super sparse Q
             Q = np.linalg.inv(V)
         if undir_graph is not None:
-            warnings.filterwarnings("ignore")
-            mask = nx.to_numpy_matrix(undir_graph)
-            warnings.resetwarnings()
-            np.fill_diagonal(mask, 1)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                mask = nx.to_numpy_matrix(undir_graph)
+                np.fill_diagonal(mask, 1)
             # Handle case where the graph is entirely dense
             if (mask == 0).sum() > 0 and not cov_est:
                 max_nonedge = np.max(np.abs(Q[mask == 0]))

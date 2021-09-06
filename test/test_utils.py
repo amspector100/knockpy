@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import unittest
+import warnings
 from .context import knockpy
 
 from knockpy import dgp, utilities
@@ -85,19 +86,20 @@ class TestUtils(unittest.TestCase):
 
         # Random symmetric matrix, will have highly neg eigs
         np.random.seed(110)
-        X = np.random.randn(100, 100)
-        X = (X.T + X) / 2
+        for p in [100, 1600]:
+            X = np.random.randn(p, p)
+            X = (X.T + X) / 2
 
-        # Force pos definite
-        tol = 1e-3
-        posX = utilities.shift_until_PSD(X, tol=tol)
-        mineig = np.linalg.eigh(posX)[0].min()
+            # Force pos definite
+            tol = 1e-3
+            posX = utilities.shift_until_PSD(X, tol=tol)
+            mineig = np.linalg.eigh(posX)[0].min()
 
-        # Make sure the difference between the tolerance and is small
-        self.assertTrue(
-            mineig >= tol - 1e-5,  # Acct for num. errors in eigval calc
-            msg="Minimum eigenvalue is not greater than or equal to tolerance",
-        )
+            # Make sure the difference between the tolerance and is small
+            self.assertTrue(
+                mineig >= tol - 1e-4,  # Acct for num. errors in eigval calc
+                msg=f"Minimum eigenvalue {mineig} is not greater than or equal to tolerance {tol}",
+            )
 
     def test_chol2inv(self):
 
@@ -136,8 +138,10 @@ class TestUtils(unittest.TestCase):
         X, y, beta, _, V = dgprocess.sample_data(**sample_kwargs)
 
         # Make sure this does not raise an error
-        # (even though it is ill-conditioned and the graph lasso doesn't fail)
-        utilities.estimate_covariance(X, shrinkage="graphicallasso")
+        # (even though it is ill-conditioned and the graph lasso doesn't converge)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            utilities.estimate_covariance(X, shrinkage="graphicallasso")
 
     def test_covariance_estimation(self):
 
@@ -154,7 +158,7 @@ class TestUtils(unittest.TestCase):
         Vest, _ = utilities.estimate_covariance(X, tol=1e-2)
         frobenius = np.sqrt(np.power(Vest - V, 2).mean())
         self.assertTrue(
-            frobenius < 0.2, f"High-dimension covariance estimation is horrible"
+            frobenius < 0.2, f"High-dimension covariance estimation is horrible with frobenius={frobenius}"
         )
 
         # Test factor approximation, should be quite good
