@@ -343,6 +343,24 @@ class TestFeatureStatistics(KStatVal):
             max_l2norm=np.inf,
         )
 
+        # Test the regularization parameters option
+        alpha = 50
+        dgprocess = knockpy.dgp.DGP()
+        dgprocess.sample_data(n=300, p=100, sparsity=0.1)
+        kfilter = knockpy.knockoff_filter.KnockoffFilter(
+            fstat='lasso', ksampler='gaussian'
+        )
+        kfilter.forward(
+            X=dgprocess.X,
+            y=dgprocess.y,
+            Sigma=dgprocess.Sigma,
+            fstat_kwargs={"alphas":alpha}
+        )
+        self.assertTrue(
+            np.all(kfilter.W == 0),
+            f"lasso with alpha={alpha} should zero out coefs, instead W={kfilter.W}"
+        )
+
     def test_antisymmetric_fns(self):
 
         n = 100

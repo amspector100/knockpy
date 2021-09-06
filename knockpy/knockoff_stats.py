@@ -188,7 +188,7 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
     return Z[rev_inds]
 
 
-def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
+def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
     """
     Fits cross-validated lasso on [X, Xk] and y.
     
@@ -202,6 +202,9 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
         ``(n,)``-shaped response vector
     y_dist : str
         One of "binomial" or "gaussian"
+    alphas : float
+        The regularization parameter(s) to try. Selects one
+        alpha using cross-validation by default.
     use_lars : bool
         If True, uses a LARS-based solver for Gaussian data.
         If False, uses a gradient based solver (default).
@@ -215,7 +218,7 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
 
     Returns
     -------
-    gl : sklearn.linear_model.LassoCV/LassoLarsCV/LogisticRegressionCV
+    gl : sklearn Lasso/LassoCV/LassoLarsCV/LogisticRegressionCV object
         The sklearn model fit through cross-validation.
     inds : np.ndarray
         ``(2p,)``-dimensional array of indices representing the random
@@ -230,6 +233,10 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
     max_iter = kwargs.pop("max_iter", 500)
     tol = kwargs.pop("tol", 1e-3)
     cv = kwargs.pop("cv", 5)
+    if alphas is None:
+        alphas = DEFAULT_REG_VALS
+    if isinstance(alphas, float) or isinstance(alphas, int):
+        alphas = [alphas]
     if y_dist is None:
         y_dist = parse_y_dist(y)
 
@@ -245,9 +252,16 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         if y_dist == "gaussian":
-            if not use_lars:
+            if not use_lars and len(alphas) == 1:
+                gl = linear_model.Lasso(
+                    alpha=alphas[0],
+                    max_iter=max_iter,
+                    tol=tol,
+                    **kwargs
+                ).fit(features, y)
+            elif not use_lars:
                 gl = linear_model.LassoCV(
-                    alphas=DEFAULT_REG_VALS,
+                    alphas=alphas,
                     cv=cv,
                     verbose=False,
                     max_iter=max_iter,
@@ -260,7 +274,7 @@ def fit_lasso(X, Xk, y, y_dist=None, use_lars=False, **kwargs):
                 ).fit(features, y)
         elif y_dist == "binomial":
             gl = linear_model.LogisticRegressionCV(
-                Cs=1 / DEFAULT_REG_VALS,
+                Cs=1 / alphas,
                 penalty="l1",
                 max_iter=max_iter,
                 tol=tol,

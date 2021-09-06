@@ -124,7 +124,7 @@ class KnockoffSampler:
             )
 
 
-def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies, verbose):
+def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies):
 
     # Calculate MX knockoff moments...
     n, p = X.shape
@@ -237,7 +237,7 @@ class GaussianSampler(KnockoffSampler):
             Sigma, invSigma = utilities.estimate_covariance(X, tol=1e-2)
         self.Sigma = Sigma
         if invSigma is None:
-            invSigma = utilities.chol2inv(Sigma)
+            invSigma = np.linalg.inv(Sigma)
         self.invSigma = invSigma
         if groups is None:
             groups = np.arange(1, self.p + 1, 1)
@@ -276,8 +276,7 @@ class GaussianSampler(KnockoffSampler):
             invSigma=self.invSigma,
             S=self.S,
             sample_tol=self.sample_tol,
-            copies=1,
-            verbose=self.verbose,
+            copies=1
         )[:, :, 0]
         return self.Xk
 
@@ -344,7 +343,7 @@ class FXSampler(KnockoffSampler):
                 f"FX knockoffs can't be generated with n ({self.n}) < 2p ({2*self.p})"
             )
         self.Sigma = np.dot(self.X.T, self.X)
-        self.invSigma = utilities.chol2inv(self.Sigma)
+        self.invSigma = np.linalg.inv(self.Sigma)
         kwargs.pop("Sigma", None)
         kwargs.pop("invSigma", None)
 

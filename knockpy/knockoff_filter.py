@@ -224,12 +224,13 @@ class KnockoffFilter:
                 ],
                 axis=1,
             )
+            self.Ginv = None
             # Handle errors where Ginv is exactly low rank
-            try:
-                self.Ginv = utilities.chol2inv(self.G)
-            except np.linalg.LinAlgError:
-                warnings.warn("The feature-knockoff covariance matrix is low rank.")
-                self.Ginv = None
+            # try:
+            #     self.Ginv = utilities.chol2inv(self.G)
+            # except np.linalg.LinAlgError:
+            #     warnings.warn("The feature-knockoff covariance matrix is low rank.")
+            #     self.Ginv = None
         else:
             self.G, self.Ginv = utilities.estimate_covariance(
                 np.concatenate([self.X, self.Xk], axis=1)
@@ -362,6 +363,8 @@ class KnockoffFilter:
         # As an edge case, pass Ginv to debiased lasso
         if "debias" in self.fstat_kwargs:
             if self.fstat_kwargs["debias"]:
+                if self.Ginv is None:
+                    self.Ginv = np.linalg.inv(self.Ginv)
                 self.fstat_kwargs["Ginv"] = self.Ginv
 
         # Feature statistics
