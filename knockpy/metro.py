@@ -987,7 +987,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
                 self.affected_vars[j] += [j2]
 
         # Store pattern of TRUE acceptances / rejections
-        self.acceptances = np.zeros((self.n, self.p)).astype(np.bool)
+        self.acceptances = np.zeros((self.n, self.p)).astype(bool)
         self.final_acc_probs = np.zeros((self.n, self.p))
 
         # Proposals
@@ -1034,7 +1034,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
             self.final_acc_probs[:, j] = acc_prob
 
             # Sample to get actual acceptances
-            self.acceptances[:, j] = np.random.binomial(1, acc_prob).astype(np.bool)
+            self.acceptances[:, j] = np.random.binomial(1, acc_prob).astype(bool)
 
             # Store knockoffs
             mask = self.acceptances[:, j] == 1
