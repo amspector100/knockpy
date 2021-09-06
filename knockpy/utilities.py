@@ -79,16 +79,26 @@ def calc_group_sizes(groups):
 
 
 ### Matrix helpers for S-matrix computation
-def cov2corr(M):
-    """ Rescales a p x p cov. matrix M to be a correlation matrix """
+def cov2corr(M, invM=None):
+    """ 
+    Rescales a p x p cov. matrix M to be a correlation matrix.
+    If invM is not None, also rescales invM to be the inverse
+    of M.
+     """
     scale = np.sqrt(np.diag(M))
-    return M / np.outer(scale, scale)
+    if invM is None:
+        return M / np.outer(scale, scale)
+    outer = np.outer(scale, scale)
+    return M / outer, invM * outer
 
 
 def chol2inv(X):
     """ Uses cholesky decomp to get inverse of matrix """
-    triang = np.linalg.inv(np.linalg.cholesky(X))
-    return np.dot(triang.T, triang)
+    triang = np.linalg.cholesky(X)
+    tinv, _ = scipy.linalg.lapack.dtrtri(
+        c=triang, lower=True, overwrite_c=False
+    )
+    return np.dot(tinv.T, tinv)
 
 def calc_mineig(M):
     """ 
@@ -315,11 +325,10 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         # Fit shrinkage. Sometimes the Graphical Lasso raises errors
         # so we handle these here.
         try:
-            warnings.filterwarnings("ignore")
-            ShrinkEst.fit(X)
-            warnings.resetwarnings()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                ShrinkEst.fit(X)
         except FloatingPointError:
-            warnings.resetwarnings()
             warnings.warn(f"Graphical lasso failed, LedoitWolf matrix")
             ShrinkEst = sklearn.covariance.LedoitWolf()
             ShrinkEst.fit(X)
@@ -330,7 +339,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         return Sigma, invSigma
 
     # Else return empirical estimate
-    return Sigma, chol2inv(Sigma)
+    return Sigma, None
 
 
 ### Multiprocessing helper

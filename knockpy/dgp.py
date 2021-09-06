@@ -58,7 +58,7 @@ def DirichletCorr(p=100, temp=1, tol=1e-6):
     return V
 
 
-def AR1(p=30, a=1, b=1, tol=1e-3, max_corr=1, rho=None):
+def AR1(p=30, a=1, b=1, tol=None, max_corr=1, rho=None):
     """
     Generates `p`-dimensional correlation matrix for
     AR(1) Gaussian process, where successive correlations
@@ -83,10 +83,11 @@ def AR1(p=30, a=1, b=1, tol=1e-3, max_corr=1, rho=None):
 
     # Use cumsum tricks to calculate all correlations
     log_corrs = -1 * np.abs(cumrhos - cumrhos.transpose())
-    corr_matrix = np.exp(log_corrs)
+    corr_matrix = np.exp(log_corrs.astype(np.float32))
 
     # Ensure PSD-ness
-    corr_matrix = cov2corr(shift_until_PSD(corr_matrix, tol))
+    if tol is not None:
+        corr_matrix = cov2corr(shift_until_PSD(corr_matrix, tol))
 
     return corr_matrix
 
@@ -165,8 +166,7 @@ def FactorModel(
     noise = np.random.randn(p, rank) / np.sqrt(rank)
     V = np.diag(diag_entries) + np.dot(noise, noise.T)
     V = utilities.cov2corr(V)
-    Q = utilities.chol2inv(V)
-    return V, Q
+    return V, None
 
 
 def PartialCorr(
@@ -176,9 +176,8 @@ def PartialCorr(
     Creates a correlation matrix of dimension `p` with partial correlation `rho`.
     """
     Q_init = rho * np.ones((p, p)) + (1 - rho) * np.eye(p)
-    V = utilities.chol2inv(Q_init)
-    V = utilities.cov2corr(V)
-    Q = utilities.chol2inv(V)
+    V = np.linalg.inv(Q_init)
+    V, Q = utilities.cov2corr(V, Q_init)
     return V, Q
 
 
@@ -251,7 +250,7 @@ def block_equi_graph(
     Xcoords, Ycoords = np.meshgrid(groups, groups)
     Sigma = get_corr(Xcoords, Ycoords)
     Sigma = Sigma + np.eye(p) - np.diagflat(np.diag(Sigma))
-    Q = chol2inv(Sigma)
+    Q = np.linalg.inv(Sigma)
 
     # Create beta
     if beta is None:
@@ -270,7 +269,11 @@ def block_equi_graph(
     # Sample design matrix
     if mu is None:
         mu = np.zeros(p)
-    X = stats.multivariate_normal.rvs(mean=mu, cov=Sigma, size=n)
+    X = np.dot(
+        np.random.randn(n, p), 
+        np.linalg.cholesky(Sigma).T
+    ) + mu.reshape(1, -1)
+
     # Sample y
     y = sample_response(X, beta, **kwargs)
 
@@ -876,10 +879,9 @@ class DGP:
 
             # Estimate cov matrix
             if self.Sigma is None:
-                self.Sigma, _ = utilities.estimate_covariance(
+                self.Sigma, self.invSigma = utilities.estimate_covariance(
                     self.X, tol=1e-6, shrinkage=None
                 )
-            self.invSigma = None
 
         # Create covariance matrix
         if self.invSigma is None and self.Sigma is None:
@@ -887,10 +889,8 @@ class DGP:
             method = str(method).lower()
             if method == "ar1":
                 self.Sigma = AR1(p=p, **kwargs)
-                self.invSigma = chol2inv(self.Sigma)
             elif method == "nestedar1":
                 self.Sigma = NestedAR1(p=p, **kwargs)
-                self.invSigma = chol2inv(self.Sigma)
             elif method == "partialcorr":
                 self.Sigma, self.invSigma = PartialCorr(p=p, **kwargs)
             elif method == "factor":
@@ -913,28 +913,24 @@ class DGP:
                 self.Sigma = cov2corr(ErdosRenyi(p=p, **kwargs))
                 self.Sigma = np.maximum(np.minimum(self.Sigma, max_corr), -1*max_corr)
                 self.Sigma += np.eye(p) - np.diag(np.diag(self.Sigma))
-                self.invSigma = chol2inv(self.Sigma)
             elif method == "qer":
-                self.invSigma = ErdosRenyi(p=p, **kwargs)
-                self.Sigma = cov2corr(chol2inv(self.invSigma))
-                self.invSigma = chol2inv(self.Sigma)
+                invSigma = ErdosRenyi(p=p, **kwargs)
+                Sigma = np.linalg.inv(invSigma)
+                self.Sigma, self.invSigma = utilities.cov2corr(Sigma, invSigma)
             elif method == "dirichlet":
                 self.Sigma = DirichletCorr(p=p, **kwargs)
-                self.invSigma = chol2inv(self.Sigma)
             elif method == "wishart":
                 self.Sigma = Wishart(p=p, **kwargs)
-                self.invSigma = chol2inv(self.Sigma)
             elif method == "uniformdot":
                 self.Sigma = UniformDot(p=p, **kwargs)
-                self.invSigma = chol2inv(self.Sigma)
             else:
                 raise ValueError(f"Other method {method} not implemented yet")
 
-        elif self.invSigma is None:
-            self.invSigma = chol2inv(self.Sigma)
+        # elif self.invSigma is None:
+        #     self.invSigma = chol2inv(self.Sigma)
         elif self.Sigma is None:
-            self.Sigma = cov2corr(chol2inv(self.invSigma))
-            self.invSigma = chol2inv(self.Sigma)
+            self.Sigma = np.linalg.inv(self.invSigma)
+            self.Sigma, self.invSigma = cov2corr(self.Sigma, self.invSigma)
         else:
             pass
 
@@ -956,7 +952,10 @@ class DGP:
         if x_dist == "gibbs":
             pass
         elif x_dist == "gaussian":
-            self.X = stats.multivariate_normal.rvs(mean=self.mu, cov=self.Sigma, size=n)
+            self.X = np.dot(
+                np.random.randn(n, p), 
+                np.linalg.cholesky(self.Sigma).T
+            ) + self.mu.reshape(1, -1) 
         elif x_dist == "ar1t":
             if str(method).lower() != "ar1":
                 raise ValueError(

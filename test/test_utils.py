@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import unittest
+import warnings
 from .context import knockpy
 
 from knockpy import dgp, utilities
@@ -137,8 +138,10 @@ class TestUtils(unittest.TestCase):
         X, y, beta, _, V = dgprocess.sample_data(**sample_kwargs)
 
         # Make sure this does not raise an error
-        # (even though it is ill-conditioned and the graph lasso doesn't fail)
-        utilities.estimate_covariance(X, shrinkage="graphicallasso")
+        # (even though it is ill-conditioned and the graph lasso doesn't converge)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            utilities.estimate_covariance(X, shrinkage="graphicallasso")
 
     def test_covariance_estimation(self):
 
@@ -155,7 +158,7 @@ class TestUtils(unittest.TestCase):
         Vest, _ = utilities.estimate_covariance(X, tol=1e-2)
         frobenius = np.sqrt(np.power(Vest - V, 2).mean())
         self.assertTrue(
-            frobenius < 0.2, f"High-dimension covariance estimation is horrible"
+            frobenius < 0.2, f"High-dimension covariance estimation is horrible with frobenius={frobenius}"
         )
 
         # Test factor approximation, should be quite good
