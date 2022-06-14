@@ -39,7 +39,7 @@ def parse_y_dist(y):
     elif np.unique(y).shape[0] == n:
         return "gaussian"
     else:
-        warnings.warn("Treating y data as continuous even though it may be discrete.")
+        #warnings.warn("Treating y data as continuous even though it may be discrete.")
         return "gaussian"
 
 
@@ -132,7 +132,7 @@ def compute_residual_variance(X, Xk, y):
     """
     Estimates sigma2 using residual variance of y
     given [X, Xk]. Uses a penalized linear model
-    if n < 2p + 10.
+    if n < 2p + 10 or p >= 1500 (for efficiency).
 
     Returns
     -------
@@ -141,19 +141,22 @@ def compute_residual_variance(X, Xk, y):
     """
     # Use (penalized) linear model to predict y
     n, p = X.shape
-    if n - 2 * p > 10:
+    if n - 2 * p > 10 and p < 1500:
         model = linear_model.LinearRegression()
     else:
         model = linear_model.Lasso(
-            alpha=0.1 * np.sqrt(np.log(p) / n)
+            alpha=0.1 * np.sqrt(np.log(p) / n),
+            max_iter=100
         )
     # Concatenating features shows no preference between X, Xk
     features = np.concatenate([X, Xk], axis=1)
     perm_inds, _ = utilities.random_permutation_inds(2 * p)
     features = features[:, perm_inds]
-    model.fit(features, y)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        model.fit(features, y)
     resid = np.power(model.predict(features) - y, 2).sum()
-    return resid / (n - np.sum(model.coef_ != 0))
+    return resid / max(10, n - np.sum(model.coef_ != 0))
 
 
 # ------------------------------ Lasso Stuff ---------------------------------------#
@@ -301,7 +304,7 @@ def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
                 ).fit(features, y)
         elif y_dist == "binomial":
             gl = linear_model.LogisticRegressionCV(
-                Cs=1 / alphas,
+                Cs=1 / np.array(alphas),
                 penalty="l1",
                 max_iter=max_iter,
                 tol=tol,

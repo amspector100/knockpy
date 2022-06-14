@@ -229,10 +229,8 @@ class KnockoffFilter:
             )
             self.Ginv = None
         else:
-            self.G, self.Ginv = utilities.estimate_covariance(
-                np.concatenate([self.X, self.Xk], axis=1)
-            )
-
+            self.G = None
+            self.Ginv = None
         return self.Xk
 
     def make_selections(self, W, fdr):
@@ -374,7 +372,12 @@ class KnockoffFilter:
         if "debias" in self.fstat_kwargs:
             if self.fstat_kwargs["debias"]:
                 if self.Ginv is None:
-                    self.Ginv = np.linalg.inv(self.Ginv)
+                    if self.G is not None:
+                        self.Ginv = np.linalg.inv(self.G)
+                    else:
+                        self.G, self.Ginv = utilities.estimate_covariance(
+                           np.concatenate([self.X, self.Xk], axis=1)
+                        )
                 self.fstat_kwargs["Ginv"] = self.Ginv
 
         # Feature statistics

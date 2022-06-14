@@ -106,7 +106,6 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
         groups = np.arange(1, p + 1, 1)
     if np.all(groups == np.arange(1, p + 1, 1)):
         gamma = min(2 * utilities.calc_mineig(Sigma), 1.0)
-        print(f"gamma={gamma}")
         S = gamma * np.eye(p)
     else:
         gamma = calc_min_group_eigenvalue(Sigma, groups, tol=tol, verbose=verbose)
@@ -376,7 +375,7 @@ def solve_group_SDP(
         shift += gj
 
     # Construct S and Grahm Matrix
-    S = cp.vstack(S_rows)
+    S = cp.atoms.affine.wraps.psd_wrap(cp.vstack(S_rows)) # does this improve performance?
     sortedSigma = cp.Constant(sortedSigma)
     constraints += [2 * sortedSigma - S >> 0]
 

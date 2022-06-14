@@ -302,17 +302,20 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
     invSigma : np.ndarray
         ``(p, p)``-shaped estimated precision matrix of X
     """
-    Sigma = np.cov(X.T)
-    mineig = calc_mineig(Sigma)
-
     # Parse none strng
     if str(shrinkage).lower() == "none" or str(shrinkage).lower() == 'mle':
         shrinkage = None
 
+    if shrinkage is None:
+        Sigma = np.cov(X.T)
+        mineig = calc_mineig(Sigma)
+        if mineig < tol:
+            shrinkage = 'ledoitwolf'
+
     # Possibly shrink Sigma
-    if mineig < tol or shrinkage is not None:
+    if shrinkage is not None:
         # Which shrinkage to use
-        if str(shrinkage).lower() == "ledoitwolf" or shrinkage is None:
+        if str(shrinkage).lower() == "ledoitwolf":
             ShrinkEst = sklearn.covariance.LedoitWolf(**kwargs)
         elif str(shrinkage).lower() == "graphicallasso":
             kwargs['alpha'] = kwargs.get('alpha', 0.1) # Default regularization
