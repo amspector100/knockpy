@@ -143,11 +143,39 @@ class KnockoffGGM:
         Kwargs for instantiating the knockoff sampler argument if
         the ksampler argument is a string identifier. Defaults to {}
 
+	Attributes
+	----------
+	W : np.array
+		``(p,p)``-shaped array of knockoff statistics
+		with zeros along the diagonal. The rows of W obey
+		the flip-sign property, i.e., W[0] obeys the flip-sign 
+		property.
+	kfs : list
+		A list of KnockoffFilter classes corresponding to the regression
+		run on each covariate.
+
     Notes
     -----
     There is no known way to use model-X knockoffs for this application.
-	"""
 
+
+    Examples
+    --------
+    Here we fit KnockoffGGM under the global null when the true Gaussian 
+    graphical model has no edges:
+
+        # Fake data-generating process for Gaussian graphical model
+        import numpy as np
+        X = np.random.randn(300, 30)
+
+        # LCD statistic with FX knockoffs
+        from knockpy.ggm import KnockoffGGM 
+        gkf = KnockoffGGM( 
+            fstat='lcd', 
+            knockoff_kwargs={"method":"mvr"}, 
+        )
+        edges = gkf.forward(X=X, verbose=True)
+	"""
 	def __init__(self, fstat='lcd', fstat_kwargs=None, knockoff_kwargs=None):
 		self.fstat = fstat
 		self.fstat_kwargs = fstat_kwargs if fstat_kwargs is not None else {}
