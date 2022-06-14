@@ -503,7 +503,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "### Gaussian graphical models"
+    "#### Gaussian graphical models"
    ]
   },
   {
