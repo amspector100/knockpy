@@ -1,74 +1,36 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>knockpy.mac &mdash; knockpy 1.1.1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>knockpy.mac &mdash; knockpy 1.2 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> knockpy
-          
-
-          
+            <a href="../../index.html" class="icon icon-home"> knockpy
           </a>
-
-          
-            
-            
               <div class="version">
-                1.1.1
+                1.2
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,19 +38,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
@@ -96,67 +47,30 @@
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">knockpy</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-        
       <li>knockpy.mac</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for knockpy.mac</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -220,14 +134,14 @@
         <span class="n">D</span><span class="p">[</span><span class="n">full_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">sqrt_inv_group_sigma</span>
 
     <span class="c1"># Test to make sure this is positive definite</span>
-    <span class="n">min_d_eig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">D</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">min_d_eig</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">min_d_eig</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">tol</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Minimum eigenvalue of block matrix D is </span><span class="si">{</span><span class="n">min_d_eig</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># Find minimum eigenvalue</span>
     <span class="n">DSig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">)</span>
     <span class="n">DSigD</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">DSig</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-    <span class="n">gamma</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">DSigD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">DSigD</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="c1"># Warn if imaginary</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span>
@@ -265,7 +179,7 @@
     <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
-        <span class="n">gamma</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">Sigma</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">gamma</span> <span class="o">=</span> <span class="n">calc_min_group_eigenvalue</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
@@ -339,7 +253,7 @@
     <span class="c1"># Constants</span>
     <span class="n">TestIfCorrMatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">maxtol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10</span>
+    <span class="n">maxtol</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
     <span class="k">if</span> <span class="n">tol</span> <span class="o">&gt;</span> <span class="n">maxtol</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Reducing SDP tol from </span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">maxtol</span><span class="si">}</span><span class="s2">, otherwise SDP would be infeasible&quot;</span>
@@ -395,7 +309,7 @@
     <span class="c1"># Scale to make this PSD using binary search</span>
     <span class="n">S</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">mineig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">mineig</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;After SDP, mineig is </span><span class="si">{</span><span class="n">mineig</span><span class="si">}</span><span class="s2"> after </span><span class="si">{</span><span class="n">num_iter</span><span class="si">}</span><span class="s2"> line search iters.&quot;</span>
         <span class="p">)</span>
@@ -473,7 +387,7 @@
             <span class="s2">&quot;Using norm objective and norm_type = 2 can lead to strange behavior: consider using Frobenius norm&quot;</span>
         <span class="p">)</span>
     <span class="c1"># Find minimum tolerance, possibly warn user if lower than they specified</span>
-    <span class="n">maxtol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="mf">1.1</span>
+    <span class="n">maxtol</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.1</span>
     <span class="k">if</span> <span class="n">tol</span> <span class="o">&gt;</span> <span class="n">maxtol</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Reducing SDP tol from </span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">maxtol</span><span class="si">}</span><span class="s2">, otherwise SDP would be infeasible&quot;</span>
@@ -535,7 +449,7 @@
         <span class="n">shift</span> <span class="o">+=</span> <span class="n">gj</span>
 
     <span class="c1"># Construct S and Grahm Matrix</span>
-    <span class="n">S</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">S_rows</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">affine</span><span class="o">.</span><span class="n">wraps</span><span class="o">.</span><span class="n">psd_wrap</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">S_rows</span><span class="p">))</span> <span class="c1"># does this improve performance?</span>
     <span class="n">sortedSigma</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">sortedSigma</span><span class="p">)</span>
     <span class="n">constraints</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sortedSigma</span> <span class="o">-</span> <span class="n">S</span> <span class="o">&gt;&gt;</span> <span class="mi">0</span><span class="p">]</span>
 
@@ -574,49 +488,30 @@
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Asher Spector
-
-    </p>
+    <p>&#169; Copyright 2020, Asher Spector.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

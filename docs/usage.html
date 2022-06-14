@@ -1,76 +1,40 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Tutorials &mdash; knockpy 1.1.1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorials &mdash; knockpy 1.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MRC Knockoffs Primer" href="mrcknock.html" />
     <link rel="prev" title="Getting Started" href="installation.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> knockpy
-          
-
-          
+            <a href="index.html" class="icon icon-home"> knockpy
           </a>
-
-          
-            
-            
               <div class="version">
-                1.1.1
+                1.2
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -78,19 +42,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
@@ -104,6 +57,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#Group-knockoffs">Group knockoffs</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#Gaussian-graphical-models">Gaussian graphical models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#To-dos">To-dos</a></li>
 </ul>
 </li>
@@ -111,69 +65,30 @@
 <li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">knockpy</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Tutorials</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="_sources/usage.ipynb.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   
 <style>
 /* CSS for nbsphinx extension */
@@ -384,7 +299,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
@@ -445,10 +360,10 @@ div.rendered_html tbody tr:hover {
 }
 </style>
 <div class="section" id="Tutorials">
-<h1>Tutorials<a class="headerlink" href="#Tutorials" title="Permalink to this headline">¶</a></h1>
+<h1>Tutorials<a class="headerlink" href="#Tutorials" title="Permalink to this headline"></a></h1>
 <p>In this tutorial, we’ll review how to use <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> to apply the knockoff framework for variable selection.</p>
 <div class="section" id="A-quick-review-of-knockoffs">
-<h2>A quick review of knockoffs<a class="headerlink" href="#A-quick-review-of-knockoffs" title="Permalink to this headline">¶</a></h2>
+<h2>A quick review of knockoffs<a class="headerlink" href="#A-quick-review-of-knockoffs" title="Permalink to this headline"></a></h2>
 <p>In this section, we briefly review the knockoff framework. Users already familiar with knockoffs may want to scroll past this section.</p>
 <p>Given a set of <span class="math notranslate nohighlight">\(p\)</span> features <span class="math notranslate nohighlight">\(X = (X_1, \dots, X_p)\)</span> and an outcome of interest <span class="math notranslate nohighlight">\(y\)</span>, knockoffs aim to select the small fraction of features on which <span class="math notranslate nohighlight">\(y\)</span> actually depends while controlling the false discovery rate. For example, if <span class="math notranslate nohighlight">\(y \mid X \sim \mathcal{N}(X \beta, \sigma^2)\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> is sparse, knockoffs aim to identify the set <span class="math notranslate nohighlight">\(\{j : \beta_j \ne 0\}\)</span>.</p>
 <p>Applying the knockoffs framework involves executing three steps.</p>
@@ -465,15 +380,14 @@ div.rendered_html tbody tr:hover {
 </ol>
 </div>
 <div class="section" id="The-KnockoffFilter-class">
-<h2>The <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class<a class="headerlink" href="#The-KnockoffFilter-class" title="Permalink to this headline">¶</a></h2>
+<h2>The <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class<a class="headerlink" href="#The-KnockoffFilter-class" title="Permalink to this headline"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">knockpy.knockoff_filter.KnockoffFilter</span></code> is the most important class in <code class="docutils literal notranslate"><span class="pre">knockpy</span></code>: it generates knockoffs, fits the feature statistics, and applies the data-dependent threshhold all at once. This is demonstrated below.</p>
 <p>First we create a synthetic dataset where <span class="math notranslate nohighlight">\(X \sim \mathcal{N}(0, \Sigma)\)</span> for some <span class="math notranslate nohighlight">\(\Sigma\)</span> and <span class="math notranslate nohighlight">\(y \mid X\)</span> Gaussian with homoskedastic errors. The details of this dataset are commented below, but they aren’t too important.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Create a random covariance matrix for X</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a random covariance matrix for X</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">knockpy</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -497,8 +411,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">knockpy.knockoff_filter</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">knockpy.knockoff_filter</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span>
 <span class="n">kfilter</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span>
     <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
     <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lasso&#39;</span><span class="p">,</span>
@@ -511,8 +424,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Flags of whether each feature was rejected</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Flags of whether each feature was rejected</span>
 <span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
     <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
     <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
@@ -539,8 +451,7 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 13.7931
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Try again with estimated cov matrix</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Try again with estimated cov matrix</span>
 <span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lasso&#39;</span><span class="p">)</span>
 <span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">shrinkage</span><span class="o">=</span><span class="s2">&quot;ledoitwolf&quot;</span><span class="p">)</span>
 <span class="c1"># Check the number of discoveries we made</span>
@@ -560,7 +471,7 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 5.66037
 </div>
 </div>
 <div class="section" id="Gaussian-knockoffs-galore">
-<h2>Gaussian knockoffs galore<a class="headerlink" href="#Gaussian-knockoffs-galore" title="Permalink to this headline">¶</a></h2>
+<h2>Gaussian knockoffs galore<a class="headerlink" href="#Gaussian-knockoffs-galore" title="Permalink to this headline"></a></h2>
 <p>There are many ways to generate Gaussian knockoffs. The default option is to generate MVR knockoffs, which (informally) maximize <span class="math notranslate nohighlight">\(\text{Var}(X_j \mid X_{-j}, \tilde{X})\)</span> for each feature <span class="math notranslate nohighlight">\(X_j\)</span>, where <span class="math notranslate nohighlight">\(X_{-j}\)</span> denotes all of the features except the <span class="math notranslate nohighlight">\(j\)</span>th feature. Intuitively, this <em>minimizes the varianced-based reconstructability (MVR)</em> between the features and their knockoffs, preventing a feature statistic like a lasso or a randomforest from using the other features
 and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference external" href="https://arxiv.org/abs/2011.14625">Spector and Janson (2020)</a> for more details.</p>
 <p>There are a variety of other options to choose from, including:</p>
@@ -575,8 +486,7 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># This uses gaussian maxent knockoffs</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This uses gaussian maxent knockoffs</span>
 <span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;maxent&#39;</span><span class="p">})</span>
 
 <span class="c1"># This uses fixed-X SDP knockoffs</span>
@@ -594,8 +504,7 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">time</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
 
 <span class="c1"># Solve MVR, maxent, and SDP optimization problems for p = 500</span>
 <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -622,7 +531,7 @@ For p=500, MVR took 2.6 sec, Maxent took 6.0 sec, SDP took 7.8 sec
 </div>
 </div>
 <div class="section" id="Metropolized-knockoff-sampling">
-<h2>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Permalink to this headline">¶</a></h2>
+<h2>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Permalink to this headline"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> implements a fully general covariance-guided Metropolized knockoff sampler, which is capable of sampling model-X knockoffs for any <span class="math notranslate nohighlight">\(X\)</span> distribution given an (unnormalized) density function of <span class="math notranslate nohighlight">\(X\)</span>. This Metropolized knockoff sampler uses a variety of computational tricks to make it orders of magnitude faster than a naive implementation, although these tricks only work when the distribution of <span class="math notranslate nohighlight">\(X\)</span> has conditional independence properties, as specified by an undirected
 graphical model. See <a class="reference external" href="https://arxiv.org/abs/1903.00434">Bates et al. (2020)</a> for more details.</p>
 <p>The API reference as well as the source for the metro module details more advanced usage of metro; however, for now, we simply demonstrate how to pass in an arbitrary log-likelihood function to the <code class="docutils literal notranslate"><span class="pre">MetropolizedKnockoffSampler</span></code> class and use it to sample knockoffs.</p>
@@ -630,8 +539,7 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">knockpy.metro</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">knockpy.metro</span>
 
 <span class="c1"># Fake variables for simplicity.</span>
 <span class="n">p</span> <span class="o">=</span> <span class="mi">30</span>
@@ -675,8 +583,7 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">kfilter_metro</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="n">metrosampler</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;ridge&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kfilter_metro</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="n">metrosampler</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;ridge&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -685,23 +592,21 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">out</span> <span class="o">=</span> <span class="n">kfilter_metro</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X_metro</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_metro</span><span class="p">,</span> <span class="n">Xk</span><span class="o">=</span><span class="n">Xk</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">kfilter_metro</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X_metro</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_metro</span><span class="p">,</span> <span class="n">Xk</span><span class="o">=</span><span class="n">Xk</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>The metro module can also accept clique potentials from an undirected graphical model in place of the likelihood function to get a <span class="math notranslate nohighlight">\(O(p)\)</span> speedup, as discussed in the API reference.</p>
 </div>
 <div class="section" id="Built-in-feature-statistics">
-<h2>Built-in feature statistics<a class="headerlink" href="#Built-in-feature-statistics" title="Permalink to this headline">¶</a></h2>
+<h2>Built-in feature statistics<a class="headerlink" href="#Built-in-feature-statistics" title="Permalink to this headline"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> offers a suite of built-in feature statistics, including cross-validated lasso, ridge, and group-lasso coefficients, lasso-path statistics, the deepPINK statistic <a class="reference external" href="https://arxiv.org/abs/1809.01185">(Lu et. al 2018)</a>, and random forest statistics with swap and swap integral importances <a class="reference external" href="https://arxiv.org/abs/1807.06214">(Giminez et. al 2018)</a>. One can easily call these use these feature statistics by modifying the <code class="docutils literal notranslate"><span class="pre">fstat</span></code> argument and <code class="docutils literal notranslate"><span class="pre">fstat_kwarg</span></code> arguments in the
 KnockoffFilter class, as exemplified below. See the API reference for more flags and options.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Random forest statistics with swap importances</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Random forest statistics with swap importances</span>
 <span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;randomforest&#39;</span><span class="p">)</span>
 <span class="c1"># Random forest with swap integral importances</span>
 <span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span>
@@ -714,7 +619,7 @@ KnockoffFilter class, as exemplified below. See the API reference for more flags
 </div>
 </div>
 <div class="section" id="Custom-feature-statistics-with-FeatureStatistic">
-<h2>Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code><a class="headerlink" href="#Custom-feature-statistics-with-FeatureStatistic" title="Permalink to this headline">¶</a></h2>
+<h2>Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code><a class="headerlink" href="#Custom-feature-statistics-with-FeatureStatistic" title="Permalink to this headline"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">knockpy.knockoff_stats.FeatureStatistic</span></code> class also has the ability to turn any model class with a <code class="docutils literal notranslate"><span class="pre">fit</span></code> or <code class="docutils literal notranslate"><span class="pre">train</span></code> method and a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method into a knockoff feature statistic using the swap or swap integral importances introduced in swap and swap integral importances <a class="reference external" href="https://arxiv.org/abs/1807.06214">(Giminez et. al 2018)</a>. This means that after training a predictive model on <span class="math notranslate nohighlight">\([X, \tilde{X}]\)</span> and <span class="math notranslate nohighlight">\(y\)</span>, to obtain a variable importance for variable <span class="math notranslate nohighlight">\(X_j\)</span>, the
 FeatureStatistic class temporarily replaces <span class="math notranslate nohighlight">\(X_j\)</span> with <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> and records the decrease in predictive performance of the trained model. After repeating this for all features and knockoffs, this yields knockoff variable importances which can be transformed via an antisymmetric function to create valid feature statistics.</p>
 <p>Using this is easier than it sounds! To do so, begin by initializing any arbitrary model with train/fit and predict methods. Second, wrap it with a FeatureStatistic class. Lastly, pass the FeatureStatistic class to the KnockoffFilter, as shown below:</p>
@@ -722,8 +627,7 @@ FeatureStatistic class temporarily replaces <span class="math notranslate nohigh
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Here, we use an arbitrary predictive model</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Here, we use an arbitrary predictive model</span>
 <span class="c1"># (in this case, kernel ridge regression)</span>
 <span class="c1"># to create feature statistics</span>
 
@@ -759,16 +663,15 @@ Made 20.0 rejections!
 </div>
 </div>
 <div class="section" id="Other-functionality">
-<h2>Other functionality<a class="headerlink" href="#Other-functionality" title="Permalink to this headline">¶</a></h2>
+<h2>Other functionality<a class="headerlink" href="#Other-functionality" title="Permalink to this headline"></a></h2>
 <div class="section" id="Group-knockoffs">
-<h3>Group knockoffs<a class="headerlink" href="#Group-knockoffs" title="Permalink to this headline">¶</a></h3>
+<h3>Group knockoffs<a class="headerlink" href="#Group-knockoffs" title="Permalink to this headline"></a></h3>
 <p>The KnockoffFilter offers some support for sampling group knockoffs for the gaussian and fixed-X knockoff types (see the API reference for more details). New in version 1.1.0, knockpy supports fast computation of group MVR and ME knockoffs, as demonstrated below.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="c1"># Create arbitrary groupings of variables</span>
 <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">groups</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
@@ -793,66 +696,73 @@ Made 60.0 rejections!
 </div>
 </div>
 </div>
+<div class="section" id="Gaussian-graphical-models">
+<h2>Gaussian graphical models<a class="headerlink" href="#Gaussian-graphical-models" title="Permalink to this headline"></a></h2>
+<p>New in version 1.2.0, <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> includes methods for detecting edges in Gaussian Graphical models, as exemplified below. See <a class="reference external" href="https://arxiv.org/pdf/1908.11611.pdf">Li and Maathuis (2019)</a> for details.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fake data-generating process for Gaussian graphical model</span>
+<span class="c1"># under global null with no edges</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+
+<span class="c1"># LCD statistic with FX knockoffs</span>
+<span class="kn">from</span> <span class="nn">knockpy.ggm</span> <span class="kn">import</span> <span class="n">KnockoffGGM</span>
+<span class="n">gkf</span> <span class="o">=</span> <span class="n">KnockoffGGM</span><span class="p">(</span>
+    <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lcd&#39;</span><span class="p">,</span>
+    <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span><span class="s2">&quot;mvr&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="n">gkf</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+False
+</pre></div></div>
+</div>
+</div>
 <div class="section" id="To-dos">
-<h2>To-dos<a class="headerlink" href="#To-dos" title="Permalink to this headline">¶</a></h2>
-<p>We plan to release additional functionality for <a class="reference external" href="https://dmhuang.github.io/tutorials/cknockoff/index.html">conditional knockoffs</a>, more flavors of Metropolized knockoff samplers, and more — stay tuned!</p>
+<h2>To-dos<a class="headerlink" href="#To-dos" title="Permalink to this headline"></a></h2>
+<p>We plan to release additional functionality for <a class="reference external" href="https://dmhuang.github.io/tutorials/cknockoff/index.html">conditional knockoffs</a>, more flavors of non-Gaussian knockoff samplers, and more, as well as performance improvements—stay tuned!</p>
 </div>
 </div>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="mrcknock.html" class="btn btn-neutral float-right" title="MRC Knockoffs Primer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="installation.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mrcknock.html" class="btn btn-neutral float-right" title="MRC Knockoffs Primer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Asher Spector
-
-    </p>
+    <p>&#169; Copyright 2020, Asher Spector.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
