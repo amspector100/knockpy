@@ -493,6 +493,7 @@ def fit_group_lasso(
 
         # Fit model
         else:
+            warnings.warn("the group_lasso backend will be depreciated in verison 1.3.")
             best_gl = None
             best_score = -1 * np.inf
             for group_reg, l1_reg in reg_vals:

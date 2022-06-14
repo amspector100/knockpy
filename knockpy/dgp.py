@@ -461,7 +461,7 @@ def sample_response(X, beta, cond_mean="linear", y_dist="gaussian"):
     if y_dist == "gaussian":
         y = cond_mean + np.random.standard_normal((n))
     elif y_dist == "binomial":
-        probs = 1 / (1 + np.exp(-1 * cond_mean))
+        probs = 1 / (1 + np.exp(np.minimum(-1 * cond_mean, 30)))
         y = stats.bernoulli.rvs(probs)
     else:
         raise ValueError(f"y_dist must be one of 'gaussian', 'binomial', not {y_dist}")
