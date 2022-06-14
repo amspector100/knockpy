@@ -52,6 +52,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-knockpy.metro">Metropolized Samplers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-knockpy.smatrix">S-matrix computation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#kpytorch">Kpytorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-knockpy.ggm">Gaussian graphical model discovery</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-knockpy.dgp">Quickly creating data-generating processes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-knockpy.utilities">Utility functions</a></li>
 </ul>
@@ -3170,6 +3171,196 @@ PSGDSolver.
 :param optimize_kwargs: kwargs to pass 
 to optimizer method.
 :returns: opt_S</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-knockpy.ggm">
+<span id="gaussian-graphical-model-discovery"></span><h2>Gaussian graphical model discovery<a class="headerlink" href="#module-knockpy.ggm" title="Permalink to this headline"></a></h2>
+<p>Knockoffs for detecting edges in gaussian graphical models.
+See <a class="reference external" href="https://arxiv.org/pdf/1908.11611.pdf">https://arxiv.org/pdf/1908.11611.pdf</a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="knockpy.ggm.KnockoffGGM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">knockpy.ggm.</span></span><span class="sig-name descname"><span class="pre">KnockoffGGM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fstat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lcd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fstat_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knockoff_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/ggm.html#KnockoffGGM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.ggm.KnockoffGGM" title="Permalink to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Tests for edges in a Gaussian Graphical Model.
+See Li and Maathuis (2019) for details.</p>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>fstat</strong><span class="classifier">str</span></dt><dd><p>The feature statistic to use in the knockoff filter: this
+must be a string and must be a valid fixed-X knockoff 
+feature statistic. Identifiers include:
+- ‘lasso’ or ‘lcd’: lasso coefficients differences 
+- ‘lsm’: signed maximum of the lasso path statistic as</p>
+<blockquote>
+<div><p>in Barber and Candes 2015</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>‘ols’: Ordinary least squares coefficients</p></li>
+<li><p>‘margcorr’: marginal correlations between features and response</p></li>
+</ul>
+</dd>
+<dt><strong>fstat_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Kwargs to pass to the feature statistic <code class="docutils literal notranslate"><span class="pre">fit</span></code> function,
+excluding the required arguments, defaults to {}</p>
+</dd>
+<dt><strong>knockoff_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Kwargs for instantiating the knockoff sampler argument if
+the ksampler argument is a string identifier. Defaults to {}</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>There is no known way to use model-X knockoffs for this application.</p>
+<p class="rubric">Examples</p>
+<p>Here we fit KnockoffGGM under the global null when the true Gaussian 
+graphical model has no edges:</p>
+<blockquote>
+<div><p># Fake data-generating process for Gaussian graphical model
+import numpy as np
+X = np.random.randn(300, 30)</p>
+<p># LCD statistic with FX knockoffs
+from knockpy.ggm import KnockoffGGM 
+gkf = KnockoffGGM(</p>
+<blockquote>
+<div><p>fstat=’lcd’, 
+knockoff_kwargs={“method”:”mvr”},</p>
+</div></blockquote>
+<p>)
+edges = gkf.forward(X=X, verbose=True)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.array</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,p)</span></code>-shaped array of knockoff statistics
+with zeros along the diagonal. The rows of W obey
+the flip-sign property, i.e., W[0] obeys the flip-sign 
+property.</p>
+</dd>
+<dt><strong>kfs</strong><span class="classifier">list</span></dt><dd><p>A list of KnockoffFilter classes corresponding to the regression
+run on each covariate.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.ggm.KnockoffGGM.forward" title="knockpy.ggm.KnockoffGGM.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>(X[, logic, fdr, ggm_kwargs, verbose])</p></td>
+<td><p>Runs the GGM filter by applying fixed-X knockoffs</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="knockpy.ggm.KnockoffGGM.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'and'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ggm_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/ggm.html#KnockoffGGM.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.ggm.KnockoffGGM.forward" title="Permalink to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Runs the GGM filter by applying fixed-X knockoffs
+to each column of X using the other columns as covariates.</p>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix.</p>
+</dd>
+<dt><strong>fdr</strong><span class="classifier">float</span></dt><dd><p>Nominal level at which to control the FDR.
+logic : string</p>
+<blockquote>
+<div><p>One of ‘and’ or ‘or’. This is a hyperparameter used to 
+determine the rejection set. Defaults to “and”.</p>
+</div></blockquote>
+</dd>
+<dt><strong>ggm_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of hyperparameters to pass to the 
+<code class="docutils literal notranslate"><span class="pre">ggm.compute_ggm_threshold</span></code> function. Defaults to {}.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If true, log progress over time.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>edges</strong><span class="classifier">np.array</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,p)</span></code>-shaped symmetric boolean array where 
+edges[i,j] is true if and only if edge (i,j) has been
+discovered.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This requires fitting knockoffs p times, so it is quite expensive.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="knockpy.ggm.compute_ggm_threshold">
+<span class="sig-prename descclassname"><span class="pre">knockpy.ggm.</span></span><span class="sig-name descname"><span class="pre">compute_ggm_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'and'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/ggm.html#compute_ggm_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.ggm.compute_ggm_threshold" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>W</strong><span class="classifier">np.array</span></dt><dd><blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">(p,p)</span></code>-shaped array of knockoff statistics
+with zeros along the diagonal. The rows of W must obey
+the flip-sign property.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>fdr<span class="classifier">float</span></dt><dd><p>Desired level of FDR control.</p>
+</dd>
+<dt>logic<span class="classifier">string</span></dt><dd><p>One of ‘and’ or ‘or’. This is a hyperparameter used to 
+determine the rejection set. Defaults to “and”.</p>
+</dd>
+<dt>a<span class="classifier">float</span></dt><dd><p>One of 0.01 or 1.
+Hyperparameter used to determine the rejection threshold.
+See Li and Maathuis (2019) for discussion.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>offset</strong><span class="classifier">int</span></dt><dd><p>If offset = 0, control the modified FDR.
+If offset = 1 (default), controls the FDR exactly.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>T</strong><span class="classifier">np.array</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-shaped array of knockoff thresholds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>See Algorithm 2, <a class="reference external" href="https://arxiv.org/pdf/1908.11611.pdf">https://arxiv.org/pdf/1908.11611.pdf</a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="knockpy.ggm.discovered_edges">
+<span class="sig-prename descclassname"><span class="pre">knockpy.ggm.</span></span><span class="sig-name descname"><span class="pre">discovered_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'and'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/ggm.html#discovered_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.ggm.discovered_edges" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>W</strong><span class="classifier">np.array</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,p)</span></code>-shaped array of knockoff statistics
+with zeros along the diagonal. The rows of W must obey
+the flip-sign property.</p>
+</dd>
+<dt><strong>T</strong><span class="classifier">np.array</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,)</span></code>-shaped array of knockoff thresholds</p>
+</dd>
+<dt><strong>logic</strong><span class="classifier">string</span></dt><dd><p>One of ‘and’ or ‘or’. This is a hyperparameter used to 
+determine the rejection set. Defaults to “and”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>edges</strong><span class="classifier">np.array</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(p,p)</span></code>-shaped symmetric boolean array where 
+edges[i,j] is true if and only if edge (i,j) has been
+discovered.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

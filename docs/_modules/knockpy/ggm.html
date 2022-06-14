@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>knockpy.ggm &mdash; knockpy 1.2 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> knockpy
+          </a>
+              <div class="version">
+                1.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">knockpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>knockpy.ggm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for knockpy.ggm</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Knockoffs for detecting edges in gaussian graphical models.</span>
+<span class="sd">See https://arxiv.org/pdf/1908.11611.pdf.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.knockoff_filter</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span> <span class="k">as</span> <span class="n">KF</span>
+
+<div class="viewcode-block" id="discovered_edges"><a class="viewcode-back" href="../../apiref.html#knockpy.ggm.discovered_edges">[docs]</a><span class="k">def</span> <span class="nf">discovered_edges</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;and&#39;</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	W : np.array</span>
+<span class="sd">		``(p,p)``-shaped array of knockoff statistics</span>
+<span class="sd">		with zeros along the diagonal. The rows of W must obey</span>
+<span class="sd">		the flip-sign property.</span>
+<span class="sd">	T : np.array</span>
+<span class="sd">		``(p,)``-shaped array of knockoff thresholds</span>
+<span class="sd">	logic : string</span>
+<span class="sd">		One of &#39;and&#39; or &#39;or&#39;. This is a hyperparameter used to </span>
+<span class="sd">		determine the rejection set. Defaults to &quot;and&quot;.</span>
+
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	edges : np.array</span>
+<span class="sd">		``(p,p)``-shaped symmetric boolean array where </span>
+<span class="sd">		edges[i,j] is true if and only if edge (i,j) has been</span>
+<span class="sd">		discovered. </span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">edges</span> <span class="o">=</span> <span class="n">W</span> <span class="o">&gt;=</span> <span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">logic</span> <span class="o">==</span> <span class="s1">&#39;and&#39;</span><span class="p">:</span>
+		<span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span> <span class="o">&amp;</span> <span class="n">edges</span><span class="o">.</span><span class="n">T</span>
+	<span class="k">elif</span> <span class="n">logic</span> <span class="o">==</span> <span class="s1">&#39;or&#39;</span><span class="p">:</span>
+		<span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span> <span class="o">|</span> <span class="n">edges</span><span class="o">.</span><span class="n">T</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;logic=</span><span class="si">{</span><span class="n">logic</span><span class="si">}</span><span class="s2"> must be one of &#39;and&#39;, &#39;or&#39;&quot;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">edges</span></div>
+
+<div class="viewcode-block" id="compute_ggm_threshold"><a class="viewcode-back" href="../../apiref.html#knockpy.ggm.compute_ggm_threshold">[docs]</a><span class="k">def</span> <span class="nf">compute_ggm_threshold</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;and&#39;</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	W : np.array</span>
+<span class="sd">		``(p,p)``-shaped array of knockoff statistics</span>
+<span class="sd">		with zeros along the diagonal. The rows of W must obey</span>
+<span class="sd">		the flip-sign property.</span>
+<span class="sd">	fdr : float</span>
+<span class="sd">		Desired level of FDR control.</span>
+<span class="sd">	logic : string</span>
+<span class="sd">		One of &#39;and&#39; or &#39;or&#39;. This is a hyperparameter used to </span>
+<span class="sd">		determine the rejection set. Defaults to &quot;and&quot;.</span>
+<span class="sd">	a : float</span>
+<span class="sd">		One of 0.01 or 1.</span>
+<span class="sd">		Hyperparameter used to determine the rejection threshold.</span>
+<span class="sd">		See Li and Maathuis (2019) for discussion.</span>
+<span class="sd">    offset : int</span>
+<span class="sd">        If offset = 0, control the modified FDR.</span>
+<span class="sd">        If offset = 1 (default), controls the FDR exactly.</span>
+
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	T : np.array</span>
+<span class="sd">		``(p,)``-shaped array of knockoff thresholds</span>
+
+<span class="sd">	Notes</span>
+<span class="sd">	-----</span>
+<span class="sd">	See Algorithm 2, https://arxiv.org/pdf/1908.11611.pdf</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">p</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="n">eps</span> <span class="o">=</span> <span class="n">W</span><span class="p">[</span><span class="n">W</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span> <span class="c1"># smallest threshold</span>
+	<span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;W matrix must have a diagonal of all zeros&quot;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+		<span class="n">ca</span> <span class="o">=</span> <span class="mf">1.93</span>
+	<span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="mf">0.01</span><span class="p">:</span>
+		<span class="n">ca</span> <span class="o">=</span> <span class="mi">102</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;a=</span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> must be one of [0.01,1.0]&quot;</span><span class="p">)</span>
+
+	<span class="c1"># Compute start of loop</span>
+	<span class="n">logic</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">logic</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">logic</span> <span class="o">==</span> <span class="s1">&#39;and&#39;</span><span class="p">:</span>
+		<span class="n">mmax</span> <span class="o">=</span> <span class="n">fdr</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">ca</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">offset</span>
+		<span class="n">qi</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">fdr</span> <span class="o">/</span> <span class="p">(</span><span class="n">ca</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">logic</span> <span class="o">==</span> <span class="s1">&#39;or&#39;</span><span class="p">:</span>
+		<span class="n">mmax</span> <span class="o">=</span> <span class="n">fdr</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ca</span><span class="p">)</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">offset</span>
+		<span class="n">qi</span> <span class="o">=</span> <span class="n">fdr</span> <span class="o">/</span> <span class="p">(</span><span class="n">ca</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;logic=</span><span class="si">{</span><span class="n">logic</span><span class="si">}</span><span class="s2"> must be one of &#39;and&#39;, &#39;or&#39;&quot;</span><span class="p">)</span>
+	<span class="n">mmax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">mmax</span><span class="p">))</span>
+	<span class="k">if</span> <span class="n">mmax</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+	<span class="c1"># Preprocess signs </span>
+	<span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+	<span class="n">sortW</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take_along_axis</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+	<span class="n">cumpos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sortW</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+	<span class="n">cumneg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sortW</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+	<span class="c1"># Loop through thresholds. `ms` indexes the number </span>
+	<span class="c1"># of negatives allowed.</span>
+	<span class="n">ms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+	<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ms</span><span class="p">:</span>
+		<span class="c1"># This gives the last index less than or equal to m</span>
+		<span class="n">Tinds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">cumneg</span> <span class="o">&lt;=</span> <span class="n">m</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> 
+		<span class="c1"># Construct thresholds based on Tinds</span>
+		<span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sortW</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">Tinds</span><span class="p">])</span>
+		<span class="c1"># if all indices are &lt;= m</span>
+		<span class="n">all_leq_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">cumneg</span> <span class="o">&lt;=</span> <span class="n">m</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+		<span class="n">T</span><span class="p">[</span><span class="n">Tinds</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="c1"># if no index is less than or equal to m</span>
+		<span class="n">T</span><span class="p">[(</span><span class="n">Tinds</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">all_leq_m</span><span class="p">]</span> <span class="o">=</span> <span class="n">eps</span>
+		<span class="c1"># Create set of discovered edges</span>
+		<span class="n">edges</span> <span class="o">=</span> <span class="n">discovered_edges</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">logic</span><span class="o">=</span><span class="n">logic</span><span class="p">)</span>
+		<span class="n">ndisc</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="c1"># is this double-counting? I don&#39;t think so, but am not sure. If so divide by 2.</span>
+		<span class="c1">#print(m, (a + m) / max(ndisc, 1.0), qi)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">ndisc</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">qi</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">T</span>
+
+	<span class="c1"># If no feasible solution, return nothing</span>
+	<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span></div>
+
+<div class="viewcode-block" id="KnockoffGGM"><a class="viewcode-back" href="../../apiref.html#knockpy.ggm.KnockoffGGM">[docs]</a><span class="k">class</span> <span class="nc">KnockoffGGM</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Tests for edges in a Gaussian Graphical Model.</span>
+<span class="sd">	See Li and Maathuis (2019) for details. </span>
+
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	fstat : str </span>
+<span class="sd">        The feature statistic to use in the knockoff filter: this</span>
+<span class="sd">        must be a string and must be a valid fixed-X knockoff </span>
+<span class="sd">        feature statistic. Identifiers include:</span>
+<span class="sd">        - &#39;lasso&#39; or &#39;lcd&#39;: lasso coefficients differences </span>
+<span class="sd">        - &#39;lsm&#39;: signed maximum of the lasso path statistic as </span>
+<span class="sd">            in Barber and Candes 2015</span>
+<span class="sd">        - &#39;ols&#39;: Ordinary least squares coefficients</span>
+<span class="sd">        - &#39;margcorr&#39;: marginal correlations between features and response</span>
+<span class="sd">    fstat_kwargs : dict</span>
+<span class="sd">        Kwargs to pass to the feature statistic ``fit`` function,</span>
+<span class="sd">        excluding the required arguments, defaults to {} </span>
+<span class="sd">    knockoff_kwargs : dict</span>
+<span class="sd">        Kwargs for instantiating the knockoff sampler argument if</span>
+<span class="sd">        the ksampler argument is a string identifier. Defaults to {}</span>
+
+<span class="sd">	Attributes</span>
+<span class="sd">	----------</span>
+<span class="sd">	W : np.array</span>
+<span class="sd">		``(p,p)``-shaped array of knockoff statistics</span>
+<span class="sd">		with zeros along the diagonal. The rows of W obey</span>
+<span class="sd">		the flip-sign property, i.e., W[0] obeys the flip-sign </span>
+<span class="sd">		property.</span>
+<span class="sd">	kfs : list</span>
+<span class="sd">		A list of KnockoffFilter classes corresponding to the regression</span>
+<span class="sd">		run on each covariate.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    There is no known way to use model-X knockoffs for this application.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Here we fit KnockoffGGM under the global null when the true Gaussian </span>
+<span class="sd">    graphical model has no edges:</span>
+
+<span class="sd">        # Fake data-generating process for Gaussian graphical model</span>
+<span class="sd">        import numpy as np</span>
+<span class="sd">        X = np.random.randn(300, 30)</span>
+
+<span class="sd">        # LCD statistic with FX knockoffs</span>
+<span class="sd">        from knockpy.ggm import KnockoffGGM </span>
+<span class="sd">        gkf = KnockoffGGM( </span>
+<span class="sd">            fstat=&#39;lcd&#39;, </span>
+<span class="sd">            knockoff_kwargs={&quot;method&quot;:&quot;mvr&quot;}, </span>
+<span class="sd">        )</span>
+<span class="sd">        edges = gkf.forward(X=X, verbose=True)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lcd&#39;</span><span class="p">,</span> <span class="n">fstat_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fstat</span> <span class="o">=</span> <span class="n">fstat</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span> <span class="o">=</span> <span class="n">fstat_kwargs</span> <span class="k">if</span> <span class="n">fstat_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span> <span class="o">=</span> <span class="n">knockoff_kwargs</span> <span class="k">if</span> <span class="n">knockoff_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="KnockoffGGM.forward"><a class="viewcode-back" href="../../apiref.html#knockpy.ggm.KnockoffGGM.forward">[docs]</a>	<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;and&#39;</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">ggm_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Runs the GGM filter by applying fixed-X knockoffs</span>
+<span class="sd">		to each column of X using the other columns as covariates.</span>
+
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            ``(n, p)``-shaped design matrix.</span>
+<span class="sd">        fdr : float</span>
+<span class="sd">        	Nominal level at which to control the FDR.</span>
+<span class="sd">		logic : string</span>
+<span class="sd">			One of &#39;and&#39; or &#39;or&#39;. This is a hyperparameter used to </span>
+<span class="sd">			determine the rejection set. Defaults to &quot;and&quot;.</span>
+<span class="sd">        ggm_kwargs : dict</span>
+<span class="sd">        	Dictionary of hyperparameters to pass to the </span>
+<span class="sd">        	``ggm.compute_ggm_threshold`` function. Defaults to {}.</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">        	If true, log progress over time.</span>
+
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+<span class="sd">		edges : np.array</span>
+<span class="sd">			``(p,p)``-shaped symmetric boolean array where </span>
+<span class="sd">			edges[i,j] is true if and only if edge (i,j) has been</span>
+<span class="sd">			discovered. </span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This requires fitting knockoffs p times, so it is quite expensive.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">logic</span> <span class="o">=</span> <span class="n">logic</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fdr</span> <span class="o">=</span> <span class="n">fdr</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ggm_kwargs</span> <span class="o">=</span> <span class="n">ggm_kwargs</span> <span class="k">if</span> <span class="n">ggm_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">kfs</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">Ws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">))</span>
+		<span class="c1"># Loop through columns to fit knockoffs</span>
+		<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">):</span>
+			<span class="n">kf</span> <span class="o">=</span> <span class="n">KF</span><span class="p">(</span>
+				<span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;fx&#39;</span><span class="p">,</span>
+				<span class="n">fstat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fstat</span><span class="p">,</span>
+				<span class="n">knockoff_kwargs</span><span class="o">=</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">knockoff_kwargs</span><span class="p">),</span>
+				<span class="n">fstat_kwargs</span><span class="o">=</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fstat_kwargs</span><span class="p">)</span>
+			<span class="p">)</span>
+			<span class="n">negj</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">]</span>
+			<span class="n">Xnegj</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">negj</span><span class="p">]</span>
+			<span class="n">kf</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+				<span class="n">X</span><span class="o">=</span><span class="n">Xnegj</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">X</span><span class="p">[:,</span> <span class="n">j</span><span class="p">],</span>
+			<span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kf</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Ws</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">negj</span><span class="p">]</span> <span class="o">=</span> <span class="n">kf</span><span class="o">.</span><span class="n">W</span>
+			<span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished feature </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+		<span class="c1"># Find threshold</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">compute_ggm_threshold</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Ws</span><span class="p">,</span> <span class="n">logic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">logic</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">ggm_kwargs</span><span class="p">)</span>
+		<span class="c1"># Compute rejections</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">discovered_edges</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Ws</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">logic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">logic</span><span class="p">)</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Asher Spector.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
