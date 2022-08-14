@@ -234,7 +234,6 @@ def solve_mvr_factored(
 
 def _solve_mvr_ungrouped(
     Sigma,
-    tol=1e-5,
     verbose=False,
     num_iter=50,
     smoothing=0,
@@ -685,7 +684,6 @@ def solve_mvr(
     if np.all(groups == np.arange(1, p+1)):
         S = _solve_mvr_ungrouped(
             Sigma=Sigma, 
-            tol=tol,
             verbose=verbose,
             num_iter=num_iter,
             smoothing=smoothing,

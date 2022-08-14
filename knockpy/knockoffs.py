@@ -6,7 +6,7 @@ import scipy.linalg
 
 from .utilities import calc_group_sizes, preprocess_groups
 from .utilities import shift_until_PSD, scale_until_PSD
-from . import utilities, smatrix
+from . import utilities, smatrix, constants
 
 
 ### Base Knockoff Class and Gaussian Knockoffs
@@ -361,6 +361,7 @@ class FXSampler(KnockoffSampler):
         if self.S is None:
             if self.verbose:
                 print(f"Computing knockoff S matrix...")
+            self.kwargs['tol'] = self.kwargs.get('tol', constants.DEFAULT_TOL / self.n)
             self.S = smatrix.compute_smatrix(
                 Sigma=self.Sigma, groups=self.groups, method=self.method, **self.kwargs
             )
