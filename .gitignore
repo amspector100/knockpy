@@ -6,7 +6,9 @@ data/*
 prof/*
 proftest/*
 profile
-
+# Don't save c files
+*.c
+*.so
 
 # Docs/todo
 makedocs.sh
