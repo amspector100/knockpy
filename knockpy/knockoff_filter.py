@@ -5,6 +5,7 @@ from . import utilities
 from . import mrc
 from . import knockoffs
 from . import metro
+from . import mlr
 from . import knockoff_stats as kstats
 
 
@@ -21,7 +22,9 @@ class KnockoffFilter:
         The feature statistic to use in the knockoff filter.
         Defaults to a lasso statistic.
         This may also be a string identifier, including:
-        - 'lasso' or 'lcd': cross-validated lasso coefficients differences 
+        - 'lasso' or 'lcd': cross-validated lasso coefficients differences
+        - 'mlr': the masked likelihood ratio (MLR) statistic, which has
+            provable optimality properties for knockoffs.
         - 'lsm': signed maximum of the lasso path statistic as 
             in Barber and Candes 2015
         - 'dlasso': Cross-validated debiased lasso coefficients
@@ -119,6 +122,24 @@ class KnockoffFilter:
         Initialize the class.
         """
 
+        ### Preprocessing for knockoffs
+        self.knockoff_kwargs = knockoff_kwargs.copy()
+        if isinstance(ksampler, str):
+            self.knockoff_type = ksampler.lower()
+            self.ksampler = None
+        if isinstance(ksampler, knockoffs.KnockoffSampler):
+            self.knockoff_type = None
+            self.ksampler = ksampler
+        if isinstance(ksampler, knockoffs.FXSampler):
+            self._mx = False
+        elif self.knockoff_type == "fx":
+            self._mx = False
+        else:
+            self._mx = True
+
+        # Initialize
+        self.S = None
+
         ### Parse feature statistic
         self.fstat_kwargs = fstat_kwargs.copy()
         if isinstance(fstat, str):
@@ -146,27 +167,14 @@ class KnockoffFilter:
             fstat = kstats.RandomForestStatistic()
         elif fstat == "deeppink":
             fstat = kstats.DeepPinkStatistic()
+        elif fstat == 'mlr':
+            if self._mx:
+                fstat = mlr.MLR_MX_Spikeslab()
+            else:
+                fstat = mlr.MLR_FX_Spikeslab()
         else:
             raise ValueError(f"Unrecognized fstat {fstat}")
         self.fstat = fstat
-
-        ### Preprocessing for knockoffs
-        self.knockoff_kwargs = knockoff_kwargs.copy()
-        if isinstance(ksampler, str):
-            self.knockoff_type = ksampler.lower()
-            self.ksampler = None
-        if isinstance(ksampler, knockoffs.KnockoffSampler):
-            self.knockoff_type = None
-            self.ksampler = ksampler
-        if isinstance(ksampler, knockoffs.FXSampler):
-            self._mx = False
-        elif self.knockoff_type == "fx":
-            self._mx = False
-        else:
-            self._mx = True
-
-        # Initialize
-        self.S = None
 
     def sample_knockoffs(self):
         """

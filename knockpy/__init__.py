@@ -8,6 +8,7 @@ all = [
     "knockoffs",
     "mac",
     "metro",
+    "mlr",
     "mrc",
     "smatrix",
     "utilities",
@@ -23,6 +24,7 @@ from . import knockoff_filter
 from . import knockoff_stats
 from . import mac
 from . import metro
+from . import mlr
 from . import mrc
 from . import smatrix
 from . import utilities

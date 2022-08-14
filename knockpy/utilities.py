@@ -429,3 +429,11 @@ def check_kpytorch_available(purpose):
         raise ValueError(
             f"Pytorch is required for {purpose}, but importing torch raised {err}. See https://pytorch.org/get-started/."
         )
+
+def check_pyglmnet_available(purpose):
+    try:
+        import pyglmnet
+    except ImportError as err:
+        raise ValueError(
+            f"pyglmnet is required for {purpose}, but importing pyglmnet raised {err}. See https://github.com/glm-tools/pyglmnet/."
+        )
