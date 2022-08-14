@@ -6,8 +6,7 @@ import unittest
 from .context import knockpy
 from .context import file_directory
 
-from knockpy import utilities
-from knockpy import dgp
+from knockpy import dgp, mlr, utilities
 from knockpy.knockoff_filter import KnockoffFilter
 
 NUM_REPS = 1
@@ -468,6 +467,37 @@ class TestKnockoffFilter(TestFdrControl):
             coeff_dist="uniform",
             coeff_size=5,
             filter_kwargs={"fstat_kwargs": {"use_lars": True}},
+        )
+
+    @pytest.mark.quick
+    def test_mlr_fit(self):
+        """Tests that MLR statistics work"""
+        n = 200
+        p = 50
+        # 1. FX
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=n,
+            p=p,
+            y_dist='gaussian',
+            test_grouped=False,
+            filter_kwargs={
+                "ksampler":"fx",
+                "fstat":"mlr",
+                "fstat_kwargs":{"n_iter":10, "chains":2, "num_mixture":4},
+            },
+        )
+        # 2. MX
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=n,
+            p=p,
+            y_dist='gaussian',
+            test_grouped=False,
+            filter_kwargs={
+                "fstat":"mlr",
+                "fstat_kwargs":{"n_iter":10, "chains":2},
+            },        
         )
 
     @pytest.mark.slow
