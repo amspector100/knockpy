@@ -22,28 +22,30 @@ class KnockoffFilter:
         The feature statistic to use in the knockoff filter.
         Defaults to a lasso statistic.
         This may also be a string identifier, including:
+
         - 'lasso' or 'lcd': cross-validated lasso coefficients differences
-        - 'mlr': the masked likelihood ratio (MLR) statistic, which has
-            provable optimality properties for knockoffs.
-        - 'lsm': signed maximum of the lasso path statistic as 
-            in Barber and Candes 2015
+        - 'mlr': the masked likelihood ratio (MLR) statistic, which has provable optimality properties for knockoffs
+        - 'lsm': signed maximum of the lasso path statistic as in Barber and Candes 2015
         - 'dlasso': Cross-validated debiased lasso coefficients
         - 'ridge': Cross validated ridge coefficients
         - 'ols': Ordinary least squares coefficients
         - 'margcorr': marginal correlations between features and response
         - 'deeppink': The deepPINK statistic as in Lu et al. 2018
         - 'randomforest': A random forest with swap importances
-        Note that when using FX knockoffs, the lcd statistic does not use
-        cross-validation and sets ``alphas = sigma2 * sqrt(log(p) / n).``
+
+        Note that when using FX knockoffs, the `lcd` statistic does not use
+        cross-valdilidation and sets ``alphas = sigma2 * sqrt(log(p) / n).``
     ksampler : str or knockpy.knockoffs.KnockoffSampler
         The knockoff sampler to use in the knockoff filter.
         This may also be a string identifier, including:
+
         - 'gaussian': Gaussian Model-X knockoffs
-        - 'fx': Fixed-X knockoffs
-        - 'metro': Generic metropolized knockoff sampler.
-        - 'artk': t-tailed Markov chain
-        - 'blockt': Blocks of t-distributed 
+        - 'fx': Fixed-X knockoffs.
+        - 'metro': Generic metropolized knockoff sampler
+        - 'artk': t-tailed Markov chain.
+        - 'blockt': Blocks of t-distributed
         - 'gibbs_grid': Discrete gibbs grid
+
         An alternative to specifying the ksampler is to simply pass
         in a knockoff matrix during the ``forward`` call.
     fstat_kwargs : dict
@@ -305,11 +307,11 @@ class KnockoffFilter:
             with rank ``num_factors`` to speed up computation.
         recycle_up_to : int or float
             Three options:
+
                 - if ``None``, does nothing.
-                - if an integer > 1, uses the first "recycle_up_to"
-                rows of X as the the first ``recycle_up_to`` rows of knockoffs
-                - if a float between 0 and 1 (inclusive), interpreted
-                as the proportion of rows to recycle. 
+                - if an integer > 1, uses the first "recycle_up_to" rows of X as the the first ``recycle_up_to`` rows of knockoffs
+                - if a float between 0 and 1 (inclusive), interpreted as the proportion of rows to recycle. 
+
             For more on recycling, see https://arxiv.org/abs/1602.03574
         """
 
@@ -335,6 +337,9 @@ class KnockoffFilter:
         # Save objects
         self.X = X
         self.Xk = Xk
+        # Center if we are going to fit FX knockoffs
+        if self.Xk is None and not self._mx:
+            self.X = self.X - self.X.mean(axis=0)
         self.y = y
         self.mu = mu
         self.Sigma = Sigma

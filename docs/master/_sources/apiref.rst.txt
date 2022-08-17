@@ -32,6 +32,7 @@ S-matrix computation
 .. automodule:: knockpy.mac
   :members:
 
+
 Kpytorch
 --------
 The kpytorch submodule includes a miscallaneous
@@ -42,6 +43,11 @@ for automatic differentation.
   :members:
 
 .. automodule:: knockpy.kpytorch.mrcgrad
+  :members:
+
+Gaussian graphical model discovery
+----------------------------------
+.. automodule:: knockpy.ggm
   :members:
 
 Quickly creating data-generating processes

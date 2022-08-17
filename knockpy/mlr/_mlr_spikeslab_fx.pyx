@@ -73,10 +73,11 @@ def _sample_mlr_spikeslab_fx(
 	double[::1] tau2_b0s,
 	int num_mixture, # must be >= 1
 	double sigma2=1.0,
-	double p0_a0=5.0,
+	int update_p0=1,
+	double p0_a0=1.0,
 	double p0_b0=1.0,
 	double sigma2_a0=2.0,
-	double sigma2_b0=1.0,
+	double sigma2_b0=0.01,
 	int update_sigma2=1,
 ):
 	# Note: atb = abs(tildebeta), stb=sign(tildebeta)
@@ -166,10 +167,14 @@ def _sample_mlr_spikeslab_fx(
 	d_params[0] = p0_a0
 	for k in range(num_mixture):
 		d_params[k+1] = p0_b0 / num_mixture
-	# sample to create p0s
-	p0s_update_arr = np.random.dirichlet(alpha=d_params_arr)
-	for k in range(num_mixture + 1):
-		p0s[0, k] = p0s_update_arr[k]
+	# initialize p0s
+	if update_p0 == 1:
+		p0s_update_arr = np.random.dirichlet(alpha=d_params_arr)
+		for k in range(num_mixture + 1):
+			p0s[0, k] = p0s_update_arr[k]
+	else:
+		for k in range(num_mixture + 1):
+			p0s[0, k] = d_params[k] / (p0_a0 + p0_b0)
 
 	for i in range(N):
 		np.random.shuffle(inds)
@@ -288,14 +293,14 @@ def _sample_mlr_spikeslab_fx(
 			d_params[mixtures[i, j]] += 1
 
 		# sample p0
-		p0s_update_arr = np.random.dirichlet(
-			alpha=d_params_arr
-		)
-		for k in range(num_mixture + 1):
-			p0s[i, k] = p0s_update_arr[k]
+		if update_p0 == 1:
+			p0s_update_arr = np.random.dirichlet(
+				alpha=d_params_arr
+			)
+			for k in range(num_mixture + 1):
+				p0s[i, k] = p0s_update_arr[k]
 
 		# Resample tau2
-		#if update_tau2:
 		for k in range(num_mixture):
 			sample_var = 0
 			num_active = 0

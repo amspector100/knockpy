@@ -46,7 +46,7 @@ class MLR_MX_Spikeslab(kstats.FeatureStatistic):
 		Else, the value of ``p0`` is fixed. Default: True.
 	p0_a0 : float
 		If ``update_p0`` is True, ``p0`` has a
-		Beta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
+		TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
 		Default: 1.0.
 	p0_b0 : float
 		If ``update_p0`` is True, ``p0`` has a
@@ -74,11 +74,11 @@ class MLR_MX_Spikeslab(kstats.FeatureStatistic):
 		If True, imposes an InverseGamma hyperprior on ``tau2``.
 		Else, the value of ``tau2`` is fixed. Default: True.
 	tau2_a0 : float
-		If ``update_sigma2`` is True, ``tau2`` has an
+		If ``update_tau2`` is True, ``tau2`` has an
 		InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior. 
 		Default: 2.0.
 	tau2_b0 : float
-		If ``update_sigma2`` is True, ``tau2`` has an
+		If ``update_tau2`` is True, ``tau2`` has an
 		InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
 		Default: 0.01.
 
@@ -202,15 +202,12 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		Else, the value of ``p0`` is fixed. Default: True.
 	p0_a0 : float
 		If ``update_p0`` is True, ``p0`` has a
-		Beta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
+		Beta(``p0_a0``, ``p0_b0``) hyperprior.
 		Default: 1.0.
 	p0_b0 : float
 		If ``update_p0`` is True, ``p0`` has a
-		TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
+		Beta(``p0_a0``, ``p0_b0``) hyperprior.
 		Default: 1.0.
-	min_p0 : float
-		Minimum value for ``p0`` as specified by the prior.
-		Default: 0.5.
 	sigma2 : float
 		Variance of y given X. Default: 1.0.
 	update_sigma2 : bool
@@ -226,17 +223,12 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		Default: 0.01.
 	tau2 : float or list of floats
 		Prior variance on nonzero coefficients. Default: 1.0.
-	update_tau2 : bool
-		If True, imposes an InverseGamma hyperprior on ``tau2``.
-		Else, the value of ``tau2`` is fixed. Default: True.
 	tau2_a0 : float or list of floats
-		If ``update_sigma2`` is True, ``tau2`` has an
-		InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior. 
+		``tau2`` has an InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior. 
 		When ``n_mixture`` > 1, this can be a list of length
 		``n_mixture``. Default: 2.0.
 	tau2_b0 : float or list of floats
-		If ``update_sigma2`` is True, ``tau2`` has an
-		InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
+		``tau2`` has an InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
 		When ``n_mixture`` > 1, this can be a list of length
 		``n_mixture``. Default: 0.01.
 
@@ -296,7 +288,7 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		check_no_groups(groups, self.p)
 		S = X.T @ X - X.T @ Xk
 		self.calc_whiteout_statistics(X=X, Xk=Xk, y=y, S=S, calc_hatxi=False)
-		self.sigma2 = kstats.compute_residual_variance(X=X, Xk=Xk, y=y)
+		#self.sigma2 = kstats.compute_residual_variance(X=X, Xk=Xk, y=y)
 		self.XTX = np.dot(X.T, X)
 		self.L = np.linalg.cholesky(self.A)
 		self.Linv = np.ascontiguousarray(
@@ -309,12 +301,12 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 			self.kwargs[key] = kwargs[key]
 		# handle mixture components and size of arrays
 		self.num_mixture = self.kwargs.pop("num_mixture", 1)
-		tau2_a0 = self.kwargs.get("tau2_a0", 2.0)
+		tau2_a0 = self.kwargs.pop("tau2_a0", 2.0)
 		# Inverse-Gamma prior on tau2
 		if isinstance(tau2_a0, float) or isinstance(tau2_a0, int):
 			tau2_a0 = [tau2_a0 for _ in range(self.num_mixture)]
 		self.tau2_a0 = np.array(tau2_a0, dtype=float)
-		tau2_b0 = self.kwargs.get("tau2_b0", 0.01)
+		tau2_b0 = self.kwargs.pop("tau2_b0", 0.01)
 		if isinstance(tau2_b0, float) or isinstance(tau2_b0, int):
 			tau2_b0 = [tau2_b0 for _ in range(self.num_mixture)]
 		self.tau2_b0 = np.array(tau2_b0, dtype=float)
@@ -373,9 +365,9 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		)
 		# This equals: log(P(sgn(tildebeta) = sign guess))
 		log_prob = scipy.special.log_softmax(etas_cat, axis=2)[:, :, 0]
-		log_prob = scipy.special.logsumexp(log_prob, b=1/self.n_iter, axis=0)
+		log_prob = scipy.special.logsumexp(log_prob, b=1/self.N, axis=0)
 		self.W = np.exp(log_prob) - 0.5
-		
+
 		# 3. Compute sign(W)
 		self.wrong_guesses = np.sign(self.tildebeta) != self.sign_guess
 		self.W[self.wrong_guesses] = -1 * self.W[self.wrong_guesses]
