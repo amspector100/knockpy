@@ -1,4 +1,4 @@
-# cython: profile=False
+# cython: profile=True
 
 import time 
 cimport cython
@@ -56,10 +56,10 @@ cdef int _weighted_choice(
 		if cumsum >= u:
 			return ii
 
-@cython.wraparound(False)
-@cython.boundscheck(False)
-@cython.nonecheck(False)
-@cython.cdivision(True)
+#@cython.wraparound(False)
+#@cython.boundscheck(False)
+#@cython.nonecheck(False)
+#@cython.cdivision(True)
 def _sample_mlr_spikeslab_fx(
 	int N,
 	double[::1] xi,
@@ -145,13 +145,13 @@ def _sample_mlr_spikeslab_fx(
 	### DEBUGGING ONLY: DELETE LATER
 	# Siginv = np.linalg.inv(XTX)
 	# cdef np.ndarray[double, ndim=1] mixture_logits_debug
-	cdef np.ndarray[double, ndim=2] ols_dots = np.zeros((N, p))
+	# cdef np.ndarray[double, ndim=2] ols_dots = np.zeros((N, p))
 
 	# precompute sigma2 posterior variance
 	sigma2_a = p + sigma2_a0
 	cdef np.ndarray [double, ndim=1] gammas = scipy.stats.gamma(a=sigma2_a).rvs(N) 
 
-	# # For debugging only---delete later
+	# For debugging only---delete later
 	# cdef np.ndarray[double, ndim=2] L_arr = np.zeros((p, p))
 	# for i in range(p):
 	# 	for j in range(p):
@@ -196,11 +196,12 @@ def _sample_mlr_spikeslab_fx(
 			cent_ols_dot = xi[j] + tb[j] * diag_S[j] / 2 - XTXjbeta
 
 			# # DEBUGGING seems like it works
-			ols_dots[i, j] = cent_ols_dot
-			# hatbeta = Siginv @ xi + 1/2 * Siginv @ (np.array(diag_S) * tb_arr)
-			# cent_hatbeta = hatbeta - betas_arr[i]
-			# cent_ols_dot_v2 = XTX[j] @ cent_hatbeta
-			# print("HERE", np.abs(cent_ols_dot - cent_ols_dot_v2))
+			# if j == 0:
+			# 	ols_dots[i, j] = cent_ols_dot
+			# 	hatbeta = Siginv @ xi + 1/2 * Siginv @ (np.array(diag_S) * tb_arr)
+			# 	cent_hatbeta = hatbeta - betas_arr[i]
+			# 	cent_ols_dot_v2 = XTX[j] @ cent_hatbeta
+			# 	print("HERE", np.abs(cent_ols_dot - cent_ols_dot_v2))
 
 
 			for k in range(num_mixture):
@@ -242,14 +243,13 @@ def _sample_mlr_spikeslab_fx(
 				log_probs=mixture_logits,
 				num_mixture=num_mixture,
 			)
-			#### Debugging only
-			# mixture_logits_debug = scipy.special.softmax(mixture_logits_debug)
-			# print(m_logits_arr)
-			# print(mixture_probs_arr)
-			# print(mixture_logits_debug)
-			# print("HERE2", k, np.abs(mixture_probs - mixture_logits_debug).mean())
-
-			#print(k, mixture_logits[0], mixture_logits[1], mixture_logits[2])
+			### Debugging only
+			#mixture_logits_debug = scipy.special.softmax(mixture_logits_debug)
+			#print(m_logits_arr)
+			#print(mixture_probs_arr)
+			#print(mixture_logits_debug)
+			#print("HERE2", f"k={k}", np.abs(mixture_probs - mixture_logits_debug).mean())
+			#print(k, mixture_logits[0], mixture_logits[1])#, mixture_logits[2])
 			mixtures[i, j] = k # record this came from mixture k
 			if k == 0:
 				betas[i, j] = 0
