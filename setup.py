@@ -29,8 +29,12 @@ ext_modules = [
         sources=["knockpy/mlr/_update_hparams.pyx"],
     ),
     Extension(
-        "knockpy.mlr._mlr_spikeslab_mx",
-        sources=["knockpy/mlr/_mlr_spikeslab_mx.pyx"],
+        "knockpy.mlr._mlr_spikeslab",
+        sources=["knockpy/mlr/_mlr_spikeslab.pyx"],
+    ),
+    Extension(
+        "knockpy.mlr._mlr_spikeslab_group",
+        sources=["knockpy/mlr/_mlr_spikeslab_group.pyx"],
     ),
     Extension(
         "knockpy.mlr._mlr_spikeslab_fx",

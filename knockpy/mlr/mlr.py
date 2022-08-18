@@ -5,19 +5,27 @@ Note to self: should this be in "knockoff_stats.py"?
 import numpy as np
 import scipy.special
 from ._mlr_spikeslab_fx import _sample_mlr_spikeslab_fx
-from ._mlr_spikeslab_mx import _sample_mlr_spikeslab_mx
+from ._mlr_spikeslab import _sample_mlr_spikeslab
+from ._mlr_spikeslab_group import _sample_mlr_spikeslab_group
 from .. import knockoff_stats as kstats
 from .. import utilities
 
 def check_no_groups(groups, p):
 	if groups is not None:
 		if np.any(groups != np.arange(1, p+1)):
-			raise ValueError(
-				"This implementation of MLR stats. does not yet support group knockoffs."
-			)
+			return False
+	return True
 
+def _calc_group_blocks(groups, group_sizes):
+	max_gsize = np.max(group_sizes)
+	ngroups = group_sizes.shape[0]
+	group_blocks = -1 * np.ones((ngroups, max_gsize), dtype=int)
+	for gj in range(ngroups):
+		gsize = group_sizes[gj]
+		group_blocks[gj, 0:gsize] = np.where(groups == (gj+1))[0]
+	return group_blocks.astype(int)
 
-class MLR_MX_Spikeslab(kstats.FeatureStatistic):
+class MLR_Spikeslab(kstats.FeatureStatistic):
 	"""
 	Masked likelihood ratio statistics using a spike-and-slab
 	prior for a linear model or probit model, automatically
@@ -25,20 +33,20 @@ class MLR_MX_Spikeslab(kstats.FeatureStatistic):
 
 	Parameters
 	----------
-    X : np.ndarray
-        the ``(n, p)``-shaped design matrix
-    Xk : np.ndarray
-        the ``(n, p)``-shaped matrix of knockoffs
-    y : np.ndarray
-        ``(n,)``-shaped response vector
-    n_iter : int
-    	Number of samples per MCMC chain used to compute
-    	MLR statistics. Default: 2000.
-    chain : int
-    	Number of MCMC chains to run. Default: 5.
-    burn_prop : float
-    	The burn-in for each chain will be equal to 
-    	``n_iter * burn_prop``.
+	X : np.ndarray
+		the ``(n, p)``-shaped design matrix
+	Xk : np.ndarray
+		the ``(n, p)``-shaped matrix of knockoffs
+	y : np.ndarray
+		``(n,)``-shaped response vector
+	n_iter : int
+		Number of samples per MCMC chain used to compute
+		MLR statistics. Default: 2000.
+	chain : int
+		Number of MCMC chains to run. Default: 5.
+	burn_prop : float
+		The burn-in for each chain will be equal to 
+		``n_iter * burn_prop``.
 	p0 : float
 		Prior probability that any coefficient equals zero.
 	update_p0 : bool
@@ -108,13 +116,21 @@ class MLR_MX_Spikeslab(kstats.FeatureStatistic):
 		self.n = X.shape[0]
 		self.p = X.shape[1]
 		self.groups = groups
-		check_no_groups(self.groups, self.p)
-		# We do not yet support group knockoffs
-		if self.groups is not None:
-			if np.any(self.groups != np.arange(1, self.p+1)):
-				raise ValueError(
-					"This implementation of MLR stats. does not yet support group knockoffs."
-				)
+		self.ungrouped = check_no_groups(self.groups, self.p)
+		if not self.ungrouped:
+			self.group_sizes = utilities.calc_group_sizes(self.groups).astype(int)
+			self.group_blocks = _calc_group_blocks(self.groups, self.group_sizes)
+			self.ngroup = len(self.group_sizes)
+		else:
+			self.ngroup = self.p
+
+		# check_no_groups(self.groups, self.p)
+		# # We do not yet support group knockoffs
+		# if self.groups is not None:
+		# 	if np.any(self.groups != np.arange(1, self.p+1)):
+		# 		raise ValueError(
+		# 			"This implementation of MLR stats. does not yet support group knockoffs."
+		# 		)
 
 		self.features = np.concatenate([X, Xk], axis=1)
 		for key in kwargs:
@@ -137,14 +153,30 @@ class MLR_MX_Spikeslab(kstats.FeatureStatistic):
 		# Posterior sampling
 		all_out = []
 		for chain in range(self.chains):
-			out = _sample_mlr_spikeslab_mx(
-				N=self.n_iter + self.burn,
-				features=self.features,
-				y=y.astype(np.float64),
-				z=z,
-				probit=probit,
-				**self.kwargs
-			)
+			if self.ungrouped:
+				out = _sample_mlr_spikeslab(
+					N=self.n_iter + self.burn,
+					features=self.features,
+					y=y.astype(np.float64),
+					z=z,
+					probit=probit,
+					**self.kwargs
+				)
+			else:
+				self.groups -= 1
+				out = _sample_mlr_spikeslab_group(
+					N=self.n_iter + self.burn,
+					features=self.features,
+					groups=self.groups,
+					blocks=self.group_blocks,
+					gsizes=self.group_sizes,
+					max_gsize=np.max(self.group_sizes).astype(int),
+					y=y.astype(np.float64),
+					z=z,
+					probit=probit,
+					# **self.kwargs
+				)
+				self.groups += 1
 			all_out.append(out)
 		self.betas = np.concatenate([x['betas'][self.burn:] for x in all_out])
 		self.etas = np.concatenate([x['etas'][self.burn:] for x in all_out])
@@ -152,13 +184,18 @@ class MLR_MX_Spikeslab(kstats.FeatureStatistic):
 		self.psis = np.concatenate([x['psis'][self.burn:] for x in all_out])
 		self.tau2s = np.concatenate([x['tau2s'][self.burn:] for x in all_out])
 		self.sigma2s = np.concatenate([x['sigma2s'][self.burn:] for x in all_out])
+		if probit == 1:
+			self.y_latents = np.concatenate([x['y_latent'][self.burn:] for x in all_out])
+		return self.compute_W()
+
+	def compute_W(self):
 
 		# Compute P(choose feature)
 		# etas = log(P(choose feature) / P(choose knockoff))
 		etas_cat = np.concatenate(
 			[
-				self.etas.reshape(self.N, self.p, 1),
-				np.zeros((self.N, self.p, 1))
+				self.etas.reshape(self.N, self.ngroup, 1),
+				np.zeros((self.N, self.ngroup, 1))
 			],
 			axis=2
 		)
@@ -170,57 +207,141 @@ class MLR_MX_Spikeslab(kstats.FeatureStatistic):
 		self.W[np.abs(self.W) < 1e-15] = 0
 		return self.W
 
+		
+class MLR_Spikeslab_Splines(MLR_Spikeslab):
+	"""
+	Masked likelihood ratio statistics using a spike-and-slab
+	prior for a linear or probit model based on regression splines.
+
+	Parameters
+	----------
+	n_knots : int
+		The number of knots to used for the regression splines.
+		Defaults to 1.
+	degree : int
+		The number of degrees to use for the regresison splines.
+		Defaults to 3.
+	"""
+	def __init__(self, **kwargs):
+
+		super().__init__(**kwargs)
+
+	def fit(self, X, Xk, groups, y, **kwargs):
+		self.X = X
+		self.Xk = Xk
+		self.n, self.p = self.X.shape
+		self.y = y
+		self.groups = groups
+		if self.groups is None:
+			self.groups = np.arange(1, self.p+1)
+		self.ngroup = len(np.unique(self.groups))
+
+		# handle kwargs
+		for key in kwargs:
+			self.kwargs[key] = kwargs[key]
+
+		## 1. Handle spline kwargs and create basis representation
+		self.n_knots = self.kwargs.pop("n_knots", 1)
+		self.degree = self.kwargs.pop("degree", 3)
+
+		# Create knots for splines
+		quantiles = np.linspace(
+			1/(self.n_knots + 1), 
+			self.n_knots / (self.n_knots + 1), 
+			self.n_knots
+		)
+		self.knots = np.quantile(
+			np.concatenate([self.X, self.Xk], axis=0),
+			quantiles,
+			axis=0
+		) # knots are p x num_knots
+
+		# Create features
+		# Todo: if we can reorder the basis functions so they are next to each other,
+		# it may improve caching performance.
+		self.features = []
+		for tX in [self.X, self.Xk]:
+			# spline basis representation: note `bases` has shape n x (degree*p)
+			bases = np.concatenate([tX**j for j in range(1, self.degree+1)], axis=1)
+			knotdiffs = tX.reshape(self.n, self.p, 1) - self.knots.reshape(1, self.p, self.n_knots)
+			knotdiffs = np.maximum(knotdiffs, 0)**self.degree
+			knotdiffs = np.concatenate(
+				[knotdiffs[:, :, k] for k in range(self.n_knots)], 
+				axis=1
+			) # reshape so this is n x (n_knots*p) 
+			# combine
+			bases = np.concatenate([bases, knotdiffs], axis=1)
+			self.features.append(bases)
+		self.features = np.concatenate(self.features, axis=1)
+
+		# Create dummy groups showing which bases belong to which feature
+		self.basis_groups = np.concatenate(
+			[self.groups for _ in range(self.n_knots + self.degree)],
+			axis=0
+		)
+		self.basis_group_sizes = utilities.calc_group_sizes(self.basis_groups).astype(int)
+		self.basis_group_blocks = _calc_group_blocks(
+			self.basis_groups, self.basis_group_sizes
+		)
+		self.n_basis_groups = len(self.basis_group_sizes)
+
+		## Posterior sampling
+		self.n_iter = self.kwargs.pop("n_iter")
+		self.chains = self.kwargs.pop("chains")
+		self.N = int(self.n_iter * self.chains)
+		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
+
+		# Check whether this is binary or linear regression
+		support = np.unique(self.y)
+		if len(support) == 2:
+			probit = int(1)
+			z = (self.y == support[0]).astype(int)
+		else:
+			probit = int(0)
+			z = np.zeros(self.n).astype(int)
+
+		# Posterior sampling
+		all_out = []
+		for chain in range(self.chains):
+			self.basis_groups -= 1
+			out = _sample_mlr_spikeslab_group(
+				N=self.n_iter + self.burn,
+				features=self.features,
+				groups=self.basis_groups,
+				blocks=self.basis_group_blocks,
+				gsizes=self.basis_group_sizes,
+				max_gsize=np.max(self.basis_group_sizes).astype(int),
+				y=self.y.astype(np.float64),
+				z=z,
+				probit=probit,
+				# **self.kwargs
+			)
+			self.basis_groups += 1
+			all_out.append(out)
+		self.betas = np.concatenate([x['betas'][self.burn:] for x in all_out])
+		self.etas = np.concatenate([x['etas'][self.burn:] for x in all_out])
+		self.p0s = np.concatenate([x['p0s'][self.burn:] for x in all_out])
+		self.psis = np.concatenate([x['psis'][self.burn:] for x in all_out])
+		self.tau2s = np.concatenate([x['tau2s'][self.burn:] for x in all_out])
+		self.sigma2s = np.concatenate([x['sigma2s'][self.burn:] for x in all_out])
+		if probit == 1:
+			self.y_latents = np.concatenate([x['y_latent'][self.burn:] for x in all_out])
+		return self.compute_W()
+
 class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 	"""
 	Masked likelihood ratio statistics using a spike-and-slab
 	linear model. This is a specialized class designed to lead
 	to slightly faster computation for fixed-X knockoffs.
 
+	The arguments are the same as those for MLR_Spikeslab, 
+	with the exception of the arguments listed below.
+
 	Parameters
 	----------
-    X : np.ndarray
-        the ``(n, p)``-shaped design matrix
-    Xk : np.ndarray
-        the ``(n, p)``-shaped matrix of knockoffs
-    y : np.ndarray
-        ``(n,)``-shaped response vector
-    n_iter : int
-    	Number of samples per MCMC chain used to compute
-    	MLR statistics. Default: 2000.
-    chain : int
-    	Number of MCMC chains to run. Default: 5.
-    burn_prop : float
-    	The burn-in for each chain will be equal to 
-    	``n_iter * burn_prop``.
-    num_mixture : int
-    	Number of mixtures for the "slab" component of the 
-    	spike and slab. Defaults to 1.
-	p0 : float
-		Prior probability that any coefficient equals zero.
-	update_p0 : bool
-		If True, updates ``p0`` using a Beta hyperprior on ``p0``.
-		Else, the value of ``p0`` is fixed. Default: True.
-	p0_a0 : float
-		If ``update_p0`` is True, ``p0`` has a
-		Beta(``p0_a0``, ``p0_b0``) hyperprior.
-		Default: 1.0.
-	p0_b0 : float
-		If ``update_p0`` is True, ``p0`` has a
-		Beta(``p0_a0``, ``p0_b0``) hyperprior.
-		Default: 1.0.
-	sigma2 : float
-		Variance of y given X. Default: 1.0.
-	update_sigma2 : bool
-		If True, imposes an InverseGamma hyperprior on ``sigma2``.
-		Else, the value of ``sigma2`` is fixed. Default: True.
-	sigma2_a0 : float
-		If ``update_sigma2`` is True, ``sigma2`` has an
-		InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.
-		Default: 2.0.
-	sigma2_b0 : float
-		If ``update_sigma2`` is True, ``sigma2`` has an
-		InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.
-		Default: 0.01.
+	num_mixture : int
+		Number of mixtures for the "slab" component of the 
+		spike and slab. Defaults to 1.
 	tau2 : float or list of floats
 		Prior variance on nonzero coefficients. Default: 1.0.
 	tau2_a0 : float or list of floats
@@ -231,12 +352,6 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		``tau2`` has an InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
 		When ``n_mixture`` > 1, this can be a list of length
 		``n_mixture``. Default: 0.01.
-
-	Notes
-	-----
-	For fixed-X knockoffs, this will give identical outputs
-	to the MLR_MX_SpikeSlab class, but it may be slightly
-	faster.
 	"""
 
 	def __init__(
@@ -285,7 +400,13 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		self.n = X.shape[0]
 		self.p = X.shape[1]
 		self.groups = groups
-		check_no_groups(groups, self.p)
+		self.ungrouped = check_no_groups(groups, self.p)
+		if not self.ungrouped:
+			raise ValueError(
+				"The specialized FX MLR class does not support group knockoffs---use the generic class instead."
+			)
+
+
 		S = X.T @ X - X.T @ Xk
 		self.calc_whiteout_statistics(X=X, Xk=Xk, y=y, S=S, calc_hatxi=False)
 		#self.sigma2 = kstats.compute_residual_variance(X=X, Xk=Xk, y=y)

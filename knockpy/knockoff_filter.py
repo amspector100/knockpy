@@ -171,7 +171,7 @@ class KnockoffFilter:
             fstat = kstats.DeepPinkStatistic()
         elif fstat == 'mlr':
             if self._mx:
-                fstat = mlr.MLR_MX_Spikeslab()
+                fstat = mlr.MLR_Spikeslab()
             else:
                 fstat = mlr.MLR_FX_Spikeslab()
         else:

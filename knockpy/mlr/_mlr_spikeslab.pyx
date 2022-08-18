@@ -108,7 +108,7 @@ cpdef double sample_truncnorm(
 	return mean + scale * z
 
 
-def _sample_mlr_spikeslab_mx(
+def _sample_mlr_spikeslab(
 	int N,
 	double[:, ::1] features,
 	double[::1] y, # outcomes for linear regression, not used for probit

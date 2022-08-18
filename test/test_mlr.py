@@ -13,6 +13,33 @@ from knockpy.knockoff_filter import KnockoffFilter as KF
 
 class TestMLR(unittest.TestCase):
 
+	def test_calc_group_blocks(self):
+		p = 30
+		for j in range(5):
+			# Create random groups
+			groups = np.random.choice(np.arange(p), p, replace=True)
+			groups = utilities.preprocess_groups(groups)
+			group_sizes = utilities.calc_group_sizes(groups)
+			max_gsize = np.max(group_sizes)
+			# create blocks
+			blocks = mlr.mlr._calc_group_blocks(groups, group_sizes)
+			groups -= 1 # makes indexing easier
+			for gj in range(group_sizes.shape[0]):
+				expected = np.where(groups == gj)[0]
+				# Make dimensions line up
+				ne = expected.shape[0]
+				if ne < max_gsize:
+					expected = np.concatenate(
+						[expected, -1*np.ones(max_gsize - ne)], axis=0
+					)
+				# Test equality
+				np.testing.assert_array_almost_equal(
+					expected,
+					blocks[gj],
+					decimal=6,
+					err_msg=f"for groups={groups}, block for group {gj} is incorrect"
+				)
+
 	def test_fx_equals_mx(self):
 		"""
 		Check MX and FX give the same results for FX knockoffs.
@@ -49,7 +76,7 @@ class TestMLR(unittest.TestCase):
 		W1 = kf1.W
 
 		# 2. Fit MX MLR spikeslab
-		mxmlr = mlr.MLR_MX_Spikeslab(
+		mxmlr = mlr.MLR_Spikeslab(
 			min_p0=0.0, p0=0.5,  **copy.deepcopy(mlr_kwargs)
 		)
 		kf2 = KF(ksampler=ksampler, fstat=mxmlr)
@@ -87,3 +114,41 @@ class TestMLR(unittest.TestCase):
 			decimal=1,
 			err_msg=f"||W_FX - W_MX||_1 >= 0.1"
 		)
+
+
+	def test_group_mlr_no_errors(self):
+		"""
+		To do: more rigorous tests would be nice
+		"""
+
+		# Create FX knockoffs
+		np.random.seed(111)
+		n_iter = 10
+		chains = 1
+		n = 200
+		p = 20
+		X = np.random.randn(n, p)
+		X = X - X.mean(axis=0)
+		beta = np.random.randn(p)
+		y = X @ beta + np.random.randn(n)
+		ksampler = knockpy.knockoffs.GaussianSampler(X=X)
+		Xk = ksampler.sample_knockoffs()
+		mlr_kwargs = dict(
+			n_iter=n_iter,
+			chains=chains,
+		)
+
+		# Create MLR fstat
+		groups = np.random.choice(np.arange(int(p/2)), p, replace=True)
+		groups = utilities.preprocess_groups(groups)
+		mxmlr = mlr.MLR_Spikeslab(
+			min_p0=0.0, p0=0.5,  **mlr_kwargs
+		)
+		mxmlr.fit(
+			X=X, Xk=Xk, y=y, groups=groups
+		)
+
+		# Do again for MLR splines
+		splinemlr = mlr.MLR_Spikeslab_Splines(**mlr_kwargs, degree=3, knots=5)
+		splinemlr.fit(X=X, Xk=Xk, y=y, groups=groups, n_iter=200)
+

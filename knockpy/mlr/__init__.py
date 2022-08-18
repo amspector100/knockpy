@@ -2,4 +2,4 @@
 all = ["mlr"]
 
 from . import mlr
-from .mlr import MLR_MX_Spikeslab, MLR_FX_Spikeslab
+from .mlr import MLR_Spikeslab, MLR_FX_Spikeslab, MLR_Spikeslab_Splines
