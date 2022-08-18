@@ -493,10 +493,23 @@ class TestKnockoffFilter(TestFdrControl):
             n=n,
             p=p,
             y_dist='gaussian',
-            test_grouped=False,
+            test_grouped=True,
             filter_kwargs={
                 "fstat":"mlr",
                 "fstat_kwargs":{"n_iter":10, "chains":2},
+            },        
+        )
+
+        # 3. splines
+        self.check_fdr_control(
+            reps=NUM_REPS,
+            n=n,
+            p=p,
+            y_dist='gaussian',
+            test_grouped=True,
+            filter_kwargs={
+                "fstat":"mlr_spline",
+                "fstat_kwargs":{"n_iter":10, "chains":2, "degree":4, "n_knots":3},
             },        
         )
 

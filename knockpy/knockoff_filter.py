@@ -31,6 +31,7 @@ class KnockoffFilter:
         - 'ols': Ordinary least squares coefficients
         - 'margcorr': marginal correlations between features and response
         - 'deeppink': The deepPINK statistic as in Lu et al. 2018
+        - 'mlrspline' or 'spline': The MLR statistic applied to regression spline basis functions.
         - 'randomforest': A random forest with swap importances
 
         Note that when using FX knockoffs, the `lcd` statistic does not use
@@ -174,6 +175,8 @@ class KnockoffFilter:
                 fstat = mlr.MLR_Spikeslab()
             else:
                 fstat = mlr.MLR_FX_Spikeslab()
+        elif fstat in ['mlr_spline', 'spline']:
+            fstat = mlr.MLR_Spikeslab_Splines()
         else:
             raise ValueError(f"Unrecognized fstat {fstat}")
         self.fstat = fstat
