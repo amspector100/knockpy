@@ -136,8 +136,8 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 		for key in kwargs:
 			self.kwargs[key] = kwargs[key]
 		# kwargs that cannot be passed to the underlying cython
-		self.n_iter = self.kwargs.pop("n_iter")
-		self.chains = self.kwargs.pop("chains")
+		self.n_iter = self.kwargs.pop("n_iter", 2000)
+		self.chains = self.kwargs.pop("chains", 5)
 		self.N = int(self.n_iter * self.chains)
 		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
 
@@ -286,8 +286,8 @@ class MLR_Spikeslab_Splines(MLR_Spikeslab):
 		self.n_basis_groups = len(self.basis_group_sizes)
 
 		## Posterior sampling
-		self.n_iter = self.kwargs.pop("n_iter")
-		self.chains = self.kwargs.pop("chains")
+		self.n_iter = self.kwargs.pop("n_iter", 2000)
+		self.chains = self.kwargs.pop("chains", 5)
 		self.N = int(self.n_iter * self.chains)
 		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
 
@@ -433,8 +433,8 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		self.tau2_b0 = np.array(tau2_b0, dtype=float)
 
 		# kwargs that cannot be passed to the underlying cython
-		self.n_iter = self.kwargs.pop("n_iter")
-		self.chains = self.kwargs.pop("chains")
+		self.n_iter = self.kwargs.pop("n_iter", 2000)
+		self.chains = self.kwargs.pop("chains", 5)
 		self.N = int(self.n_iter * self.chains)
 		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
 
