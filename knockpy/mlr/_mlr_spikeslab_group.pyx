@@ -13,7 +13,7 @@ cimport scipy.linalg.cython_lapack as lapack
 from libc.stdlib cimport rand, RAND_MAX
 from libc.math cimport log, exp, fabs, sqrt, fmin, fmax, erfc
 from ._update_hparams import _update_hparams
-from ._mlr_spikeslab_mx import sample_truncnorm
+from ._mlr_spikeslab import sample_truncnorm
 
 # Blas commonly used parameters
 cdef double zero = 0, one = 1, neg1 = -1

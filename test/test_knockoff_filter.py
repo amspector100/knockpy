@@ -510,7 +510,7 @@ class TestKnockoffFilter(TestFdrControl):
             filter_kwargs={
                 "fstat":"mlr_spline",
                 "fstat_kwargs":{"n_iter":10, "chains":2, "degree":4, "n_knots":3},
-            },        
+            },
         )
 
     @pytest.mark.slow
