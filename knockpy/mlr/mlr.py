@@ -7,7 +7,7 @@ import scipy.special
 from ._mlr_spikeslab_fx import _sample_mlr_spikeslab_fx
 from ._mlr_spikeslab import _sample_mlr_spikeslab
 from ._mlr_spikeslab_group import _sample_mlr_spikeslab_group
-from ._mlr_oracle import _sample_mlr_oracle
+from ._mlr_oracle import _sample_mlr_oracle_gaussian, _sample_mlr_oracle_logistic
 from .. import knockoff_stats as kstats
 from .. import utilities
 
@@ -366,16 +366,29 @@ class OracleMLR(MLR_Spikeslab):
 		self.N = int(self.n_iter * self.chains)
 		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
 
+		# Check whether we are in the binary setting
+		support = np.unique(self.y)
+		self.binary = len(support) == 2
+
 		# Posterior sampling
 		all_out = []
 		for chain in range(self.chains):
-			out = _sample_mlr_oracle(
-				N=self.n_iter + self.burn,
-				beta=self.beta,
-				features=self.features,
-				y=y.astype(np.float64),
-				**self.kwargs
-			)
+			if self.binary:
+				out = _sample_mlr_oracle_logistic(
+					N=self.n_iter + self.burn,
+					beta=self.beta,
+					features=self.features,
+					y=y.astype(np.float64),
+					**self.kwargs
+				)
+			else:
+				out = _sample_mlr_oracle_gaussian(
+					N=self.n_iter + self.burn,
+					beta=self.beta,
+					features=self.features,
+					y=y.astype(np.float64),
+					**self.kwargs
+				)
 			all_out.append(out)
 		self.etas = np.concatenate([x['etas'][self.burn:] for x in all_out])
 		self.psis = np.concatenate([x['psis'][self.burn:] for x in all_out])

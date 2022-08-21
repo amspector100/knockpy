@@ -8,6 +8,7 @@ from .context import knockpy
 from .context import file_directory
 
 from knockpy import knockoffs, mlr, utilities
+from knockpy import knockoff_stats as kstats
 from knockpy.knockoff_filter import KnockoffFilter as KF
 
 
@@ -147,6 +148,10 @@ class TestMLR(unittest.TestCase):
 			decimal=2,
 			err_msg=f"OracleMLR statistic log probs do not agree with theoretical values from Whiteout"
 		)
+
+		# repeat for probit, make sure no errors
+		oracle_logistic = mlr.OracleMLR(beta=beta, n_iter=200, chains=3)
+		oracle_logistic.fit(X=X, Xk=Xk, y=(y > 0).astype(float), groups=None)
 
 	def test_group_mlr_no_errors(self):
 		"""
