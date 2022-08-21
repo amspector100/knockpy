@@ -115,6 +115,38 @@ class TestMLR(unittest.TestCase):
 			err_msg=f"||W_FX - W_MX||_1 >= 0.1"
 		)
 
+	def test_mlr_oracle(self):
+		# Data generating process
+		np.random.seed(111)
+		n_iter = 2000
+		chains = 10
+		n = 65
+		p = 30
+		X = np.random.randn(n, p)
+		X = X - X.mean(axis=0)
+		beta = np.random.randn(p) / 10
+		y = X @ beta + np.random.randn(n)
+
+		# knockoffs
+		ksampler = knockoffs.FXSampler(X=X)
+		Xk = ksampler.sample_knockoffs()
+
+		# Expected oracle log-probs
+		S = X.T @ X - X.T @ Xk
+		Sinv = np.diag(1 / np.diag(S))
+		Delta = np.diag(2 * Sinv)
+		tildebeta = np.dot(Sinv, np.dot(X.T - Xk.T, y))
+		expected_log_probs = 2 * np.abs(tildebeta*beta) / Delta
+
+		# Fit oracle statistic
+		oracle = mlr.OracleMLR(beta=beta, sigma2=1.0, n_iter=n_iter, chains=chains)
+		oracle.fit(X=X, Xk=Xk, y=y, groups=None)
+		np.testing.assert_almost_equal(
+			np.abs(oracle.etas.mean(axis=0)),
+			expected_log_probs,
+			decimal=2,
+			err_msg=f"OracleMLR statistic log probs do not agree with theoretical values from Whiteout"
+		)
 
 	def test_group_mlr_no_errors(self):
 		"""

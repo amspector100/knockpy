@@ -7,12 +7,15 @@ import scipy.special
 from ._mlr_spikeslab_fx import _sample_mlr_spikeslab_fx
 from ._mlr_spikeslab import _sample_mlr_spikeslab
 from ._mlr_spikeslab_group import _sample_mlr_spikeslab_group
+from ._mlr_oracle import _sample_mlr_oracle
 from .. import knockoff_stats as kstats
 from .. import utilities
 
-def check_no_groups(groups, p):
+def check_no_groups(groups, p, error=None):
 	if groups is not None:
 		if np.any(groups != np.arange(1, p+1)):
+			if error is not None:
+				raise ValueError(error)
 			return False
 	return True
 
@@ -328,6 +331,54 @@ class MLR_Spikeslab_Splines(MLR_Spikeslab):
 			self.y_latents = np.concatenate([x['y_latent'][self.burn:] for x in all_out])
 		return self.compute_W()
 
+
+class OracleMLR(MLR_Spikeslab):
+	"""
+	Oracle masked likelihood ratio statistics for generalized additive models.
+
+	Parameters
+	----------
+	beta : np.ndarray
+		``p``-dimensional array of linear coefficients.
+	"""
+	def __init__(self, beta, **kwargs):
+		self.beta = beta
+		self.kwargs = kwargs
+		self.Z = None
+
+	def fit(self, X, Xk, groups, y, **kwargs):
+		self.n, self.p = X.shape
+		self.X = X
+		self.Xk = Xk
+		self.features = np.concatenate([X, Xk], axis=1)
+		self.y = y
+		self.groups = groups
+		self.ungrouped = check_no_groups(self.groups, self.p, error='Groups not implemented for OracleMLR.')
+		self.ngroup = self.p
+		for key in kwargs:
+			self.kwargs[key] = kwargs[key]
+
+		# number of iterations to run
+		self.n_iter = self.kwargs.pop("n_iter", 2000)
+		self.chains = self.kwargs.pop("chains", 5)
+		self.N = int(self.n_iter * self.chains)
+		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
+
+		# Posterior sampling
+		all_out = []
+		for chain in range(self.chains):
+			out = _sample_mlr_oracle(
+				N=self.n_iter + self.burn,
+				beta=self.beta,
+				features=self.features,
+				y=y.astype(np.float64),
+				**self.kwargs
+			)
+			all_out.append(out)
+		self.etas = np.concatenate([x['etas'][self.burn:] for x in all_out])
+		self.psis = np.concatenate([x['psis'][self.burn:] for x in all_out])
+		return self.compute_W()
+
 class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 	"""
 	Masked likelihood ratio statistics using a spike-and-slab
@@ -400,13 +451,11 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		self.n = X.shape[0]
 		self.p = X.shape[1]
 		self.groups = groups
-		self.ungrouped = check_no_groups(groups, self.p)
-		if not self.ungrouped:
-			raise ValueError(
-				"The specialized FX MLR class does not support group knockoffs---use the generic class instead."
-			)
-
-
+		self.ungrouped = check_no_groups(
+			groups, 
+			self.p, 
+			error="The specialized FX MLR class does not support group knockoffs---use the generic class instead."
+		)
 		S = X.T @ X - X.T @ Xk
 		self.calc_whiteout_statistics(X=X, Xk=Xk, y=y, S=S, calc_hatxi=False)
 		#self.sigma2 = kstats.compute_residual_variance(X=X, Xk=Xk, y=y)

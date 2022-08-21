@@ -39,6 +39,10 @@ ext_modules = [
     Extension(
         "knockpy.mlr._mlr_spikeslab_fx",
         sources=["knockpy/mlr/_mlr_spikeslab_fx.pyx"],
+    ),
+    Extension(
+        "knockpy.mlr._mlr_oracle",
+        sources=["knockpy/mlr/_mlr_oracle.pyx"],
     )
 ]
 

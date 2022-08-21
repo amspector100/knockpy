@@ -2,4 +2,4 @@
 all = ["mlr"]
 
 from . import mlr
-from .mlr import MLR_Spikeslab, MLR_FX_Spikeslab, MLR_Spikeslab_Splines
+from .mlr import MLR_Spikeslab, MLR_FX_Spikeslab, MLR_Spikeslab_Splines, OracleMLR
