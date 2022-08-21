@@ -345,6 +345,8 @@ class OracleMLR(MLR_Spikeslab):
 		self.beta = beta
 		self.kwargs = kwargs
 		self.Z = None
+		self.score = None
+		self.score_type = None
 
 	def fit(self, X, Xk, groups, y, **kwargs):
 		self.n, self.p = X.shape
@@ -359,8 +361,8 @@ class OracleMLR(MLR_Spikeslab):
 			self.kwargs[key] = kwargs[key]
 
 		# number of iterations to run
-		self.n_iter = self.kwargs.pop("n_iter", 2000)
-		self.chains = self.kwargs.pop("chains", 5)
+		self.n_iter = self.kwargs.pop("n_iter", 1000)
+		self.chains = self.kwargs.pop("chains", 2)
 		self.N = int(self.n_iter * self.chains)
 		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
 
