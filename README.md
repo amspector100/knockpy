@@ -6,7 +6,7 @@ A python implementation of the knockoffs framework for variable selection. See h
 
 To install knockpy, first install choldate using the following command:
 
-``pip install git+git://github.com/jcrudy/choldate.git``
+``pip install git+https://github.com/jcrudy/choldate.git``
 
 Then, install knockpy using pip:
 
@@ -34,7 +34,7 @@ knockpy relies on heavy-duty linear algebra routines which sometimes fail on non
     
     (b) Run
 
-        ``pip install git+git://github.com/jcrudy/choldate.git``
+        ``pip install git+https://github.com/jcrudy/choldate.git``
 
 3. [Optional] To speed up computation for (non-default) SDP knockoffs, you will need to install ``scikit-dsdp``. This can be challenging on non-Linux environments. We hope to provide more explicit instructions for installation of this package in the future.
  
