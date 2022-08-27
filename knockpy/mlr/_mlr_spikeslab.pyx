@@ -27,7 +27,9 @@ cdef float MAX_EXP = 20
 
 cdef double log_sum_exp(u, v):
 	cdef double m = fmax(u, v)
-	return m + log(exp(u - m) + exp(v - m))
+	return m + log(
+		exp(fmin(u-m, MAX_EXP)) + exp(fmin(v-m, MAX_EXP))
+	)
 
 # Truncated normal sampling was a bottleneck, so 
 # some custom samplers are here.

@@ -65,7 +65,7 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 		Default: 1.0.
 	min_p0 : float
 		Minimum value for ``p0`` as specified by the prior.
-		Default: 0.5.
+		Default: 0.8.
 	sigma2 : float
 		Variance of y given X. Default: 1.0.
 	update_sigma2 : bool
@@ -78,7 +78,7 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 	sigma2_b0 : float
 		If ``update_sigma2`` is True, ``sigma2`` has an
 		InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.
-		Default: 0.01.
+		Default: 1.0.
 	tau2 : float
 		Prior variance on nonzero coefficients. Default: 1.0.
 	update_tau2 : bool
@@ -91,7 +91,7 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 	tau2_b0 : float
 		If ``update_tau2`` is True, ``tau2`` has an
 		InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
-		Default: 0.01.
+		Default: 1.0.
 
 	Returns
 	-------
@@ -127,22 +127,22 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 		else:
 			self.ngroup = self.p
 
-		# check_no_groups(self.groups, self.p)
-		# # We do not yet support group knockoffs
-		# if self.groups is not None:
-		# 	if np.any(self.groups != np.arange(1, self.p+1)):
-		# 		raise ValueError(
-		# 			"This implementation of MLR stats. does not yet support group knockoffs."
-		# 		)
-
 		self.features = np.concatenate([X, Xk], axis=1)
 		for key in kwargs:
 			self.kwargs[key] = kwargs[key]
+
 		# kwargs that cannot be passed to the underlying cython
 		self.n_iter = self.kwargs.pop("n_iter", 2000)
 		self.chains = self.kwargs.pop("chains", 5)
 		self.N = int(self.n_iter * self.chains)
 		self.burn = int(self.kwargs.pop("burn_prop", 0.1) * self.n_iter)
+
+		# Defaults for model-X
+		self.kwargs['tau2_a0'] = self.kwargs.get('tau2_a0', 2.0)
+		self.kwargs['tau2_b0'] = self.kwargs.get('tau2_a0', 1.0)
+		self.kwargs['sigma2_a0'] = self.kwargs.get('tau2_a0', 2.0)
+		self.kwargs['sigma2_b0'] = self.kwargs.get('tau2_a0', 1.0)
+		self.kwargs['min_p0'] = self.kwargs.get('min_p0', 0.8)
 
 		# Check whether this is binary or linear regression
 		support = np.unique(y)
