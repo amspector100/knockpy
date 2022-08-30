@@ -28,3 +28,5 @@ from . import mlr
 from . import mrc
 from . import smatrix
 from . import utilities
+
+from .knockoff_filter import KnockoffFilter
