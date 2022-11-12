@@ -4,8 +4,6 @@ import numpy as np
 # Model-fitters
 import sklearn
 from sklearn import linear_model, model_selection, ensemble
-from group_lasso import GroupLasso, LogisticGroupLasso
-from pyglmnet import GLMCV
 from . import utilities
 from .constants import DEFAULT_REG_VALS
 
@@ -15,21 +13,6 @@ def calc_mse(model, X, y):
     preds = model.predict(X)
     resids = (preds - y) / y.std()
     return np.sum((resids) ** 2)
-
-
-def use_reg_lasso(groups):
-    """ Parses whether or not to use group lasso """
-    # See if we are using regular lasso...
-    if groups is not None:
-        p = groups.shape[0]
-        m = np.unique(groups).shape[0]
-        if p == m:
-            return True
-        else:
-            return False
-    else:
-        return True
-
 
 def parse_y_dist(y):
     """ Checks if y is binary; else assumes it is continuous """
@@ -380,155 +363,6 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
             raise ValueError(f"y_dist must be one of gaussian, binomial, not {y_dist}")
 
     return ridge, inds, rev_inds
-
-
-def fit_group_lasso(
-    X, Xk, y, groups, use_pyglm=True, y_dist=None, group_lasso=True, **kwargs,
-):
-    """
-    Fits cross-validated ridge on [X, Xk] and y.
-
-    Parameters
-    ----------
-    X : np.ndarray
-        the ``(n, p)``-shaped design matrix
-    Xk : np.ndarray
-        the ``(n, p)``-shaped matrix of knockoffs
-    y : np.ndarray
-        ``(n,)``-shaped response vector
-    groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
-        num_groups such that ``groups[j] == i`` indicates that variable `j`
-        is a member of group `i`. Defaults to None (regular knockoffs). 
-    use_pyglm : bool
-        When fitting the group lasso, use the pyglm package if True (default).
-        Else, use the group_lasso package.
-    y_dist : str
-        One of "binomial" or "gaussian"
-    group_lasso : bool
-        If True, use a true group lasso. Else just use the sklearn ungrouped
-        lasso.
-    **kwargs
-        kwargs for eventual (group) lasso model.
-
-    Notes
-    -----
-    To avoid FDR control violations, this randomly permutes
-    the features before fitting the group lasso.
-
-    Returns
-    -------
-    gl : pyglm/sklearn/group_lasso model
-        The model fit through cross-validation; one of many types.
-    inds : np.ndarray
-        ``(2p,)``-dimensional array of indices representing the random
-        permutation applied to the concatenation of [X, Xk] before fitting
-        ``gl.``
-    rev_inds : np.ndarray:
-        Indices which reverse the effect of ``inds.`` In particular, if
-        M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```
-    """
-
-    if y_dist is None:
-        y_dist = parse_y_dist(y)
-
-    # Bind data
-    n = X.shape[0]
-    p = X.shape[1]
-
-    # By default, all variables are their own group
-    if groups is None:
-        groups = np.arange(1, p + 1, 1)
-    m = np.unique(groups).shape[0]
-
-    # If m == p, meaning each variable is their own group,
-    # just fit a regular lasso
-    if m == p or not group_lasso:
-        return fit_lasso(X, Xk, y, y_dist, **kwargs)
-
-    # Make sure variables and their knockoffs are in the same group
-    # This is necessary for antisymmetry
-    doubled_groups = np.concatenate([groups, groups], axis=0)
-
-    # Randomize coordinates to make sure everything is symmetric
-    inds, rev_inds = utilities.random_permutation_inds(2 * p)
-    features = np.concatenate([X, Xk], axis=1)
-    features = features[:, inds]
-    doubled_groups = doubled_groups[inds]
-
-    # Standardize - important for pyglmnet performance,
-    # highly detrimental for group_lasso performance
-    if use_pyglm:
-        features = (features - features.mean()) / features.std()
-        if y_dist == "gaussian":
-            y = (y - y.mean()) / y.std()
-
-    # Get regularization values for cross validation
-    reg_vals = kwargs.pop("reg_vals", [(x, x) for x in DEFAULT_REG_VALS])
-
-    # Fit pyglm model using warm starts
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        if use_pyglm:
-
-            # Change defaults forkwargs
-            kwargs['max_iter'] = kwargs.pop("max_iter", 100)
-            kwargs['tol'] = kwargs.pop("tol", 1e-2)
-            kwargs['cv'] = kwargs.pop("cv", 5)
-            kwargs['learning_rate'] = kwargs.pop("learning_rate", 2)
-            l1_regs = [x[0] for x in reg_vals]
-            gl = GLMCV(
-                distr=y_dist,
-                group=doubled_groups,
-                alpha=1.0,
-                reg_lambda=l1_regs,
-                solver="cdfast",
-                **kwargs
-            )
-            gl.fit(features, y)
-
-            # Pull score, rename
-            best_score = -1 * calc_mse(gl, features, y)
-            best_gl = gl
-
-        # Fit model
-        else:
-            warnings.warn("the group_lasso backend will be depreciated in verison 1.3.")
-            best_gl = None
-            best_score = -1 * np.inf
-            for group_reg, l1_reg in reg_vals:
-
-                # Fit logistic/gaussian group lasso
-                kwargs['tol'] = kwargs.pop("tol", 1e-2)
-                if y_dist.lower() == "gaussian":
-                    gl = GroupLasso(
-                        groups=doubled_groups,
-                        group_reg=group_reg,
-                        l1_reg=l1_reg,
-                        **kwargs,
-                    )
-                elif y_dist.lower() == "binomial":
-                    gl = LogisticGroupLasso(
-                        groups=doubled_groups,
-                        group_reg=group_reg,
-                        l1_reg=l1_reg,
-                        **kwargs,
-                    )
-                else:
-                    raise ValueError(
-                        f"y_dist must be one of gaussian, binomial, not {y_dist}"
-                    )
-
-                gl.fit(features, y.reshape(n, 1))
-                score = -1 * calc_mse(gl, features, y.reshape(n, 1))
-
-            # Score, possibly select
-            if score > best_score:
-                best_score = score
-                best_gl = gl
-
-    return best_gl, inds, rev_inds
-
 
 class FeatureStatistic:
     """
@@ -968,8 +802,6 @@ class LassoStatistic(FeatureStatistic):
         y,
         groups=None,
         zstat="coef",
-        use_pyglm=True,
-        group_lasso=False,
         antisym="cd",
         group_agg="avg",
         cv_score=False,
@@ -999,14 +831,6 @@ class LassoStatistic(FeatureStatistic):
             - If 'lars_path', uses the lambda value where each feature/knockoff
             enters the lasso path (meaning becomes nonzero).
             This defaults to coef.
-        use_pyglm : bool
-            When fitting the group lasso, use the pyglm package if True (default).
-            Else, use the group_lasso package.
-        y_dist : str
-            One of "binomial" or "gaussian"
-        group_lasso : bool
-            If True, use a true group lasso. Else just use the sklearn ungrouped
-            lasso.
         antisym : str
             The antisymmetric function used to create (ungrouped) feature
             statistics. Three options: 
@@ -1049,32 +873,25 @@ class LassoStatistic(FeatureStatistic):
             groups = np.arange(1, p + 1, 1)
 
         # Check if y_dist is gaussian, binomial, poisson
-        kwargs["y_dist"] = parse_y_dist(y)
+        kwargs["y_dist"] = kwargs.get("y_dist", parse_y_dist(y))
 
         # Step 1: Calculate Z statistics
         zstat = str(zstat).lower()
         if zstat == "coef":
 
             # Fit (possibly group) lasso
-            gl, inds, rev_inds = fit_group_lasso(
+            gl, inds, rev_inds = fit_lasso(
                 X=X,
                 Xk=Xk,
                 y=y,
-                groups=groups,
-                use_pyglm=use_pyglm,
-                group_lasso=group_lasso,
                 **kwargs,
             )
 
-            # Parse the expected output format based on which
-            # lasso package we are using
-            reg_lasso_flag = use_reg_lasso(groups) or (not group_lasso)
+            # Parse the expected output format 
             logistic_flag = parse_logistic_flag(kwargs)
 
             # Retrieve Z statistics
-            if use_pyglm and not reg_lasso_flag:
-                Z = gl.beta_[rev_inds]
-            elif reg_lasso_flag and logistic_flag:
+            if logistic_flag:
                 if gl.coef_.shape[0] != 1:
                     raise ValueError(
                         "Unexpected shape for logistic lasso coefficients (sklearn)"

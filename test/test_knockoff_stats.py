@@ -217,85 +217,6 @@ class TestFeatureStatistics(KStatVal):
             min_power=0.8,
         )
 
-    def test_pyglm_group_lasso_fit(self):
-
-        pyglm_kwargs = {
-            "use_pyglm": True,
-            "max_iter": 20,
-            "tol": 5e-2,
-            "learning_rate": 3,
-            "group_lasso": True,
-        }
-        self.check_kstat_fit(
-            fstat=kstats.LassoStatistic(),
-            fstat_name="Pyglm solver",
-            fstat_kwargs=pyglm_kwargs,
-            n=500,
-            p=200,
-            rho=0.2,
-            coeff_size=5,
-            sparsity=0.5,
-            seed=110,
-            min_power=0.5,
-            group_features=True,
-            max_l2norm=np.inf,
-        )
-
-        # Repeat for logistic case
-        self.check_kstat_fit(
-            fstat=kstats.LassoStatistic(),
-            fstat_name="Pyglm solver",
-            fstat_kwargs=pyglm_kwargs,
-            n=500,
-            p=100,
-            rho=0.2,
-            coeff_size=5,
-            sparsity=0.5,
-            seed=110,
-            min_power=0.5,
-            group_features=True,
-            y_dist="binomial",
-            max_l2norm=np.inf,
-        )
-
-    # def test_vanilla_group_lasso_fit(self):
-
-    #     glasso_kwargs = {
-    #         "use_pyglm": False, 
-    #         "group_lasso": True,
-    #     }
-    #     self.check_kstat_fit(
-    #         fstat=kstats.LassoStatistic(),
-    #         fstat_name="Vanilla group lasso solver",
-    #         fstat_kwargs=glasso_kwargs,
-    #         n=500,
-    #         p=200,
-    #         rho=0.2,
-    #         coeff_size=5,
-    #         sparsity=0.5,
-    #         seed=110,
-    #         min_power=0,
-    #         group_features=True,
-    #         max_l2norm=np.inf,
-    #     )
-
-    #     # Repeat for logistic case
-    #     self.check_kstat_fit(
-    #         fstat=kstats.LassoStatistic(),
-    #         fstat_name="Vanilla group lasso solver",
-    #         fstat_kwargs=glasso_kwargs,
-    #         n=500,
-    #         p=100,
-    #         rho=0.2,
-    #         coeff_size=5,
-    #         sparsity=0.5,
-    #         seed=110,
-    #         min_power=0,
-    #         group_features=True,
-    #         y_dist="binomial",
-    #         max_l2norm=np.inf,
-    #     )
-
     def test_lasso_fit(self):
 
         # Lasso fit for Gaussian data
@@ -452,29 +373,6 @@ class TestFeatureStatistics(KStatVal):
         self.assertTrue(
             ols_stat.score < 2,
             msg=f"cv scoring fails for ols_stat as cv_score={ols_stat.score} >= 2",
-        )
-
-        # 3. Test that throws correct error for non-sklearn backend
-        def non_sklearn_backend_cvscore():
-            dgprocess = dgp.DGP()
-            X, y, beta, _, corr_matrix = dgprocess.sample_data(
-                n=n, p=p, y_dist="binomial", coeff_size=100, sign_prob=1
-            )
-            groups = np.random.randint(1, p + 1, size=(p,))
-            group = utilities.preprocess_groups(groups)
-            pyglm_logit = kstats.LassoStatistic()
-            pyglm_logit.fit(
-                X,
-                knockoffs,
-                y,
-                use_pyglm=True,
-                group_lasso=True,
-                groups=groups,
-                cv_score=True,
-            )
-
-        self.assertRaisesRegex(
-            ValueError, "must be sklearn estimator", non_sklearn_backend_cvscore
         )
 
     def test_debiased_lasso(self):

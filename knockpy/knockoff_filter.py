@@ -401,19 +401,29 @@ class KnockoffFilter:
             X=self.X, Xk=self.Xk, y=self.y, groups=self.groups, **self.fstat_kwargs
         )
         # Inherit some attributes
+        self.fdr = fdr
         self.Z = self.fstat.Z
         self.W = self.fstat.W
         self.score = self.fstat.score
         self.score_type = self.fstat.score_type
-        self.rejections = self.make_selections(self.W, fdr)
+        self.rejections = self.make_selections(self.W, self.fdr)
 
         # Return
         return self.rejections
 
-    def plot(
+    def seqstep_plot(
         self,
-        labels=None
+        max_rank=None,
     ):
+        """
+        Visualizes the knockoff filter.
+
+        Parameters
+        ----------
+        max_rank : int
+            Only plot the top ``max_rank`` feature statistics.
+            Defaults to plotting all feature statistics.
+        """
         # Import matplotlib
         try:
             import matplotlib.pyplot as plt
@@ -421,7 +431,32 @@ class KnockoffFilter:
             raise ImportError(
                 f"matplotlib is required for plotting, but importing it raised {err}."
             )
+        if max_rank is None:
+            max_rank = self.X.shape[1]
 
+        # sort W statistics
+        inds = np.argsort(-1*np.abs(self.W))
+        sortW = self.W[inds][0:max_rank]
+        xvals = np.arange(max_rank)
 
+        # threshold
+        threshold_ind = np.sum(np.abs(self.W) >= self.threshold)
+
+        # Plot and show
+        plt.bar(xvals[sortW < 0], sortW[sortW < 0], color='red')
+        plt.bar(xvals[sortW >= 0], sortW[sortW >= 0], color='blue')
+        if threshold_ind >= max_rank:
+            print("Not plotting threshold since threshold <= max_rank.")
+        else:
+            plt.axvline(
+                threshold_ind, 
+                color='black', 
+                linestyle='dashed', 
+                label=f'Threshold\n(q={self.fdr})'
+            )
+            plt.legend()
+        plt.xlabel("Rank")
+        plt.ylabel("Feature statistic")
+        plt.show()
 
 
