@@ -61,6 +61,10 @@ cdef int _zero_phiT(
 	)
 	return 0
 
+@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
 cdef double _compute_suff_stats_and_Qj(
 	double[:, ::1] fT,
 	double[:, ::1] phiT,
@@ -216,7 +220,10 @@ cdef double _compute_suff_stats_and_Qj(
 
 
 
-
+@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
 def _sample_mlr_spikeslab_group(
 	int N,
 	double[:, ::1] features,

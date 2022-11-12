@@ -864,7 +864,9 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         # Fast_exp function is helpful for profiling
         # (to see how much time is spent here)
         def fast_exp(ld_ratio, lq_ratio, Fj_ratio):
-            return np.exp((ld_ratio + lq_ratio + Fj_ratio).astype(np.float32))
+            return np.exp((
+                np.minimum(ld_ratio + lq_ratio + Fj_ratio, constants.MAXEXP32)
+            ).astype(np.float32))
 
         acc_prob = self.gamma * np.minimum(1, fast_exp(ld_ratio, lq_ratio, Fj_ratio))
 

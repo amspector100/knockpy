@@ -11,6 +11,8 @@ DEFAULT_TOL = 1e-5
 METRO_TOL = 1e-2
 # For line search for mrc/mac solvers
 GAMMA_VALS = [0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.9999, 1]
+# max exp to avoid overflow
+MAXEXP32 = 50.0
 # DSDP warning
 DSDP_WARNING = f"""
 	---------------------------------------------------------

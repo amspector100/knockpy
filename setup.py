@@ -1,11 +1,30 @@
 import numpy as np
-import os.path
+import os
 import codecs
 import setuptools
-import distutils
-from setuptools import find_packages, setup
-from distutils.extension import Extension
-from Cython.Build import cythonize
+from setuptools import Extension
+#from distutils.extension import Extension
+
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    cythonize = None
+
+# https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#distributing-cython-modules
+def no_cythonize(extensions, **_ignore):
+    for extension in extensions:
+        sources = []
+        for sfile in extension.sources:
+            path, ext = os.path.splitext(sfile)
+            if ext in (".pyx", ".py"):
+                if extension.language == "c++":
+                    ext = ".cpp"
+                else:
+                    ext = ".c"
+                sfile = path + ext
+            sources.append(sfile)
+        extension.sources[:] = sources
+    return extensions
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -46,14 +65,16 @@ ext_modules = [
     )
 ]
 
-# ### Allows installation if cython is not yet installed
-# try:
-#     from Cython.Build import cythonize
-# except ImportError:
-#     # create closure for deferred import
-#     def cythonize (*args, ** kwargs ):
-#         from Cython.Build import cythonize
-#         return cythonize(*args, ** kwargs)
+#CYTHONIZE = bool(int(os.getenv("CYTHONIZE", 0))) and cythonize is not None
+CYTHONIZE = cythonize is not None
+
+if CYTHONIZE:
+    compiler_directives = {"language_level": 3, "embedsignature": True}
+    ext_modules = cythonize(
+        ext_modules, compiler_directives=compiler_directives, annotate=False
+    )
+else:
+    ext_modules = no_cythonize(ext_modules)
 
 setuptools.setup(
     name="knockpy",
@@ -82,20 +103,14 @@ setuptools.setup(
     ],
     extras_require={
         "kpytorch":["torch>=1.4.0"],
-        "fast":["choldate", "scikit-dsdp"]
+        "fast":["choldate", "scikit-dsdp"],
+        "docs": ["sphinx", "sphinx-rtd-theme"],
     },
     setup_requires=[
         'numpy>=1.19',
         'setuptools>=58.0',
-        'cython>=0.29.21',
+        #'cython>=0.29.21',
     ],
-    ext_modules=cythonize(
-        ext_modules,
-        compiler_directives={
-            "language_level": 3, 
-            "embedsignature": True
-        },
-        annotate=False,
-    ),
+    ext_modules=ext_modules,
     include_dirs=[np.get_include()],
 )

@@ -110,6 +110,10 @@ cpdef double sample_truncnorm(
 	return mean + scale * z
 
 
+@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
 def _sample_mlr_spikeslab(
 	int N,
 	double[:, ::1] features,
