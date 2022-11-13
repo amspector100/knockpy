@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>knockpy.knockoff_stats &mdash; knockpy 1.2 documentation</title>
+  <title>knockpy.knockoff_stats &mdash; knockpy 1.3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -29,7 +29,7 @@
             <a href="../../index.html" class="icon icon-home"> knockpy
           </a>
               <div class="version">
-                1.2
+                1.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -43,6 +43,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Constructing-knockoffs">Constructing knockoffs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Knockoff-feature-statistics">Knockoff feature statistics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
@@ -78,8 +80,6 @@
 <span class="c1"># Model-fitters</span>
 <span class="kn">import</span> <span class="nn">sklearn</span>
 <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">,</span> <span class="n">ensemble</span>
-<span class="kn">from</span> <span class="nn">group_lasso</span> <span class="kn">import</span> <span class="n">GroupLasso</span><span class="p">,</span> <span class="n">LogisticGroupLasso</span>
-<span class="kn">from</span> <span class="nn">pyglmnet</span> <span class="kn">import</span> <span class="n">GLMCV</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
 <span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="n">DEFAULT_REG_VALS</span>
 
@@ -89,21 +89,6 @@
     <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
     <span class="n">resids</span> <span class="o">=</span> <span class="p">(</span><span class="n">preds</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">y</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">resids</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="use_reg_lasso"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.use_reg_lasso">[docs]</a><span class="k">def</span> <span class="nf">use_reg_lasso</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Parses whether or not to use group lasso &quot;&quot;&quot;</span>
-    <span class="c1"># See if we are using regular lasso...</span>
-    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">m</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
-
 
 <div class="viewcode-block" id="parse_y_dist"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.parse_y_dist">[docs]</a><span class="k">def</span> <span class="nf">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Checks if y is binary; else assumes it is continuous &quot;&quot;&quot;</span>
@@ -454,155 +439,6 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">ridge</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span></div>
-
-
-<div class="viewcode-block" id="fit_group_lasso"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.fit_group_lasso">[docs]</a><span class="k">def</span> <span class="nf">fit_group_lasso</span><span class="p">(</span>
-    <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">use_pyglm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_lasso</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Fits cross-validated ridge on [X, Xk] and y.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    X : np.ndarray</span>
-<span class="sd">        the ``(n, p)``-shaped design matrix</span>
-<span class="sd">    Xk : np.ndarray</span>
-<span class="sd">        the ``(n, p)``-shaped matrix of knockoffs</span>
-<span class="sd">    y : np.ndarray</span>
-<span class="sd">        ``(n,)``-shaped response vector</span>
-<span class="sd">    groups : np.ndarray</span>
-<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
-<span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
-<span class="sd">        is a member of group `i`. Defaults to None (regular knockoffs). </span>
-<span class="sd">    use_pyglm : bool</span>
-<span class="sd">        When fitting the group lasso, use the pyglm package if True (default).</span>
-<span class="sd">        Else, use the group_lasso package.</span>
-<span class="sd">    y_dist : str</span>
-<span class="sd">        One of &quot;binomial&quot; or &quot;gaussian&quot;</span>
-<span class="sd">    group_lasso : bool</span>
-<span class="sd">        If True, use a true group lasso. Else just use the sklearn ungrouped</span>
-<span class="sd">        lasso.</span>
-<span class="sd">    **kwargs</span>
-<span class="sd">        kwargs for eventual (group) lasso model.</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    To avoid FDR control violations, this randomly permutes</span>
-<span class="sd">    the features before fitting the group lasso.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    gl : pyglm/sklearn/group_lasso model</span>
-<span class="sd">        The model fit through cross-validation; one of many types.</span>
-<span class="sd">    inds : np.ndarray</span>
-<span class="sd">        ``(2p,)``-dimensional array of indices representing the random</span>
-<span class="sd">        permutation applied to the concatenation of [X, Xk] before fitting</span>
-<span class="sd">        ``gl.``</span>
-<span class="sd">    rev_inds : np.ndarray:</span>
-<span class="sd">        Indices which reverse the effect of ``inds.`` In particular, if</span>
-<span class="sd">        M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="n">y_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">y_dist</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-
-    <span class="c1"># Bind data</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-
-    <span class="c1"># By default, all variables are their own group</span>
-    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="c1"># If m == p, meaning each variable is their own group,</span>
-    <span class="c1"># just fit a regular lasso</span>
-    <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">p</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">group_lasso</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">fit_lasso</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_dist</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="c1"># Make sure variables and their knockoffs are in the same group</span>
-    <span class="c1"># This is necessary for antisymmetry</span>
-    <span class="n">doubled_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">groups</span><span class="p">,</span> <span class="n">groups</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-    <span class="c1"># Randomize coordinates to make sure everything is symmetric</span>
-    <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">random_permutation_inds</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
-    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">]</span>
-    <span class="n">doubled_groups</span> <span class="o">=</span> <span class="n">doubled_groups</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
-
-    <span class="c1"># Standardize - important for pyglmnet performance,</span>
-    <span class="c1"># highly detrimental for group_lasso performance</span>
-    <span class="k">if</span> <span class="n">use_pyglm</span><span class="p">:</span>
-        <span class="n">features</span> <span class="o">=</span> <span class="p">(</span><span class="n">features</span> <span class="o">-</span> <span class="n">features</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="n">features</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">y_dist</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="n">y</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
-
-    <span class="c1"># Get regularization values for cross validation</span>
-    <span class="n">reg_vals</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;reg_vals&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">DEFAULT_REG_VALS</span><span class="p">])</span>
-
-    <span class="c1"># Fit pyglm model using warm starts</span>
-    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">use_pyglm</span><span class="p">:</span>
-
-            <span class="c1"># Change defaults forkwargs</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;max_iter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;cv&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cv&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;learning_rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">l1_regs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">reg_vals</span><span class="p">]</span>
-            <span class="n">gl</span> <span class="o">=</span> <span class="n">GLMCV</span><span class="p">(</span>
-                <span class="n">distr</span><span class="o">=</span><span class="n">y_dist</span><span class="p">,</span>
-                <span class="n">group</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                <span class="n">reg_lambda</span><span class="o">=</span><span class="n">l1_regs</span><span class="p">,</span>
-                <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;cdfast&quot;</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">kwargs</span>
-            <span class="p">)</span>
-            <span class="n">gl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-
-            <span class="c1"># Pull score, rename</span>
-            <span class="n">best_score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">calc_mse</span><span class="p">(</span><span class="n">gl</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-            <span class="n">best_gl</span> <span class="o">=</span> <span class="n">gl</span>
-
-        <span class="c1"># Fit model</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;the group_lasso backend will be depreciated in verison 1.3.&quot;</span><span class="p">)</span>
-            <span class="n">best_gl</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">best_score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
-            <span class="k">for</span> <span class="n">group_reg</span><span class="p">,</span> <span class="n">l1_reg</span> <span class="ow">in</span> <span class="n">reg_vals</span><span class="p">:</span>
-
-                <span class="c1"># Fit logistic/gaussian group lasso</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
-                    <span class="n">gl</span> <span class="o">=</span> <span class="n">GroupLasso</span><span class="p">(</span>
-                        <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
-                        <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
-                        <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
-                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">elif</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;binomial&quot;</span><span class="p">:</span>
-                    <span class="n">gl</span> <span class="o">=</span> <span class="n">LogisticGroupLasso</span><span class="p">(</span>
-                        <span class="n">groups</span><span class="o">=</span><span class="n">doubled_groups</span><span class="p">,</span>
-                        <span class="n">group_reg</span><span class="o">=</span><span class="n">group_reg</span><span class="p">,</span>
-                        <span class="n">l1_reg</span><span class="o">=</span><span class="n">l1_reg</span><span class="p">,</span>
-                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;y_dist must be one of gaussian, binomial, not </span><span class="si">{</span><span class="n">y_dist</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="n">gl</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-                <span class="n">score</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">calc_mse</span><span class="p">(</span><span class="n">gl</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-
-            <span class="c1"># Score, possibly select</span>
-            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
-                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
-                <span class="n">best_gl</span> <span class="o">=</span> <span class="n">gl</span>
-
-    <span class="k">return</span> <span class="n">best_gl</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span></div>
-
 
 <div class="viewcode-block" id="FeatureStatistic"><a class="viewcode-back" href="../../apiref.html#knockpy.knockoff_stats.FeatureStatistic">[docs]</a><span class="k">class</span> <span class="nc">FeatureStatistic</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1042,8 +878,6 @@
         <span class="n">y</span><span class="p">,</span>
         <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">zstat</span><span class="o">=</span><span class="s2">&quot;coef&quot;</span><span class="p">,</span>
-        <span class="n">use_pyglm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">group_lasso</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">antisym</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span>
         <span class="n">group_agg</span><span class="o">=</span><span class="s2">&quot;avg&quot;</span><span class="p">,</span>
         <span class="n">cv_score</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1073,14 +907,6 @@
 <span class="sd">            - If &#39;lars_path&#39;, uses the lambda value where each feature/knockoff</span>
 <span class="sd">            enters the lasso path (meaning becomes nonzero).</span>
 <span class="sd">            This defaults to coef.</span>
-<span class="sd">        use_pyglm : bool</span>
-<span class="sd">            When fitting the group lasso, use the pyglm package if True (default).</span>
-<span class="sd">            Else, use the group_lasso package.</span>
-<span class="sd">        y_dist : str</span>
-<span class="sd">            One of &quot;binomial&quot; or &quot;gaussian&quot;</span>
-<span class="sd">        group_lasso : bool</span>
-<span class="sd">            If True, use a true group lasso. Else just use the sklearn ungrouped</span>
-<span class="sd">            lasso.</span>
 <span class="sd">        antisym : str</span>
 <span class="sd">            The antisymmetric function used to create (ungrouped) feature</span>
 <span class="sd">            statistics. Three options: </span>
@@ -1123,32 +949,25 @@
             <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Check if y_dist is gaussian, binomial, poisson</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_dist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_dist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y_dist&quot;</span><span class="p">,</span> <span class="n">parse_y_dist</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 
         <span class="c1"># Step 1: Calculate Z statistics</span>
         <span class="n">zstat</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">zstat</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">zstat</span> <span class="o">==</span> <span class="s2">&quot;coef&quot;</span><span class="p">:</span>
 
             <span class="c1"># Fit (possibly group) lasso</span>
-            <span class="n">gl</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">fit_group_lasso</span><span class="p">(</span>
+            <span class="n">gl</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">rev_inds</span> <span class="o">=</span> <span class="n">fit_lasso</span><span class="p">(</span>
                 <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
                 <span class="n">Xk</span><span class="o">=</span><span class="n">Xk</span><span class="p">,</span>
                 <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
-                <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span>
-                <span class="n">use_pyglm</span><span class="o">=</span><span class="n">use_pyglm</span><span class="p">,</span>
-                <span class="n">group_lasso</span><span class="o">=</span><span class="n">group_lasso</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="c1"># Parse the expected output format based on which</span>
-            <span class="c1"># lasso package we are using</span>
-            <span class="n">reg_lasso_flag</span> <span class="o">=</span> <span class="n">use_reg_lasso</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">group_lasso</span><span class="p">)</span>
+            <span class="c1"># Parse the expected output format </span>
             <span class="n">logistic_flag</span> <span class="o">=</span> <span class="n">parse_logistic_flag</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
 
             <span class="c1"># Retrieve Z statistics</span>
-            <span class="k">if</span> <span class="n">use_pyglm</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">reg_lasso_flag</span><span class="p">:</span>
-                <span class="n">Z</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">beta_</span><span class="p">[</span><span class="n">rev_inds</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="n">reg_lasso_flag</span> <span class="ow">and</span> <span class="n">logistic_flag</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">logistic_flag</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">gl</span><span class="o">.</span><span class="n">coef_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s2">&quot;Unexpected shape for logistic lasso coefficients (sklearn)&quot;</span>

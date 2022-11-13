@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tutorials &mdash; knockpy 1.2 documentation</title>
+  <title>Tutorials &mdash; knockpy 1.3.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -33,7 +33,7 @@
             <a href="index.html" class="icon icon-home"> knockpy
           </a>
               <div class="version">
-                1.2
+                1.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -49,11 +49,18 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#A-quick-review-of-knockoffs">A quick review of knockoffs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#The-KnockoffFilter-class">The <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Gaussian-knockoffs-galore">Gaussian knockoffs galore</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Metropolized-knockoff-sampling">Metropolized knockoff sampling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Built-in-feature-statistics">Built-in feature statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Custom-feature-statistics-with-FeatureStatistic">Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Other-functionality">Other functionality</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Constructing-knockoffs">Constructing knockoffs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Gaussian-knockoffs-galore">Gaussian knockoffs galore</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Metropolized-knockoff-sampling">Metropolized knockoff sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Knockoff-feature-statistics">Knockoff feature statistics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Built-in-feature-statistics">Built-in feature statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Masked-likelihood-ratio-(MLR)-statistics">Masked likelihood ratio (MLR) statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Custom-feature-statistics-with-FeatureStatistic">Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Other-functionality:-group-knockoffs-and-graphical-model-discovery">Other functionality: group knockoffs and graphical model discovery</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#Group-knockoffs">Group knockoffs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Gaussian-graphical-models">Gaussian graphical models</a></li>
 </ul>
@@ -381,7 +388,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="The-KnockoffFilter-class">
 <h2>The <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class<a class="headerlink" href="#The-KnockoffFilter-class" title="Permalink to this headline"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">knockpy.knockoff_filter.KnockoffFilter</span></code> is the most important class in <code class="docutils literal notranslate"><span class="pre">knockpy</span></code>: it generates knockoffs, fits the feature statistics, and applies the data-dependent threshhold all at once. This is demonstrated below.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">knockpy.KnockoffFilter</span></code> is the most important class in <code class="docutils literal notranslate"><span class="pre">knockpy</span></code>: it generates knockoffs, fits the feature statistics, and applies the data-dependent threshhold all at once. This is demonstrated below.</p>
 <p>First we create a synthetic dataset where <span class="math notranslate nohighlight">\(X \sim \mathcal{N}(0, \Sigma)\)</span> for some <span class="math notranslate nohighlight">\(\Sigma\)</span> and <span class="math notranslate nohighlight">\(y \mid X\)</span> Gaussian with homoskedastic errors. The details of this dataset are commented below, but they aren’t too important.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -411,7 +418,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">knockpy.knockoff_filter</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">knockpy</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span>
 <span class="n">kfilter</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span>
     <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
     <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lasso&#39;</span><span class="p">,</span>
@@ -443,12 +450,12 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 13.793103396892548%
+The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 4.0%
 </pre></div></div>
 </div>
 <p>Of course, in most real applications, we do not know <span class="math notranslate nohighlight">\(\Sigma\)</span>. In these cases, the knockoff filter will automatically infer <span class="math notranslate nohighlight">\(\Sigma\)</span> using LedoitWolf or GraphicalLasso covariance estimation. Although this invalidates the exact validty of model-X knockoffs, knockoffs have been shown to be fairly robust in this setting.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Try again with estimated cov matrix</span>
@@ -466,12 +473,14 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 13.7931
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 5.6603774428367615%
+The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 9.09%
 </pre></div></div>
 </div>
 </div>
+<div class="section" id="Constructing-knockoffs">
+<h2>Constructing knockoffs<a class="headerlink" href="#Constructing-knockoffs" title="Permalink to this headline"></a></h2>
 <div class="section" id="Gaussian-knockoffs-galore">
-<h2>Gaussian knockoffs galore<a class="headerlink" href="#Gaussian-knockoffs-galore" title="Permalink to this headline"></a></h2>
+<h3>Gaussian knockoffs galore<a class="headerlink" href="#Gaussian-knockoffs-galore" title="Permalink to this headline"></a></h3>
 <p>There are many ways to generate Gaussian knockoffs. The default option is to generate MVR knockoffs, which (informally) maximize <span class="math notranslate nohighlight">\(\text{Var}(X_j \mid X_{-j}, \tilde{X})\)</span> for each feature <span class="math notranslate nohighlight">\(X_j\)</span>, where <span class="math notranslate nohighlight">\(X_{-j}\)</span> denotes all of the features except the <span class="math notranslate nohighlight">\(j\)</span>th feature. Intuitively, this <em>minimizes the varianced-based reconstructability (MVR)</em> between the features and their knockoffs, preventing a feature statistic like a lasso or a randomforest from using the other features
 and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference external" href="https://arxiv.org/abs/2011.14625">Spector and Janson (2020)</a> for more details.</p>
 <p>There are a variety of other options to choose from, including:</p>
@@ -531,12 +540,12 @@ For p=500, MVR took 2.6 sec, Maxent took 6.0 sec, SDP took 7.8 sec
 </div>
 </div>
 <div class="section" id="Metropolized-knockoff-sampling">
-<h2>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Permalink to this headline"></a></h2>
+<h3>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Permalink to this headline"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> implements a fully general covariance-guided Metropolized knockoff sampler, which is capable of sampling model-X knockoffs for any <span class="math notranslate nohighlight">\(X\)</span> distribution given an (unnormalized) density function of <span class="math notranslate nohighlight">\(X\)</span>. This Metropolized knockoff sampler uses a variety of computational tricks to make it orders of magnitude faster than a naive implementation, although these tricks only work when the distribution of <span class="math notranslate nohighlight">\(X\)</span> has conditional independence properties, as specified by an undirected
 graphical model. See <a class="reference external" href="https://arxiv.org/abs/1903.00434">Bates et al. (2020)</a> for more details.</p>
 <p>The API reference as well as the source for the metro module details more advanced usage of metro; however, for now, we simply demonstrate how to pass in an arbitrary log-likelihood function to the <code class="docutils literal notranslate"><span class="pre">MetropolizedKnockoffSampler</span></code> class and use it to sample knockoffs.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">knockpy.metro</span>
@@ -568,15 +577,6 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/asher/.local/lib/python3.6/site-packages/knockpy/metro.py:867: RuntimeWarning: overflow encountered in exp
-  return np.exp((ld_ratio + lq_ratio + Fj_ratio).astype(np.float32))
-</pre></div></div>
-</div>
 <p>It is possible to generate Metropolized knockoffs for discrete data via the <code class="docutils literal notranslate"><span class="pre">buckets</span></code> argument, which specifies the support of the discrete data.</p>
 <p>If you want to build a custom knockoff sampler class, as long as it inherets from the base class <code class="docutils literal notranslate"><span class="pre">knockpy.knockoffs.KnockoffSampler</span></code>, you can still pass it to the KnockoffFilter constructor to run the knockoff filter. For example, we pass the customized metropolized knockoff sampler to a KnockoffFilter below:</p>
 <div class="nbinput nblast docutils container">
@@ -598,10 +598,13 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 </div>
 <p>The metro module can also accept clique potentials from an undirected graphical model in place of the likelihood function to get a <span class="math notranslate nohighlight">\(O(p)\)</span> speedup, as discussed in the API reference.</p>
 </div>
+</div>
+<div class="section" id="Knockoff-feature-statistics">
+<h2>Knockoff feature statistics<a class="headerlink" href="#Knockoff-feature-statistics" title="Permalink to this headline"></a></h2>
 <div class="section" id="Built-in-feature-statistics">
-<h2>Built-in feature statistics<a class="headerlink" href="#Built-in-feature-statistics" title="Permalink to this headline"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> offers a suite of built-in feature statistics, including cross-validated lasso, ridge, and group-lasso coefficients, lasso-path statistics, the deepPINK statistic <a class="reference external" href="https://arxiv.org/abs/1809.01185">(Lu et. al 2018)</a>, and random forest statistics with swap and swap integral importances <a class="reference external" href="https://arxiv.org/abs/1807.06214">(Giminez et. al 2018)</a>. One can easily call these use these feature statistics by modifying the <code class="docutils literal notranslate"><span class="pre">fstat</span></code> argument and <code class="docutils literal notranslate"><span class="pre">fstat_kwarg</span></code> arguments in the
-KnockoffFilter class, as exemplified below. See the API reference for more flags and options.</p>
+<h3>Built-in feature statistics<a class="headerlink" href="#Built-in-feature-statistics" title="Permalink to this headline"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> offers a suite of built-in feature statistics, including cross-validated lasso and ridge coefficients, lasso-path statistics, masked likelihood ratio statistics <a class="reference external" href="https://amspector100.github.io/assets/docs/mlrknock.pdf">(Spector and Fithian, 2022)</a>, the deepPINK statistic <a class="reference external" href="https://arxiv.org/abs/1809.01185">(Lu et. al 2018)</a>, and random forest statistics with swap and swap integral importances <a class="reference external" href="https://arxiv.org/abs/1807.06214">(Giminez et. al 2018)</a>. One can easily call these
+use these feature statistics by modifying the <code class="docutils literal notranslate"><span class="pre">fstat</span></code> argument and <code class="docutils literal notranslate"><span class="pre">fstat_kwarg</span></code> arguments in the KnockoffFilter class, as exemplified below. See the API reference for more flags and options.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -618,8 +621,75 @@ KnockoffFilter class, as exemplified below. See the API reference for more flags
 </div>
 </div>
 </div>
+<div class="section" id="Masked-likelihood-ratio-(MLR)-statistics">
+<h3>Masked likelihood ratio (MLR) statistics<a class="headerlink" href="#Masked-likelihood-ratio-(MLR)-statistics" title="Permalink to this headline"></a></h3>
+<p>New in version 1.3.0, <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> now contains cython-based implementations of <em>masked likelihood ratio</em> (MLR) knockoff statistics <a class="reference external" href="https://amspector100.github.io/assets/docs/mlrknock.pdf">(Spector and Fithian, 2022)</a>. In particular, knockpy contains three types of MLR statistics: (a) MLR statistics for Gaussian linear models, (b) MLR statistics for binary regression, (c) MLR statistics for generalized additive models based on regression splines</p>
+<p>To use MLR statistics, simply create a knockoff filter and specify <code class="docutils literal notranslate"><span class="pre">fstat='mlr'</span></code> for options (a) and (b) or <code class="docutils literal notranslate"><span class="pre">fstat='mlr_spline'</span></code> for option (c), as shown below.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># default MLR statistics; these work for both continuous and binary responses</span>
+<span class="n">kfilter_mlr</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+<span class="c1"># masked likelihood ratio statistics based on regression splines</span>
+<span class="n">kfilter_mlr_splines</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;mlr_spline&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>MLR statistics are motivated by a common problem when applying knockoffs, which is that in many applied analyses, one is forced to construct knockoffs <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> which are highly correlated with features <span class="math notranslate nohighlight">\(X_j\)</span>. As shown below, highly correlated knockoffs <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> can wreak havoc with common feature statistics like the lasso statistic by causing the lasso to select <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> over <span class="math notranslate nohighlight">\(X_j\)</span> and leading to highly negative feature statistics. This substantially
+reduces the power of knockoffs.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create highly correlated design matrix</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">200</span>
+<span class="n">Sigma</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># AR1 process</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1"># Create random sparse coefficients and sample y | X from a linear model</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">create_sparse_coefficients</span><span class="p">(</span>
+    <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">coeff_size</span><span class="o">=</span><span class="mf">0.8</span>
+<span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="c1"># Fit lasso signed maximum stat with fixed-X knockoffs</span>
+<span class="n">kf_lasso</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lsm&#39;</span><span class="p">,</span> <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;fx&#39;</span><span class="p">)</span>
+<span class="n">kf_lasso</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">)</span>
+<span class="c1"># Plot</span>
+<span class="n">kf_lasso</span><span class="o">.</span><span class="n">seqstep_plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/usage_40_0.png" src="_images/usage_40_0.png" />
+</div>
+</div>
+<p>MLR statistics are designed to at least partially avoid this problem, as visualized below. Note that below, the MLR statistics with the highest absolute values are consistently positive, allowing knockoffs to make more discoveries.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kfilter_mlr</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;fx&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+<span class="n">kfilter_mlr</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">)</span>
+<span class="n">kfilter_mlr</span><span class="o">.</span><span class="n">seqstep_plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/usage_42_0.png" src="_images/usage_42_0.png" />
+</div>
+</div>
+</div>
 <div class="section" id="Custom-feature-statistics-with-FeatureStatistic">
-<h2>Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code><a class="headerlink" href="#Custom-feature-statistics-with-FeatureStatistic" title="Permalink to this headline"></a></h2>
+<h3>Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code><a class="headerlink" href="#Custom-feature-statistics-with-FeatureStatistic" title="Permalink to this headline"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">knockpy.knockoff_stats.FeatureStatistic</span></code> class also has the ability to turn any model class with a <code class="docutils literal notranslate"><span class="pre">fit</span></code> or <code class="docutils literal notranslate"><span class="pre">train</span></code> method and a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method into a knockoff feature statistic using the swap or swap integral importances introduced in swap and swap integral importances <a class="reference external" href="https://arxiv.org/abs/1807.06214">(Giminez et. al 2018)</a>. This means that after training a predictive model on <span class="math notranslate nohighlight">\([X, \tilde{X}]\)</span> and <span class="math notranslate nohighlight">\(y\)</span>, to obtain a variable importance for variable <span class="math notranslate nohighlight">\(X_j\)</span>, the
 FeatureStatistic class temporarily replaces <span class="math notranslate nohighlight">\(X_j\)</span> with <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> and records the decrease in predictive performance of the trained model. After repeating this for all features and knockoffs, this yields knockoff variable importances which can be transformed via an antisymmetric function to create valid feature statistics.</p>
 <p>Using this is easier than it sounds! To do so, begin by initializing any arbitrary model with train/fit and predict methods. Second, wrap it with a FeatureStatistic class. Lastly, pass the FeatureStatistic class to the KnockoffFilter, as shown below:</p>
@@ -662,8 +732,9 @@ Made 20.0 rejections!
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="Other-functionality">
-<h2>Other functionality<a class="headerlink" href="#Other-functionality" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="Other-functionality:-group-knockoffs-and-graphical-model-discovery">
+<h2>Other functionality: group knockoffs and graphical model discovery<a class="headerlink" href="#Other-functionality:-group-knockoffs-and-graphical-model-discovery" title="Permalink to this headline"></a></h2>
 <div class="section" id="Group-knockoffs">
 <h3>Group knockoffs<a class="headerlink" href="#Group-knockoffs" title="Permalink to this headline"></a></h3>
 <p>The KnockoffFilter offers some support for sampling group knockoffs for the gaussian and fixed-X knockoff types (see the API reference for more details). New in version 1.1.0, knockpy supports fast computation of group MVR and ME knockoffs, as demonstrated below.</p>

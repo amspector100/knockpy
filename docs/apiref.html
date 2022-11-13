@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API Reference &mdash; knockpy 1.2 documentation</title>
+  <title>API Reference &mdash; knockpy 1.3.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -30,7 +30,7 @@
             <a href="index.html" class="icon icon-home"> knockpy
           </a>
               <div class="version">
-                1.2
+                1.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -44,6 +44,8 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html#Constructing-knockoffs">Constructing knockoffs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html#Knockoff-feature-statistics">Knockoff feature statistics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-knockpy.knockoff_filter">The KnockoffFilter</a></li>
@@ -122,32 +124,33 @@
 <dd class="field-odd"><dl>
 <dt><strong>fstat</strong><span class="classifier">str or knockpy.knockoff_stats.FeatureStatistic</span></dt><dd><p>The feature statistic to use in the knockoff filter.
 Defaults to a lasso statistic.
-This may also be a string identifier, including:
-- ‘lasso’ or ‘lcd’: cross-validated lasso coefficients differences 
-- ‘lsm’: signed maximum of the lasso path statistic as</p>
-<blockquote>
-<div><p>in Barber and Candes 2015</p>
-</div></blockquote>
+This may also be a string identifier, including:</p>
 <ul class="simple">
+<li><p>‘lasso’ or ‘lcd’: cross-validated lasso coefficients differences</p></li>
+<li><p>‘mlr’: the masked likelihood ratio (MLR) statistic, which has provable optimality properties for knockoffs</p></li>
+<li><p>‘lsm’: signed maximum of the lasso path statistic as in Barber and Candes 2015</p></li>
 <li><p>‘dlasso’: Cross-validated debiased lasso coefficients</p></li>
 <li><p>‘ridge’: Cross validated ridge coefficients</p></li>
 <li><p>‘ols’: Ordinary least squares coefficients</p></li>
 <li><p>‘margcorr’: marginal correlations between features and response</p></li>
 <li><p>‘deeppink’: The deepPINK statistic as in Lu et al. 2018</p></li>
+<li><p>‘mlrspline’ or ‘spline’: The MLR statistic applied to regression spline basis functions.</p></li>
 <li><p>‘randomforest’: A random forest with swap importances</p></li>
 </ul>
-<p>Note that when using FX knockoffs, the lcd statistic does not use
-cross-validation and sets <code class="docutils literal notranslate"><span class="pre">alphas</span> <span class="pre">=</span> <span class="pre">sigma2</span> <span class="pre">*</span> <span class="pre">sqrt(log(p)</span> <span class="pre">/</span> <span class="pre">n).</span></code></p>
+<p>Note that when using FX knockoffs, the <cite>lcd</cite> statistic does not use
+cross-valdilidation and sets <code class="docutils literal notranslate"><span class="pre">alphas</span> <span class="pre">=</span> <span class="pre">sigma2</span> <span class="pre">*</span> <span class="pre">sqrt(log(p)</span> <span class="pre">/</span> <span class="pre">n).</span></code></p>
 </dd>
 <dt><strong>ksampler</strong><span class="classifier">str or knockpy.knockoffs.KnockoffSampler</span></dt><dd><p>The knockoff sampler to use in the knockoff filter.
-This may also be a string identifier, including:
-- ‘gaussian’: Gaussian Model-X knockoffs
-- ‘fx’: Fixed-X knockoffs
-- ‘metro’: Generic metropolized knockoff sampler.
-- ‘artk’: t-tailed Markov chain
-- ‘blockt’: Blocks of t-distributed 
-- ‘gibbs_grid’: Discrete gibbs grid
-An alternative to specifying the ksampler is to simply pass
+This may also be a string identifier, including:</p>
+<ul class="simple">
+<li><p>‘gaussian’: Gaussian Model-X knockoffs</p></li>
+<li><p>‘fx’: Fixed-X knockoffs.</p></li>
+<li><p>‘metro’: Generic metropolized knockoff sampler</p></li>
+<li><p>‘artk’: t-tailed Markov chain.</p></li>
+<li><p>‘blockt’: Blocks of t-distributed</p></li>
+<li><p>‘gibbs_grid’: Discrete gibbs grid</p></li>
+</ul>
+<p>An alternative to specifying the ksampler is to simply pass
 in a knockoff matrix during the <code class="docutils literal notranslate"><span class="pre">forward</span></code> call.</p>
 </dd>
 <dt><strong>fstat_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Kwargs to pass to the feature statistic <code class="docutils literal notranslate"><span class="pre">fit</span></code> function,
@@ -238,16 +241,8 @@ the knockoff filter rejects the jth feature.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs" title="knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_knockoffs</span></code></a>()</p></td>
 <td><p>Samples knockoffs during <code class="docutils literal notranslate"><span class="pre">forward</span></code>.</p></td>
 </tr>
-</tbody>
-</table>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 44%" />
-<col style="width: 56%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>plot</strong></p></td>
-<td></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_filter.KnockoffFilter.seqstep_plot" title="knockpy.knockoff_filter.KnockoffFilter.seqstep_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seqstep_plot</span></code></a>([max_rank])</p></td>
+<td><p>Visualizes the knockoff filter.</p></td>
 </tr>
 </tbody>
 </table>
@@ -294,16 +289,14 @@ such as the “metro” identifier. Defaults to {}</p>
 assumes that the ground-truth Sigma is a factor model 
 with rank <code class="docutils literal notranslate"><span class="pre">num_factors</span></code> to speed up computation.</p>
 </dd>
-<dt><strong>recycle_up_to</strong><span class="classifier">int or float</span></dt><dd><dl>
-<dt>Three options:</dt><dd><ul class="simple">
+<dt><strong>recycle_up_to</strong><span class="classifier">int or float</span></dt><dd><p>Three options:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>if <code class="docutils literal notranslate"><span class="pre">None</span></code>, does nothing.</p></li>
-<li><p>if an integer &gt; 1, uses the first “recycle_up_to”</p></li>
+<li><p>if an integer &gt; 1, uses the first “recycle_up_to” rows of X as the the first <code class="docutils literal notranslate"><span class="pre">recycle_up_to</span></code> rows of knockoffs</p></li>
+<li><p>if a float between 0 and 1 (inclusive), interpreted as the proportion of rows to recycle.</p></li>
 </ul>
-<p>rows of X as the the first <code class="docutils literal notranslate"><span class="pre">recycle_up_to</span></code> rows of knockoffs
-- if a float between 0 and 1 (inclusive), interpreted
-as the proportion of rows to recycle.</p>
-</dd>
-</dl>
+</div></blockquote>
 <p>For more on recycling, see <a class="reference external" href="https://arxiv.org/abs/1602.03574">https://arxiv.org/abs/1602.03574</a></p>
 </dd>
 </dl>
@@ -321,6 +314,21 @@ as the proportion of rows to recycle.</p>
 <dt class="sig sig-object py" id="knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs">
 <span class="sig-name descname"><span class="pre">sample_knockoffs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_filter.html#KnockoffFilter.sample_knockoffs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_filter.KnockoffFilter.sample_knockoffs" title="Permalink to this definition"></a></dt>
 <dd><p>Samples knockoffs during <code class="docutils literal notranslate"><span class="pre">forward</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="knockpy.knockoff_filter.KnockoffFilter.seqstep_plot">
+<span class="sig-name descname"><span class="pre">seqstep_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_filter.html#KnockoffFilter.seqstep_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_filter.KnockoffFilter.seqstep_plot" title="Permalink to this definition"></a></dt>
+<dd><p>Visualizes the knockoff filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>max_rank</strong><span class="classifier">int</span></dt><dd><p>Only plot the top <code class="docutils literal notranslate"><span class="pre">max_rank</span></code> feature statistics.
+Defaults to plotting all feature statistics.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -622,7 +630,7 @@ Z_swap is in the same permuted as <code class="docutils literal notranslate"><sp
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv_score_model</span></code>(features, y, cv_score[, ...])</p></td>
 <td><p>Similar to score_model, but uses cross-validated scoring if cv_score=True.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.LassoStatistic.fit" title="knockpy.knockoff_stats.LassoStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, zstat, use_pyglm, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#knockpy.knockoff_stats.LassoStatistic.fit" title="knockpy.knockoff_stats.LassoStatistic.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, Xk, y[, groups, zstat, antisym, ...])</p></td>
 <td><p>Wraps the FeatureStatistic class but uses cross-validated Lasso coefficients or Lasso path statistics as variable importances.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_model</span></code>(features, y[, y_dist])</p></td>
@@ -638,7 +646,7 @@ Z_swap is in the same permuted as <code class="docutils literal notranslate"><sp
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="knockpy.knockoff_stats.LassoStatistic.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zstat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'coef'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyglm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_lasso</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">antisym</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_agg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'avg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ginv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#LassoStatistic.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_stats.LassoStatistic.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zstat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'coef'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">antisym</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_agg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'avg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ginv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#LassoStatistic.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_stats.LassoStatistic.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Wraps the FeatureStatistic class but uses cross-validated Lasso
 coefficients or Lasso path statistics as variable importances.</p>
 <dl class="field-list simple">
@@ -659,14 +667,6 @@ is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
 - If ‘lars_path’, uses the lambda value where each feature/knockoff
 enters the lasso path (meaning becomes nonzero).
 This defaults to coef.</p>
-</dd>
-<dt><strong>use_pyglm</strong><span class="classifier">bool</span></dt><dd><p>When fitting the group lasso, use the pyglm package if True (default).
-Else, use the group_lasso package.</p>
-</dd>
-<dt><strong>y_dist</strong><span class="classifier">str</span></dt><dd><p>One of “binomial” or “gaussian”</p>
-</dd>
-<dt><strong>group_lasso</strong><span class="classifier">bool</span></dt><dd><p>If True, use a true group lasso. Else just use the sklearn ungrouped
-lasso.</p>
 </dd>
 <dt><strong>antisym</strong><span class="classifier">str</span></dt><dd><p>The antisymmetric function used to create (ungrouped) feature
 statistics. Three options: 
@@ -1125,54 +1125,6 @@ dimensional array.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="knockpy.knockoff_stats.fit_group_lasso">
-<span class="sig-prename descclassname"><span class="pre">knockpy.knockoff_stats.</span></span><span class="sig-name descname"><span class="pre">fit_group_lasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyglm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_lasso</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#fit_group_lasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_stats.fit_group_lasso" title="Permalink to this definition"></a></dt>
-<dd><p>Fits cross-validated ridge on [X, Xk] and y.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>X</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped design matrix</p>
-</dd>
-<dt><strong>Xk</strong><span class="classifier">np.ndarray</span></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>-shaped matrix of knockoffs</p>
-</dd>
-<dt><strong>y</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(n,)</span></code>-shaped response vector</p>
-</dd>
-<dt><strong>groups</strong><span class="classifier">np.ndarray</span></dt><dd><p>For group knockoffs, a p-length array of integers from 1 to 
-num_groups such that <code class="docutils literal notranslate"><span class="pre">groups[j]</span> <span class="pre">==</span> <span class="pre">i</span></code> indicates that variable <cite>j</cite>
-is a member of group <cite>i</cite>. Defaults to None (regular knockoffs).</p>
-</dd>
-<dt><strong>use_pyglm</strong><span class="classifier">bool</span></dt><dd><p>When fitting the group lasso, use the pyglm package if True (default).
-Else, use the group_lasso package.</p>
-</dd>
-<dt><strong>y_dist</strong><span class="classifier">str</span></dt><dd><p>One of “binomial” or “gaussian”</p>
-</dd>
-<dt><strong>group_lasso</strong><span class="classifier">bool</span></dt><dd><p>If True, use a true group lasso. Else just use the sklearn ungrouped
-lasso.</p>
-</dd>
-<dt><strong>**kwargs</strong></dt><dd><p>kwargs for eventual (group) lasso model.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>gl</strong><span class="classifier">pyglm/sklearn/group_lasso model</span></dt><dd><p>The model fit through cross-validation; one of many types.</p>
-</dd>
-<dt><strong>inds</strong><span class="classifier">np.ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">(2p,)</span></code>-dimensional array of indices representing the random
-permutation applied to the concatenation of [X, Xk] before fitting
-<code class="docutils literal notranslate"><span class="pre">gl.</span></code></p>
-</dd>
-<dt><strong>rev_inds</strong><span class="classifier">np.ndarray:</span></dt><dd><p>Indices which reverse the effect of <code class="docutils literal notranslate"><span class="pre">inds.</span></code> In particular, if
-M is any <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2p)</span></code>-dimensional array, then <code class="docutils literal notranslate"><span class="pre">`M==M[:,</span> <span class="pre">inds][:,</span> <span class="pre">rev_inds]`</span></code></p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>To avoid FDR control violations, this randomly permutes
-the features before fitting the group lasso.</p>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="knockpy.knockoff_stats.fit_lasso">
 <span class="sig-prename descclassname"><span class="pre">knockpy.knockoff_stats.</span></span><span class="sig-name descname"><span class="pre">fit_lasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_lars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#fit_lasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_stats.fit_lasso" title="Permalink to this definition"></a></dt>
 <dd><p>Fits cross-validated lasso on [X, Xk] and y.</p>
@@ -1264,12 +1216,6 @@ the features before fitting the ridge.</p>
 <dt class="sig sig-object py" id="knockpy.knockoff_stats.parse_y_dist">
 <span class="sig-prename descclassname"><span class="pre">knockpy.knockoff_stats.</span></span><span class="sig-name descname"><span class="pre">parse_y_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#parse_y_dist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_stats.parse_y_dist" title="Permalink to this definition"></a></dt>
 <dd><p>Checks if y is binary; else assumes it is continuous</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="knockpy.knockoff_stats.use_reg_lasso">
-<span class="sig-prename descclassname"><span class="pre">knockpy.knockoff_stats.</span></span><span class="sig-name descname"><span class="pre">use_reg_lasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groups</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/knockpy/knockoff_stats.html#use_reg_lasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#knockpy.knockoff_stats.use_reg_lasso" title="Permalink to this definition"></a></dt>
-<dd><p>Parses whether or not to use group lasso</p>
 </dd></dl>
 
 </div>

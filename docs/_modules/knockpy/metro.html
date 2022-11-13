@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>knockpy.metro &mdash; knockpy 1.2 documentation</title>
+  <title>knockpy.metro &mdash; knockpy 1.3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -29,7 +29,7 @@
             <a href="../../index.html" class="icon icon-home"> knockpy
           </a>
               <div class="version">
-                1.2
+                1.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -43,6 +43,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Constructing-knockoffs">Constructing knockoffs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Knockoff-feature-statistics">Knockoff feature statistics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
@@ -938,7 +940,9 @@
         <span class="c1"># Fast_exp function is helpful for profiling</span>
         <span class="c1"># (to see how much time is spent here)</span>
         <span class="k">def</span> <span class="nf">fast_exp</span><span class="p">(</span><span class="n">ld_ratio</span><span class="p">,</span> <span class="n">lq_ratio</span><span class="p">,</span> <span class="n">Fj_ratio</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">ld_ratio</span> <span class="o">+</span> <span class="n">lq_ratio</span> <span class="o">+</span> <span class="n">Fj_ratio</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">ld_ratio</span> <span class="o">+</span> <span class="n">lq_ratio</span> <span class="o">+</span> <span class="n">Fj_ratio</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">MAXEXP32</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
 
         <span class="n">acc_prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">fast_exp</span><span class="p">(</span><span class="n">ld_ratio</span><span class="p">,</span> <span class="n">lq_ratio</span><span class="p">,</span> <span class="n">Fj_ratio</span><span class="p">))</span>
 
