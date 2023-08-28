@@ -744,58 +744,112 @@ class TestBaseFeatureStatistic(KStatVal):
 class TestDataThreshhold(unittest.TestCase):
     """ Tests data-dependent threshhold """
 
+    def check_T(self, W, T, q):
+        self.assertTrue(
+            T != 0,
+            msg=f"T={T} should not equal zero."
+        )
+        if T != np.inf:
+            # Check FDR control
+            hat_fdr = (1 + np.sum(W <= -T)) / np.sum(W >= T)
+            self.assertTrue(
+                hat_fdr <= q,
+                msg=f"hat_fdr={hat_fdr} > q={q} for T={T}, W={W}"
+            )
+            # Check that this is the largest threshold controlling FDR
+            absW = np.unique(np.abs(W))
+            if T != np.min(absW):
+                T2 = absW[absW < T].min()
+                hat_fdr2 = (1 + np.sum(W <= -T2)) / np.sum(W >= T2)
+                self.assertTrue(
+                    hat_fdr2 > q,
+                    msg=f"With T={T}, using T={T2} controls hat_fdr={hat_fdr} <= q={q}."
+                )
+        else:
+            # Check that we truly cannot make any discoveries
+            inds = np.argsort(-np.abs(W))
+            W_sorted = W[inds]
+            positives = np.cumsum(W_sorted > 0)
+            negatives = np.cumsum(W_sorted <= 0)
+            hat_fdrs = (negatives + 1) / np.maximum(positives, 1)
+            self.assertTrue(
+                np.all(hat_fdrs > q),
+                msg=f"hat_fdrs={hat_fdrs} but T=inf"
+            )
+
     def test_unbatched(self):
 
+        # Three manual checks
+        q1 = 0.2
         W1 = np.array([1, -2, 3, 6, 3, -2, 1, 2, 5, 3, 0.5, 1, 1, 1, 1, 1, 1, 1])
-        T1 = data_dependent_threshhold(W1, fdr=0.2)
+        T1 = data_dependent_threshhold(W1, fdr=q1)
         expected = np.abs(W1).min()
         self.assertTrue(
             T1 == expected,
-            msg=f"Incorrect data dependent threshhold: T1 should be 0, not {T1}",
+            msg=f"Incorrect data dependent threshhold: T1 should be {expected}, not {T1}",
         )
 
-        W2 = np.array([-1, -2, -3])
-        T2 = data_dependent_threshhold(W2, fdr=0.3)
+        q2 = 0.3
+        W2 = np.array([-1, 2, -3])
+        T2 = data_dependent_threshhold(W2, fdr=q2)
         self.assertTrue(
             T2 == np.inf,
             msg=f"Incorrect data dependent threshhold: T2 should be inf, not {T2}",
         )
 
+        q3 = 0.2
         W3 = np.array([-5, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        T3 = data_dependent_threshhold(W3, fdr=0.2)
+        T3 = data_dependent_threshhold(W3, fdr=q3)
         self.assertTrue(
-            T3 == 5,
-            msg=f"Incorrect data dependent threshhold: T3 should be 5, not {T3}",
+            T3 == 6,
+            msg=f"Incorrect data dependent threshhold: T3 should be 6, not {T3}",
         )
+        for W, T, q in zip([W1, W2, W3], [T1, T2, T3], [q1, q2, q3]):
+            self.check_T(W, T, q)
+
+        # Random checks
+        np.random.seed(123)
+        ps = [5, 10, 100]
+        for p in ps:
+            for _ in range(5):
+                W = np.random.randn(p) + 1
+                q = np.random.uniform()
+                T = data_dependent_threshhold(W, fdr=q)
+                self.check_T(W, T, q)
 
     def test_batched(self):
 
+        q = 0.2
         W1 = np.array([1] * 10)
         W2 = np.array([-2, -1, 1, 2, 3, 4, 5, 6, 7, 8])
         W3 = np.array([-1] * 10)
         combined = np.stack([W1, W2, W3]).transpose()
-        Ts = data_dependent_threshhold(combined, fdr=0.2)
-        expected = np.array([1, 2, np.inf])
+        Ts = data_dependent_threshhold(combined, fdr=q)
+        expected = np.array([1, 3, np.inf])
         np.testing.assert_array_almost_equal(
             Ts,
             expected,
             err_msg=f"Incorrect data dependent threshhold (batched): Ts should be {expected}, not {Ts}",
         )
+        for j in range(len(Ts)):
+            self.check_T(W=combined[:, j], T=Ts[j], q=q)
 
     def test_zero_handling(self):
         """ Makes sure Ts != 0 """
 
+        q = 0.2
         W1 = np.array([1] * 10 + [0] * 10)
         W2 = np.array([-2, -1, 1, 2, 3, 4, 5, 6, 7, 8] + [0] * 10)
         W3 = np.array([-1] * 10 + [0] * 10)
-        combined = np.stack([W1, W2, W3]).transpose()
-        Ts = data_dependent_threshhold(combined, fdr=0.2)
-        expected = np.array([1, 2, np.inf])
-        np.testing.assert_array_almost_equal(
-            Ts,
-            expected,
-            err_msg=f"Incorrect data dependent threshhold (batched): Ts should be {expected}, not {Ts}",
-        )
+        expecteds = np.array([1, 3, np.inf])
+        for W, expected in zip([W1, W2, W3], expecteds):
+            T = data_dependent_threshhold(W, fdr=q)
+            self.check_T(W, T, q)
+            np.testing.assert_array_almost_equal(
+                T,
+                expected,
+                err_msg=f"Incorrect data dependent threshhold (batched): T should = {expected}, not {T}",
+            )
 
 class TestHelpers(unittest.TestCase):
     """ tests miscallaneous helper functions """

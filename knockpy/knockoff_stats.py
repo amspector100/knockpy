@@ -1343,46 +1343,28 @@ def data_dependent_threshhold(W, fdr=0.10, offset=1):
         dimensional array.
     """
 
-    # Add dummy batch axis if necessary
+    # Non-batched result.
     if len(W.shape) == 1:
-        W = W.reshape(-1, 1)
-    p = W.shape[0]
-    batch = W.shape[1]
-
-    # Sort W by absolute values
-    ind = np.argsort(-1 * np.abs(W), axis=0)
-    sorted_W = np.take_along_axis(W, ind, axis=0)
-
-    # Calculate ratios
-    negatives = np.cumsum(sorted_W <= 0, axis=0)
-    positives = np.cumsum(sorted_W > 0, axis=0)
-    positives[positives == 0] = 1  # Don't divide by 0
-    ratios = (negatives + offset) / positives
-
-    # Add zero as an option to prevent index errors
-    # (zero means select everything strictly > 0)
-    sorted_W = np.concatenate([sorted_W, np.zeros((1, batch))], axis=0)
-
-    # Find maximum indexes satisfying FDR control
-    # Adding np.arange is just a batching trick
-    helper = (ratios <= fdr) + np.arange(0, p, 1).reshape(-1, 1) / p
-    sorted_W[1:][helper < 1] = np.inf  # Never select values where the ratio > fdr
-    T_inds = np.argmax(helper, axis=0) + 1
-    more_inds = np.indices(T_inds.shape)
-
-    # Find Ts
-    acceptable = np.abs(sorted_W)[T_inds, more_inds][0]
-
-    # Replace 0s with a very small value to ensure that
-    # downstream you don't select W statistics == 0.
-    # This value is the smallest abs value of nonzero W
-    if np.sum(acceptable == 0) != 0:
-        W_new = W.copy()
-        W_new[W_new == 0] = np.abs(W).max()
-        zero_replacement = np.abs(W_new).min(axis=0)
-        acceptable[acceptable == 0] = zero_replacement[acceptable == 0]
-
-    if batch == 1:
-        acceptable = acceptable[0]
-
-    return acceptable
+        # sort by abs values
+        absW = np.abs(W)
+        inds = np.argsort(-absW)
+        negatives = np.cumsum(W[inds] <= 0)
+        positives = np.cumsum(W[inds] > 0)
+        positives[positives == 0] = 1  # Don't divide by 0
+        # calc hat fdrs
+        hat_fdrs = (negatives + offset) / positives
+        # Maximum threshold such that hat_fdr <= nominal level
+        if np.any(hat_fdrs <= fdr):
+            T = absW[inds[np.where(hat_fdrs <= fdr)[0].max()]]
+            if T == 0:
+                T = np.min(W[W > 0])
+        else:
+            T = np.inf
+        return T
+        
+    # batch (may be depreciated)
+    else:
+        return np.array([
+            data_dependent_threshhold(W[:, j], fdr=fdr, offset=offset)
+            for j in range(W.shape[1])
+        ])
