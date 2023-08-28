@@ -247,7 +247,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         if undir_graph is not None:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
-                mask = nx.to_numpy_matrix(undir_graph)
+                mask = nx.to_numpy_array(undir_graph)
                 np.fill_diagonal(mask, 1)
             # Handle case where the graph is entirely dense
             if (mask == 0).sum() > 0 and not cov_est:
