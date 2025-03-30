@@ -12,11 +12,11 @@ classifiers=[
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
-]  
+]
 requires-python = ">= 3.6"
 dependencies = [
   "choldate@git+http://github.com/jamieleecho/choldate.git@main",
-  "cvxpy>=1.0.25", 
+  "cvxpy>=1.0.25",
   "networkx>=2.4",
   "numpy>=1.19",
   "scikit_learn>=0.22",
@@ -44,6 +44,7 @@ Issues = "https://github.com/amspector100/knockpy/issues"
 [dependency-groups]
 dev = [
   "pytest",
+  "pre-commit",
 ]
 
 [build-system]
