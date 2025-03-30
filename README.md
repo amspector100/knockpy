@@ -32,7 +32,7 @@ The `Makefile` makes it easy to perform the most common operations:
 * `make lock` locks `uv.lock` to `pyproject.toml`
 * `make install-pre-commit` installs pre-commit hooks
 * `make run-tests` will run the unit tests
-* `make sync` syncs the python envhironment with `uv.lock`
+* `make sync` syncs the python environment with `uv.lock`
 
 `.vscode/settings.json` is set so that unit tests can be run without further configuration.
 
