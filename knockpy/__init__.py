@@ -1,6 +1,6 @@
 name = "knockpy"
 all = [
-	"constants",
+    "constants",
     "dgp",
     "ggm",
     "knockoff_stats",

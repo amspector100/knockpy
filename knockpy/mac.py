@@ -1,22 +1,22 @@
 import warnings
 import numpy as np
 import scipy as sp
-from scipy import stats
 import scipy.linalg
 
 from .constants import DEFAULT_TOL
-from . import utilities, mrc, constants
+from . import utilities, constants
 
 # For SDP
-import time
 import cvxpy as cp
+
 try:
     from pydsdp.dsdp5 import dsdp
+
     DSDP_AVAILABLE = True
 except:
     DSDP_AVAILABLE = False
 try:
-    import choldate
+
     CHOLDATE_AVAILABLE = True
 except:
     CHOLDATE_AVAILABLE = False
@@ -34,7 +34,7 @@ def TestIfCorrMatrix(Sigma):
 
 def calc_min_group_eigenvalue(Sigma, groups, tol=DEFAULT_TOL, verbose=False):
     """
-    Calculates the minimum "group" eigenvalue of a covariance 
+    Calculates the minimum "group" eigenvalue of a covariance
     matrix Sigma: see Dai and Barber 2016. This is useful for
     constructing equicorrelated (group) knockoffs.
     """
@@ -46,7 +46,6 @@ def calc_min_group_eigenvalue(Sigma, groups, tol=DEFAULT_TOL, verbose=False):
     p = Sigma.shape[0]
     D = np.zeros((p, p))
     for j in np.unique(groups):
-
         # Select subset of cov matrix
         inds = np.where(groups == j)[0]
         full_inds = np.ix_(inds, inds)
@@ -80,7 +79,7 @@ def calc_min_group_eigenvalue(Sigma, groups, tol=DEFAULT_TOL, verbose=False):
 
 
 def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter=10):
-    """ Calculates the block diagonal matrix S using the 
+    """Calculates the block diagonal matrix S using the
     equicorrelated method described by Dai and Barber 2016.
 
     Parameters
@@ -88,9 +87,9 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
     Sigma : np.ndarray
         ``(p, p)``-shaped covariance matrix of X
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
-        is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
+        is a member of group `i`. Defaults to ``None`` (regular knockoffs).
     tol : float
         Minimum permissible eigenvalue of 2Sigma - S and S.
 
@@ -113,7 +112,6 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
         # Start to fill up S
         S = np.zeros((p, p))
         for j in np.unique(groups):
-
             # Select subset of cov matrix
             inds = np.where(groups == j)[0]
             full_inds = np.ix_(inds, inds)
@@ -129,7 +127,7 @@ def solve_equicorrelated(Sigma, groups, tol=DEFAULT_TOL, verbose=False, num_iter
 
 
 def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
-    """ 
+    """
     Solves ungrouped SDP to create S-matrix for MAC-minimizing knockoffs.
 
     Parameters
@@ -189,8 +187,8 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     # Construct C (-b + vec(F0) from above)
     # Note the tolerance here prevents the min. val
     # of S from being too small.
-    Cl1 = np.diag(-1 * tol * np.ones(p)).reshape(1, p ** 2)
-    Cl2 = np.diag(np.ones(p)).reshape(1, p ** 2)
+    Cl1 = np.diag(-1 * tol * np.ones(p)).reshape(1, p**2)
+    Cl2 = np.diag(np.ones(p)).reshape(1, p**2)
     Cs = np.reshape(2 * Sigma, [1, p * p])
     C = np.concatenate([Cl1, Cl2, Cs], axis=1)
 
@@ -236,9 +234,7 @@ def solve_SDP(Sigma, verbose=False, num_iter=10, tol=DEFAULT_TOL):
     S, gamma = utilities.scale_until_PSD(Sigma, S, tol, num_iter)
     if verbose:
         mineig = utilities.calc_mineig(2 * Sigma - S)
-        print(
-            f"After SDP, mineig is {mineig} after {num_iter} line search iters."
-        )
+        print(f"After SDP, mineig is {mineig} after {num_iter} line search iters.")
 
     return S
 
@@ -261,13 +257,13 @@ def solve_group_SDP(
     Sigma : np.ndarray
         ``(p, p)``-shaped covariance matrix of X
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
-        is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
+        is a member of group `i`. Defaults to ``None`` (regular knockoffs).
     verbose : bool
         If True, prints updates during optimization.
     objective : str
-        How to optimize the S matrix for group knockoffs. 
+        How to optimize the S matrix for group knockoffs.
         There are several options:
         - 'abs': minimize sum(abs(Sigma - S))
         - 'pnorm': minimize Lp-th matrix norm.
@@ -275,7 +271,7 @@ def solve_group_SDP(
         (see norm_type below).
     norm_type : str or int
         - When objective == 'pnorm', a float specifying which Lp-th matrix norm
-        to use. Can be any float >= 1. 
+        to use. Can be any float >= 1.
         - When objective == 'norm', can be 'fro', 'nuc', np.inf, or 1.
     num_iter : int
         Number of iterations in a final binary search to account for
@@ -327,7 +323,12 @@ def solve_group_SDP(
     # Possibly solve non-grouped SDP
     if m == p:
         if DSDP_AVAILABLE:
-            return solve_SDP(Sigma=Sigma, verbose=verbose, num_iter=num_iter, tol=tol,)
+            return solve_SDP(
+                Sigma=Sigma,
+                verbose=verbose,
+                num_iter=num_iter,
+                tol=tol,
+            )
         elif dsdp_warning:
             warnings.warn(constants.DSDP_WARNING)
 
@@ -342,7 +343,6 @@ def solve_group_SDP(
     S_rows = []
     shift = 0
     for j in range(m):
-
         # Create block variable
         gj = int(group_sizes[j])
         Sj = cp.Variable((gj, gj), symmetric=True)
@@ -375,7 +375,9 @@ def solve_group_SDP(
         shift += gj
 
     # Construct S and Grahm Matrix
-    S = cp.atoms.affine.wraps.psd_wrap(cp.vstack(S_rows)) # does this improve performance?
+    S = cp.atoms.affine.wraps.psd_wrap(
+        cp.vstack(S_rows)
+    )  # does this improve performance?
     sortedSigma = cp.Constant(sortedSigma)
     constraints += [2 * sortedSigma - S >> 0]
 

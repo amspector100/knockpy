@@ -9,25 +9,26 @@ from .constants import DEFAULT_REG_VALS
 
 
 def calc_mse(model, X, y):
-    """ Gets MSE of a model """
+    """Gets MSE of a model"""
     preds = model.predict(X)
     resids = (preds - y) / y.std()
     return np.sum((resids) ** 2)
 
+
 def parse_y_dist(y):
-    """ Checks if y is binary; else assumes it is continuous """
+    """Checks if y is binary; else assumes it is continuous"""
     n = y.shape[0]
     if np.unique(y).shape[0] == 2:
         return "binomial"
     elif np.unique(y).shape[0] == n:
         return "gaussian"
     else:
-        #warnings.warn("Treating y data as continuous even though it may be discrete.")
+        # warnings.warn("Treating y data as continuous even though it may be discrete.")
         return "gaussian"
 
 
 def parse_logistic_flag(kwargs):
-    """ Checks whether y_dist is binomial """
+    """Checks whether y_dist is binomial"""
     if "y_dist" in kwargs:
         if kwargs["y_dist"] == "binomial":
             return True
@@ -45,18 +46,18 @@ def combine_Z_stats(Z, groups=None, antisym="cd", group_agg="sum"):
         correspond to true features, and the last p correspond to knockoffs
         (in the same order as the true features).
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
-        is a member of group `i`. Defaults to None (regular knockoffs). 
+        is a member of group `i`. Defaults to None (regular knockoffs).
     antisym : str
         The antisymmetric function used to create (ungrouped) feature
-        statistics. Three options: 
+        statistics. Three options:
         - "CD" (Difference of absolute vals of coefficients),
         - "SM" (signed maximum).
         - "SCD" (Simple difference of coefficients - NOT recommended)
     group_agg : str
         For group knockoffs, specifies how to turn individual feature
-        statistics into grouped feature statistics. Two options: 
+        statistics into grouped feature statistics. Two options:
         "sum" and "avg".
 
     Returns
@@ -71,7 +72,7 @@ def combine_Z_stats(Z, groups=None, antisym="cd", group_agg="sum"):
     p = int(Z.shape[0] / 2)
     if Z.shape[0] != 2 * p:
         raise ValueError(
-            f"Unexpected shape {Z.shape} for Z statistics (expected ({2*p},))"
+            f"Unexpected shape {Z.shape} for Z statistics (expected ({2 * p},))"
         )
     if groups is None:
         groups = np.arange(1, p + 1)
@@ -111,6 +112,7 @@ def combine_Z_stats(Z, groups=None, antisym="cd", group_agg="sum"):
     # Return
     return W_group
 
+
 def compute_residual_variance(X, Xk, y):
     """
     Estimates sigma2 using residual variance of y
@@ -127,10 +129,7 @@ def compute_residual_variance(X, Xk, y):
     if n - 2 * p > 10 and p < 1500:
         model = linear_model.LinearRegression()
     else:
-        model = linear_model.Lasso(
-            alpha=0.1 * np.sqrt(np.log(p) / n),
-            max_iter=100
-        )
+        model = linear_model.Lasso(alpha=0.1 * np.sqrt(np.log(p) / n), max_iter=100)
     # Concatenating features shows no preference between X, Xk
     features = np.concatenate([X, Xk], axis=1)
     perm_inds, _ = utilities.random_permutation_inds(2 * p)
@@ -145,9 +144,9 @@ def compute_residual_variance(X, Xk, y):
 # ------------------------------ Lasso Stuff ---------------------------------------#
 def calc_lars_path(X, Xk, y, groups=None, **kwargs):
     """
-    Calculates locations at which X/knockoffs enter lasso 
+    Calculates locations at which X/knockoffs enter lasso
     model when regressed on y.
-    
+
     Parameters
     ----------
     X : np.ndarray
@@ -157,9 +156,9 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
     y : np.ndarray
         ``(n,)``-shaped response vector
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
-        is a member of group `i`. Defaults to None (regular knockoffs). 
+        is a member of group `i`. Defaults to None (regular knockoffs).
     **kwargs
         kwargs for ``sklearn.linear_model.lars_path``
 
@@ -168,8 +167,8 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
     Z : np.ndarray
         ``(2p,)``-shaped array indicating the lasso path statistic
         for each variable. (This means the maximum lambda such that
-        the lasso coefficient on variable j is nonzero.) 
-     """
+        the lasso coefficient on variable j is nonzero.)
+    """
 
     # Ignore y_dist kwargs (residual)
     if "y_dist" in kwargs:
@@ -188,7 +187,12 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
         groups = np.arange(1, p + 1, 1)
 
     # Fit
-    alphas, _, coefs = linear_model.lars_path(features, y, method="lasso", **kwargs,)
+    alphas, _, coefs = linear_model.lars_path(
+        features,
+        y,
+        method="lasso",
+        **kwargs,
+    )
 
     # Calculate places where features enter the model
     Z = np.zeros(2 * p)
@@ -204,7 +208,7 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
 def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
     """
     Fits cross-validated lasso on [X, Xk] and y.
-    
+
     Parameters
     ----------
     X : np.ndarray
@@ -267,10 +271,7 @@ def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
         if y_dist == "gaussian":
             if not use_lars and len(alphas) == 1:
                 gl = linear_model.Lasso(
-                    alpha=alphas[0],
-                    max_iter=max_iter,
-                    tol=tol,
-                    **kwargs
+                    alpha=alphas[0], max_iter=max_iter, tol=tol, **kwargs
                 ).fit(features, y)
             elif not use_lars:
                 gl = linear_model.LassoCV(
@@ -283,7 +284,10 @@ def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
                 ).fit(features, y)
             elif use_lars:
                 gl = linear_model.LassoLarsCV(
-                    cv=cv, verbose=False, max_iter=max_iter, **kwargs,
+                    cv=cv,
+                    verbose=False,
+                    max_iter=max_iter,
+                    **kwargs,
                 ).fit(features, y)
         elif y_dist == "binomial":
             gl = linear_model.LogisticRegressionCV(
@@ -347,7 +351,7 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
 
     # Fit lasso
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+        warnings.simplefilter("ignore")
         if y_dist == "gaussian":
             ridge = linear_model.RidgeCV(
                 alphas=DEFAULT_REG_VALS,
@@ -357,12 +361,16 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
             ).fit(features, y)
         elif y_dist == "binomial":
             ridge = linear_model.LogisticRegressionCV(
-                Cs=1 / DEFAULT_REG_VALS, penalty="l2", solver="liblinear", **kwargs,
+                Cs=1 / DEFAULT_REG_VALS,
+                penalty="l2",
+                solver="liblinear",
+                **kwargs,
             ).fit(features, y)
         else:
             raise ValueError(f"y_dist must be one of gaussian, binomial, not {y_dist}")
 
     return ridge, inds, rev_inds
+
 
 class FeatureStatistic:
     """
@@ -371,13 +379,13 @@ class FeatureStatistic:
 
     Parameters
     ----------
-    model : 
+    model :
         An instance of a class with a "train" or "fit" method
         and a "predict" method.
 
     Attributes
     ----------
-    model : 
+    model :
         A (predictive) model class underlying the variable importance
         measures.
     inds : np.ndarray
@@ -401,13 +409,12 @@ class FeatureStatistic:
         for regular knockoffs and ``(num_groups,)``-dimensional for
         group knockoffs.
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
         is a member of group `i`. Defaults to None (regular knockoffs).
     """
 
     def __init__(self, model=None):
-
         self.model = model  # sklearn/statsmodels/pyglmnet model
         self.inds = None  # permutation of features
         self.rev_inds = None  # reverse permutation of features
@@ -440,13 +447,13 @@ class FeatureStatistic:
         y : np.ndarray
             ``(n,)``-shaped response vector
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to None (regular knockoffs).
         feature_importance : str
-            Specifies how to create feature importances from ``model``. 
+            Specifies how to create feature importances from ``model``.
             Two options:
-                - "swap": The default swap-statistic from 
+                - "swap": The default swap-statistic from
                 http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.
                 These are good measures of feature importance but
                 slightly slower.
@@ -455,17 +462,17 @@ class FeatureStatistic:
             Defaults to 'swap'
         antisym : str
             The antisymmetric function used to create (ungrouped) feature
-            statistics. Three options: 
+            statistics. Three options:
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
             - "SCD" (Simple difference of coefficients - NOT recommended)
         group_agg : str
             For group knockoffs, specifies how to turn individual feature
-            statistics into grouped feature statistics. Two options: 
+            statistics into grouped feature statistics. Two options:
             "sum" and "avg".
         **kwargs : **dict
             kwargs to pass to the 'train' or 'fit' method of the model.
-        
+
         Returns
         -------
         W : np.ndarray
@@ -517,7 +524,7 @@ class FeatureStatistic:
         as follows.
 
         For feature i, replace the feature with its knockoff and calculate
-        the relative increase in the loss. Similarly, for knockoff i, 
+        the relative increase in the loss. Similarly, for knockoff i,
         replace the knockoffs with its feature and calculate the relative
         increase in the loss.
 
@@ -545,7 +552,6 @@ class FeatureStatistic:
         Z_swap = np.zeros(2 * p)
         for i in range(p):
             for knockoff in [0, 1]:
-
                 # Unshuffle features and replace column
                 new_features = features[:, self.rev_inds].copy()
                 col = i + knockoff * p  # The column we calculate the score for
@@ -586,7 +592,6 @@ class FeatureStatistic:
         for lambd in lambda_vals:
             for i in range(p):
                 for knockoff in [0, 1]:
-
                     # Unshuffle features and replace column
                     new_features = features[:, self.rev_inds].copy()
                     col = i + knockoff * p  # The column we calculate the score for
@@ -660,7 +665,6 @@ class FeatureStatistic:
         # can be very expensive (e.g. for LARS solver)
         if cv_score:
             if isinstance(self.model, sklearn.base.RegressorMixin):
-
                 # Parse whether to use MSE or Accuracy
                 if logistic_flag:
                     self.score_type = "accuracy_cv"
@@ -669,7 +673,11 @@ class FeatureStatistic:
                     self.score_type = "mse_cv"
                     scoring = "neg_mean_squared_error"
                 cv_scores = model_selection.cross_val_score(
-                    self.model, features, y, cv=5, scoring=scoring,
+                    self.model,
+                    features,
+                    y,
+                    cv=5,
+                    scoring=scoring,
                 )
 
                 # Adjust negative mse to be positive
@@ -694,10 +702,9 @@ class FeatureStatistic:
 
 
 class RidgeStatistic(FeatureStatistic):
-    """ Ridge statistic wrapper class """
+    """Ridge statistic wrapper class"""
 
     def __init__(self):
-
         super().__init__()
 
     def fit(
@@ -724,18 +731,18 @@ class RidgeStatistic(FeatureStatistic):
         y : np.ndarray
             ``(n,)``-shaped response vector
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to None (regular knockoffs).
         antisym : str
             The antisymmetric function used to create (ungrouped) feature
-            statistics. Three options: 
+            statistics. Three options:
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
             - "SCD" (Simple difference of coefficients - NOT recommended)
         group_agg : str
             For group knockoffs, specifies how to turn individual feature
-            statistics into grouped feature statistics. Two options: 
+            statistics into grouped feature statistics. Two options:
             "sum" and "avg".
         cv_score : bool
             If true, score the feature statistic's predictive accuracy
@@ -762,7 +769,12 @@ class RidgeStatistic(FeatureStatistic):
         kwargs["y_dist"] = y_dist
 
         # Step 1: Calculate Z stats by fitting ridge
-        self.model, self.inds, self.rev_inds = fit_ridge(X=X, Xk=Xk, y=y, **kwargs,)
+        self.model, self.inds, self.rev_inds = fit_ridge(
+            X=X,
+            Xk=Xk,
+            y=y,
+            **kwargs,
+        )
 
         # Retrieve Z statistics and save cv scores
         if y_dist == "gaussian":
@@ -789,10 +801,9 @@ class RidgeStatistic(FeatureStatistic):
 
 
 class LassoStatistic(FeatureStatistic):
-    """ Lasso Statistic wrapper class """
+    """Lasso Statistic wrapper class"""
 
     def __init__(self):
-
         super().__init__()
 
     def fit(
@@ -822,9 +833,9 @@ class LassoStatistic(FeatureStatistic):
         y : np.ndarray
             ``(n,)``-shaped response vector
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to None (regular knockoffs).
         zstat : str:
             Two options for the variable importance measure:
             - If 'coef', uses to cross-validated (group) lasso coefficients.
@@ -833,13 +844,13 @@ class LassoStatistic(FeatureStatistic):
             This defaults to coef.
         antisym : str
             The antisymmetric function used to create (ungrouped) feature
-            statistics. Three options: 
+            statistics. Three options:
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
             - "SCD" (Simple difference of coefficients - NOT recommended)
         group_agg : str
             For group knockoffs, specifies how to turn individual feature
-            statistics into grouped feature statistics. Two options: 
+            statistics into grouped feature statistics. Two options:
             "sum" and "avg".
         cv_score : bool
             If true, score the feature statistic's predictive accuracy
@@ -847,14 +858,14 @@ class LassoStatistic(FeatureStatistic):
         debias : bool:
             If true, debias the lasso. See https://arxiv.org/abs/1508.02757
         Ginv : np.ndarray
-            ``(2p, 2p)``-shaped precision matrix for the feature-knockoff 
+            ``(2p, 2p)``-shaped precision matrix for the feature-knockoff
             covariate distribution. This must be specified if ``debias=True``.
         kwargs : dict
             Extra kwargs to pass to underlying Lasso classes.
 
         Notes
         -----
-        When not using the group lasso, one can specify choice(s) of 
+        When not using the group lasso, one can specify choice(s) of
         regularization parameter using the ``alphas`` keyword argument.
         Otherwise, use the ``reg_vals`` keyword argument.
 
@@ -878,7 +889,6 @@ class LassoStatistic(FeatureStatistic):
         # Step 1: Calculate Z statistics
         zstat = str(zstat).lower()
         if zstat == "coef":
-
             # Fit (possibly group) lasso
             gl, inds, rev_inds = fit_lasso(
                 X=X,
@@ -887,7 +897,7 @@ class LassoStatistic(FeatureStatistic):
                 **kwargs,
             )
 
-            # Parse the expected output format 
+            # Parse the expected output format
             logistic_flag = parse_logistic_flag(kwargs)
 
             # Retrieve Z statistics
@@ -903,10 +913,10 @@ class LassoStatistic(FeatureStatistic):
             # Possibly debias the lasso
             if debias:
                 if Ginv is None:
-                    raise ValueError(f"To debias the lasso, Ginv must be provided")
+                    raise ValueError("To debias the lasso, Ginv must be provided")
                 elif logistic_flag:
                     raise ValueError(
-                        f"Debiased lasso is not implemented for binomial data"
+                        "Debiased lasso is not implemented for binomial data"
                     )
                 else:
                     features = np.concatenate([X, Xk], axis=1)
@@ -954,17 +964,21 @@ class LassoStatistic(FeatureStatistic):
 
 
 class MargCorrStatistic(FeatureStatistic):
-    """ Lasso Statistic wrapper class """
+    """Lasso Statistic wrapper class"""
 
     def __init__(self):
-
         super().__init__()
 
     def fit(
-        self, X, Xk, y, groups=None, **kwargs,
+        self,
+        X,
+        Xk,
+        y,
+        groups=None,
+        **kwargs,
     ):
         """
-        Wraps the FeatureStatistic class using marginal correlations 
+        Wraps the FeatureStatistic class using marginal correlations
         between X, Xk and y as variable importances.
 
         Parameters
@@ -976,9 +990,9 @@ class MargCorrStatistic(FeatureStatistic):
         y : np.ndarray
             ``(n,)``-shaped response vector
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to None (regular knockoffs).
         kwargs : dict
             Extra kwargs to pass to underlying ``combine_Z_stats``
 
@@ -1006,10 +1020,9 @@ class MargCorrStatistic(FeatureStatistic):
 
 
 class OLSStatistic(FeatureStatistic):
-    """ Lasso Statistic wrapper class """
+    """Lasso Statistic wrapper class"""
 
     def __init__(self):
-
         super().__init__()
 
     def fit(self, X, Xk, y, groups=None, cv_score=False, **kwargs):
@@ -1025,9 +1038,9 @@ class OLSStatistic(FeatureStatistic):
         y : np.ndarray
             ``(n,)``-shaped response vector
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to None (regular knockoffs).
         cv_score : bool
             If true, score the feature statistic's predictive accuracy
             using cross validation.
@@ -1055,7 +1068,7 @@ class OLSStatistic(FeatureStatistic):
         Z = Z.reshape(-1)
         if Z.shape[0] != 2 * p:
             raise ValueError(
-                f"Unexpected shape {Z.shape} for sklearn LinearRegression coefs (expected ({2*p},))"
+                f"Unexpected shape {Z.shape} for sklearn LinearRegression coefs (expected ({2 * p},))"
             )
 
         # Undo random permutation
@@ -1074,7 +1087,9 @@ class OLSStatistic(FeatureStatistic):
 
         # Score model
         self.cv_score_model(
-            features=features, y=y, cv_score=cv_score,
+            features=features,
+            y=y,
+            cv_score=cv_score,
         )
 
         return W
@@ -1094,7 +1109,7 @@ class RandomForestStatistic(FeatureStatistic):
         **kwargs,
     ):
         """
-        Wraps the FeatureStatistic class using a Random Forest to 
+        Wraps the FeatureStatistic class using a Random Forest to
         generate variable importances.
 
         Parameters
@@ -1106,16 +1121,16 @@ class RandomForestStatistic(FeatureStatistic):
         y : np.ndarray
             ``(n,)``-shaped response vector
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to None (regular knockoffs).
         feature_importance : str
-            Specifies how to create feature importances from ``model``. 
+            Specifies how to create feature importances from ``model``.
             Three options:
                 - "sklearn": Use sklearn feature importances. These
                 are very poor measures of feature importance, but
                 very fast.
-                - "swap": The default swap-statistic from 
+                - "swap": The default swap-statistic from
                 http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.
                 These are good measures of feature importance but
                 slightly slower.
@@ -1124,13 +1139,13 @@ class RandomForestStatistic(FeatureStatistic):
             Defaults to 'swap'
         antisym : str
             The antisymmetric function used to create (ungrouped) feature
-            statistics. Three options: 
+            statistics. Three options:
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
             - "SCD" (Simple difference of coefficients - NOT recommended)
         group_agg : str
             For group knockoffs, specifies how to turn individual feature
-            statistics into grouped feature statistics. Two options: 
+            statistics into grouped feature statistics. Two options:
             "sum" and "avg".
         cv_score : bool
             If true, score the feature statistic's predictive accuracy
@@ -1157,7 +1172,7 @@ class RandomForestStatistic(FeatureStatistic):
 
         # By default, all variables are their own group
         if groups is None:
-            groups = np.arange(1, p+1)
+            groups = np.arange(1, p + 1)
         self.groups = groups
 
         # Parse y_dist, initialize model
@@ -1223,11 +1238,11 @@ class DeepPinkStatistic(FeatureStatistic):
         y : np.ndarray
             ``(n,)``-shaped response vector
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to None (regular knockoffs). 
+            is a member of group `i`. Defaults to None (regular knockoffs).
         feature_importance : str
-            Specifies how to create feature importances from ``model``. 
+            Specifies how to create feature importances from ``model``.
             Four options:
                 - "deeppink": Use the deeppink feature importance
                 defined in https://arxiv.org/abs/1809.01185
@@ -1235,21 +1250,21 @@ class DeepPinkStatistic(FeatureStatistic):
                 paper without weighting them using the layers from
                 the MLP. Deeppink usually outperforms this feature
                 importance (but not always).
-                - "swap": The default swap-statistic from 
+                - "swap": The default swap-statistic from
                 http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
                 - "swapint": The swap-integral defined from
                 http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
-            Defaults to deeppink, which is often both the most powerful and 
+            Defaults to deeppink, which is often both the most powerful and
             the most computationally efficient.
         antisym : str
             The antisymmetric function used to create (ungrouped) feature
-            statistics. Three options: 
+            statistics. Three options:
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
             - "SCD" (Simple difference of coefficients - NOT recommended)
         group_agg : str
             For group knockoffs, specifies how to turn individual feature
-            statistics into grouped feature statistics. Two options: 
+            statistics into grouped feature statistics. Two options:
             "sum" and "avg".
         cv_score : bool
             If true, score the feature statistic's predictive accuracy
@@ -1276,12 +1291,12 @@ class DeepPinkStatistic(FeatureStatistic):
 
         # The deeppink model class will shuffle statistics,
         # but for compatability we create indices anyway
-        self.inds = np.arange(2*p)
+        self.inds = np.arange(2 * p)
         self.rev_inds = self.inds
 
         # By default, all variables are their own group
         if groups is None:
-            groups = np.arange(1, p+1)
+            groups = np.arange(1, p + 1)
         self.groups = groups
 
         # Parse y_dist, hidden_sizes, initialize model
@@ -1324,11 +1339,11 @@ class DeepPinkStatistic(FeatureStatistic):
 def data_dependent_threshhold(W, fdr=0.10, offset=1):
     """
     Calculate data-dependent threshhold given W statistics.
-    
+
     Parameters
     ----------
     W : np.ndarray
-        p-length numpy array of feature statistics OR (p, batch_length) 
+        p-length numpy array of feature statistics OR (p, batch_length)
         shaped array.
     fdr : float
         desired level of false discovery rate control
@@ -1339,7 +1354,7 @@ def data_dependent_threshhold(W, fdr=0.10, offset=1):
     Returns
     -------
     T : float or np.ndarray
-        The data-dependent threshhold. Either a float or a (batch_length,) 
+        The data-dependent threshhold. Either a float or a (batch_length,)
         dimensional array.
     """
 
@@ -1361,10 +1376,12 @@ def data_dependent_threshhold(W, fdr=0.10, offset=1):
         else:
             T = np.inf
         return T
-        
+
     # batch (may be depreciated)
     else:
-        return np.array([
-            data_dependent_threshhold(W[:, j], fdr=fdr, offset=offset)
-            for j in range(W.shape[1])
-        ])
+        return np.array(
+            [
+                data_dependent_threshhold(W[:, j], fdr=fdr, offset=offset)
+                for j in range(W.shape[1])
+            ]
+        )

@@ -24,8 +24,11 @@ The `Makefile` makes it easy to perform the most common operations:
 * `make check-lint` will run check the linting
 * `make check-lock` will verify the `uv.lock` is aligned to `pyproject.toml`
 * `make clean` cleans the virtual environment and caches
-* `make fix-all` formats the code and runs locks `uv.lock` to `pyproject.toml`
+* `make fix-all` formats the code, fixes lint errors and runs locks `uv.lock` to `pyproject.toml`
 * `make fix-format` formats the code
+* `make fix-lint` fixes linting issues
+* `make fix-lint-unsafe` fixes linting issues potentially adding inadvertant bugs
+* `make help` outputs the different make options
 * `make lock` locks `uv.lock` to `pyproject.toml`
 * `make install-pre-commit` installs pre-commit hooks
 * `make run-tests` will run the unit tests

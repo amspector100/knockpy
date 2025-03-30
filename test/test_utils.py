@@ -2,23 +2,22 @@ import numpy as np
 import scipy as sp
 import unittest
 import warnings
-from .context import knockpy
 
 from knockpy import dgp, utilities
 
 
 def myfunc(a, b, c, d):
-    """ A random function. Important to define this globally
-	because the multiprocessing package can't pickle locally
-	defined functions."""
-    return a ** b + c * d
+    """A random function. Important to define this globally
+    because the multiprocessing package can't pickle locally
+    defined functions."""
+    return a**b + c * d
 
 
 class TestUtils(unittest.TestCase):
-    """ Tests some various utility functions """
+    """Tests some various utility functions"""
 
     def test_group_manipulations(self):
-        """ Tests calc_group_sizes and preprocess_groups """
+        """Tests calc_group_sizes and preprocess_groups"""
 
         # Calc group sizes
         groups = np.concatenate([np.ones(2), np.ones(3) + 1, np.ones(2) + 3])
@@ -35,7 +34,10 @@ class TestUtils(unittest.TestCase):
         # which include zero
         groups = np.arange(0, 10, 1)
         self.assertRaisesRegex(
-            ValueError, "groups cannot contain 0", utilities.calc_group_sizes, groups,
+            ValueError,
+            "groups cannot contain 0",
+            utilities.calc_group_sizes,
+            groups,
         )
 
         # Make sure this raises the correct error for groups
@@ -69,7 +71,7 @@ class TestUtils(unittest.TestCase):
         )
 
     def test_random_permutation(self):
-        """ Tests random permutation """
+        """Tests random permutation"""
 
         # Calculate random permutation, see if rev_inds correctly undoes inds
         test_list = np.array([0, 5, 3, 6, 32, 2, 1])
@@ -83,7 +85,6 @@ class TestUtils(unittest.TestCase):
         )
 
     def test_force_pos_def(self):
-
         # Random symmetric matrix, will have highly neg eigs
         np.random.seed(110)
         for p in [100, 1600]:
@@ -102,7 +103,6 @@ class TestUtils(unittest.TestCase):
             )
 
     def test_chol2inv(self):
-
         # Random pos def matrix
         X = np.random.randn(100, 100)
         X = np.dot(X.T, X)
@@ -117,7 +117,6 @@ class TestUtils(unittest.TestCase):
         )
 
     def test_misaligned_covariance_estimation(self):
-
         # Inputs
         seed = 110
         sample_kwargs = {
@@ -140,11 +139,10 @@ class TestUtils(unittest.TestCase):
         # Make sure this does not raise an error
         # (even though it is ill-conditioned and the graph lasso doesn't converge)
         with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
+            warnings.simplefilter("ignore")
             utilities.estimate_covariance(X, shrinkage="graphicallasso")
 
     def test_covariance_estimation(self):
-
         # Random data
         np.random.seed(110)
         n = 50
@@ -158,7 +156,8 @@ class TestUtils(unittest.TestCase):
         Vest, _ = utilities.estimate_covariance(X, tol=1e-2)
         frobenius = np.sqrt(np.power(Vest - V, 2).mean())
         self.assertTrue(
-            frobenius < 0.2, f"High-dimension covariance estimation is horrible with frobenius={frobenius}"
+            frobenius < 0.2,
+            f"High-dimension covariance estimation is horrible with frobenius={frobenius}",
         )
 
         # Test factor approximation, should be quite good
@@ -167,12 +166,11 @@ class TestUtils(unittest.TestCase):
         frobenius = np.sqrt(np.power(V_factor - Vest, 2).mean())
         target = 0.1
         self.assertTrue(
-            frobenius < target, f"Factor approximation is very poor (frob error={frobenius} > {target})"
+            frobenius < target,
+            f"Factor approximation is very poor (frob error={frobenius} > {target})",
         )
 
-
     def test_apply_pool(self):
-
         # Apply_pool for num_processes = 1
         a_vals = [1, 2, 3, 4]
         b_vals = [1, 2, 3, 4]
@@ -203,11 +201,10 @@ class TestUtils(unittest.TestCase):
             num_processes=4,
         )
         self.assertEqual(
-            out, out2, f"Apply_pool yields different answers for different processes"
+            out, out2, "Apply_pool yields different answers for different processes"
         )
 
     def test_blockdiag_to_blocks(self):
-
         # Create block sizes and blocks
         block_nos = utilities.preprocess_groups(np.random.randint(1, 50, 100))
         block_nos = np.sort(block_nos)

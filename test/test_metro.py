@@ -1,19 +1,15 @@
-import time
 import os
-import pytest
 import numpy as np
 import networkx as nx
 from networkx.algorithms.approximation import treewidth
 from scipy import stats
 import unittest
 from .context import knockpy
-from knockpy import utilities, dgp, metro
-from knockpy.mrc import mvr_loss
+from knockpy import dgp, metro
 
 
 class TestMetroProposal(unittest.TestCase):
     def test_gaussian_likelihood(self):
-
         X = np.array([0.5, 1, 2, 3])
         mu = 0.5
         var = 0.2
@@ -30,7 +26,6 @@ class TestMetroProposal(unittest.TestCase):
         )
 
     def test_proposal_covs(self):
-
         # Fake data
         np.random.seed(110)
         n = 5
@@ -67,14 +62,13 @@ class TestMetroProposal(unittest.TestCase):
         # Likelihood of jth variable given first j - 1
         prev_proposals = None
         for j in range(p):
-
             # Test = scipy likelihood at this point
             scipy_likelihood = stats.multivariate_normal(
                 mean=np.zeros(p + j), cov=metro_sampler.G[0 : p + j, 0 : p + j]
             ).logpdf(features[0 : p + j])
             self.assertTrue(
                 np.abs(loglike - scipy_likelihood) < 0.001,
-                f"Proposal likelihood for j={j-1} fails: output {loglike}, expected {scipy_likelihood} (scipy)",
+                f"Proposal likelihood for j={j - 1} fails: output {loglike}, expected {scipy_likelihood} (scipy)",
             )
 
             # Add loglike
@@ -83,9 +77,9 @@ class TestMetroProposal(unittest.TestCase):
             )
             prev_proposals = Xstar[:, 0 : j + 1]
 
+
 class TestMetroSample(unittest.TestCase):
     def test_ar1_sample(self):
-
         # Fake data
         np.random.seed(110)
         n = 30000
@@ -131,18 +125,21 @@ class TestMetroSample(unittest.TestCase):
         features = np.concatenate([X, Xk], axis=1)
         emp_corr_matrix = np.corrcoef(features.T)
         G = np.concatenate(
-            [np.concatenate([V, V - S]), np.concatenate([V - S, V]),], axis=1
+            [
+                np.concatenate([V, V - S]),
+                np.concatenate([V - S, V]),
+            ],
+            axis=1,
         )
 
         np.testing.assert_almost_equal(
             emp_corr_matrix,
             G,
             decimal=2,
-            err_msg=f"For AR1 gaussian design, metro does not match theoretical matrix",
+            err_msg="For AR1 gaussian design, metro does not match theoretical matrix",
         )
 
     def test_dense_sample(self):
-
         # Fake data
         np.random.seed(110)
         n = 10000
@@ -194,20 +191,23 @@ class TestMetroSample(unittest.TestCase):
         features = np.concatenate([X, Xk], axis=1)
         emp_corr_matrix = np.corrcoef(features.T)
         G = np.concatenate(
-            [np.concatenate([V, V - S]), np.concatenate([V - S, V]),], axis=1
+            [
+                np.concatenate([V, V - S]),
+                np.concatenate([V - S, V]),
+            ],
+            axis=1,
         )
 
         np.testing.assert_almost_equal(
             emp_corr_matrix,
             G,
             decimal=2,
-            err_msg=f"For equi gaussian design, metro does not match theoretical matrix",
+            err_msg="For equi gaussian design, metro does not match theoretical matrix",
         )
 
 
 class TestARTK(unittest.TestCase):
     def test_t_log_likelihood(self):
-
         # Fake data
         np.random.seed(110)
         n = 15
@@ -230,11 +230,10 @@ class TestARTK(unittest.TestCase):
             custom_diff,
             sp_diff,
             decimal=2,
-            err_msg=f"custom t_log_likelihood and scipy t.logpdf disagree",
+            err_msg="custom t_log_likelihood and scipy t.logpdf disagree",
         )
 
     def test_tmarkov_likelihood(self):
-
         # Data
         np.random.seed(110)
         n = 15
@@ -286,7 +285,11 @@ class TestARTK(unittest.TestCase):
         )
 
         # Check consistency of tsampler class
-        tsampler = metro.ARTKSampler(X=X1, Sigma=V, df_t=df_t,)
+        tsampler = metro.ARTKSampler(
+            X=X1,
+            Sigma=V,
+            df_t=df_t,
+        )
         new_ar1_like1 = tsampler.lf(tsampler.X)
         self.assertTrue(
             np.abs(ar1_like1 - new_ar1_like1).sum() < 0.01,
@@ -294,7 +297,6 @@ class TestARTK(unittest.TestCase):
         )
 
     def test_tmarkov_samples(self):
-
         # Test to make sure low df --> heavy tails
         # and therefore acceptances < 1
         np.random.seed(110)
@@ -306,13 +308,15 @@ class TestARTK(unittest.TestCase):
             n=n, p=p, method="AR1", rho=0.3, x_dist="ar1t", df_t=df_t
         )
         for S in [None, np.eye(p)]:
-
             # Sample t
-            tsampler = metro.ARTKSampler(X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True)
+            tsampler = metro.ARTKSampler(
+                X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True
+            )
 
             # Correct junction tree
             self.assertTrue(
-                tsampler.width == 1, f"tsampler should have width 1, not {tsampler.width}"
+                tsampler.width == 1,
+                f"tsampler should have width 1, not {tsampler.width}",
             )
 
             # Sample
@@ -325,7 +329,7 @@ class TestARTK(unittest.TestCase):
                 muk_hat,
                 np.zeros(p),
                 decimal=2,
-                err_msg=f"For ARTK sampler, empirical mean of Xk does not match mean of X",
+                err_msg="For ARTK sampler, empirical mean of Xk does not match mean of X",
             )
 
             # Check empirical covariance matrix
@@ -334,7 +338,7 @@ class TestARTK(unittest.TestCase):
                 V,
                 Vk_hat,
                 decimal=2,
-                err_msg=f"For ARTK sampler, empirical covariance of Xk does not match cov of X",
+                err_msg="For ARTK sampler, empirical covariance of Xk does not match cov of X",
             )
 
             # Check that marginal fourth moments match
@@ -344,7 +348,7 @@ class TestARTK(unittest.TestCase):
                 X4th / 10,
                 Xk4th / 10,
                 decimal=1,
-                err_msg=f"For ARTK sampler, fourth moment of Xk does not match theoretical fourth moment",
+                err_msg="For ARTK sampler, fourth moment of Xk does not match theoretical fourth moment",
             )
 
             # Run a ton of KS tests
@@ -353,7 +357,6 @@ class TestARTK(unittest.TestCase):
 
 class TestBlockT(unittest.TestCase):
     def test_tmvn_log_likelihood(self):
-
         # Fake data
         np.random.seed(110)
         n = 10
@@ -383,7 +386,6 @@ class TestBlockT(unittest.TestCase):
         )
 
     def test_blockt_samples(self):
-
         # Test to make sure low df --> heavy tails
         # and therefore acceptances < 1
         np.random.seed(110)
@@ -402,9 +404,10 @@ class TestBlockT(unittest.TestCase):
             df_t=df_t,
         )
         for S in [np.eye(p), None]:
-
             # Sample t
-            tsampler = metro.BlockTSampler(X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True)
+            tsampler = metro.BlockTSampler(
+                X=X, Sigma=V, df_t=df_t, S=S, metro_verbose=True
+            )
 
             # Sample
             Xk = tsampler.sample_knockoffs()
@@ -416,7 +419,7 @@ class TestBlockT(unittest.TestCase):
                 muk_hat,
                 np.zeros(p),
                 decimal=2,
-                err_msg=f"For block T sampler, empirical mean of Xk does not match mean of X",
+                err_msg="For block T sampler, empirical mean of Xk does not match mean of X",
             )
 
             # Check empirical covariance matrix
@@ -425,7 +428,7 @@ class TestBlockT(unittest.TestCase):
                 V,
                 Vk_hat,
                 decimal=2,
-                err_msg=f"For block T sampler, empirical covariance of Xk does not match cov of X",
+                err_msg="For block T sampler, empirical covariance of Xk does not match cov of X",
             )
 
             # Check that marginal fourth moments match
@@ -435,7 +438,7 @@ class TestBlockT(unittest.TestCase):
                 X4th / 10,
                 Xk4th / 10,
                 decimal=1,
-                err_msg=f"For block T sampler, fourth moment of Xk does not match theoretical fourth moment",
+                err_msg="For block T sampler, fourth moment of Xk does not match theoretical fourth moment",
             )
 
             # Run a ton of KS tests
@@ -444,7 +447,6 @@ class TestBlockT(unittest.TestCase):
 
 class TestGibbsGraph(unittest.TestCase):
     def test_divconquer_likelihoods(self):
-
         # Test to make sure the way we split up
         # cliques does not change the likelihood
         np.random.seed(110)
@@ -453,7 +455,10 @@ class TestGibbsGraph(unittest.TestCase):
         mu = np.zeros(p)
         dgprocess = dgp.DGP()
         X, _, _, _, _ = dgprocess.sample_data(
-            n=n, p=p, method="ising", x_dist="gibbs",
+            n=n,
+            p=p,
+            method="ising",
+            x_dist="gibbs",
         )
         gibbs_graph = dgprocess.gibbs_graph
         np.fill_diagonal(gibbs_graph, 1)
@@ -464,7 +469,11 @@ class TestGibbsGraph(unittest.TestCase):
 
         # Initialize sampler
         metro_sampler = metro.GibbsGridSampler(
-            X=X, gibbs_graph=gibbs_graph, mu=mu, Sigma=V, max_width=2,
+            X=X,
+            gibbs_graph=gibbs_graph,
+            mu=mu,
+            Sigma=V,
+            max_width=2,
         )
 
         # Non-divided likelihood
@@ -504,7 +513,6 @@ class TestGibbsGraph(unittest.TestCase):
         )
 
     def test_large_ising_samples(self):
-
         # Test that sampling does not throw an error
         np.random.seed(110)
         n = 100
@@ -512,7 +520,10 @@ class TestGibbsGraph(unittest.TestCase):
         mu = np.zeros(p)
         dgprocess = dgp.DGP()
         X, _, _, _, _ = dgprocess.sample_data(
-            n=n, p=p, method="ising", x_dist="gibbs",
+            n=n,
+            p=p,
+            method="ising",
+            x_dist="gibbs",
         )
         gibbs_graph = dgprocess.gibbs_graph
         np.fill_diagonal(gibbs_graph, 1)
@@ -542,7 +553,6 @@ class TestGibbsGraph(unittest.TestCase):
         Xk = metro_sampler.sample_knockoffs()
 
     def test_small_ising_samples(self):
-
         # Test samples to make sure the
         # knockoff properties hold
         np.random.seed(110)
@@ -551,7 +561,10 @@ class TestGibbsGraph(unittest.TestCase):
         mu = np.zeros(p)
         dgprocess = dgp.DGP()
         X, _, _, _, _ = dgprocess.sample_data(
-            n=n, p=p, method="ising", x_dist="gibbs",
+            n=n,
+            p=p,
+            method="ising",
+            x_dist="gibbs",
         )
         gibbs_graph = dgprocess.gibbs_graph
         np.fill_diagonal(gibbs_graph, 1)
@@ -568,7 +581,12 @@ class TestGibbsGraph(unittest.TestCase):
 
         # Initialize sampler
         metro_sampler = metro.GibbsGridSampler(
-            X=X, gibbs_graph=gibbs_graph, mu=mu, Sigma=V, Q=Q, max_width=2,
+            X=X,
+            gibbs_graph=gibbs_graph,
+            mu=mu,
+            Sigma=V,
+            Q=Q,
+            max_width=2,
         )
 
         # Sample
@@ -582,7 +600,7 @@ class TestGibbsGraph(unittest.TestCase):
             muk_hat,
             mu_hat,
             decimal=2,
-            err_msg=f"For Ising sampler, empirical mean of Xk does not match mean of X",
+            err_msg="For Ising sampler, empirical mean of Xk does not match mean of X",
         )
 
         # Check empirical covariance matrix
@@ -592,7 +610,7 @@ class TestGibbsGraph(unittest.TestCase):
             V_hat / 2,
             Vk_hat / 2,
             decimal=1,
-            err_msg=f"For Ising sampler, empirical covariance of Xk does not match cov of X",
+            err_msg="For Ising sampler, empirical covariance of Xk does not match cov of X",
         )
 
         # Check that marginal fourth moments match
@@ -602,12 +620,14 @@ class TestGibbsGraph(unittest.TestCase):
             X4th / 10,
             Xk4th / 10,
             decimal=1,
-            err_msg=f"For Ising sampler, fourth moment of Xk does not match theoretical fourth moment",
+            err_msg="For Ising sampler, fourth moment of Xk does not match theoretical fourth moment",
         )
 
         # Run a ton of KS tests
         metro_sampler.check_xk_validity(
-            X, Xk, testname="SMALL_ISING",
+            X,
+            Xk,
+            testname="SMALL_ISING",
         )
 
 

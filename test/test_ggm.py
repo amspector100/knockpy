@@ -1,20 +1,20 @@
 import numpy as np
-import scipy as sp
 import unittest
 import pytest
+
 # for regular pytest calls
 try:
     from .context import knockpy
 # for running directly with python
 except ImportError:
-    from context import knockpy
+    pass
 
-from knockpy import dgp
 from knockpy import ggm
+
 
 class TestGGM(unittest.TestCase):
     """
-    Tests FDR control for gaussian 
+    Tests FDR control for gaussian
     graphical models.
     """
 
@@ -27,28 +27,20 @@ class TestGGM(unittest.TestCase):
         T = np.random.randn(p)
         T[5] = np.inf
         # Check results
-        for logic in ['and', 'or']:
+        for logic in ["and", "or"]:
             edges = ggm.discovered_edges(W=W, T=T, logic=logic)
             for i in range(p):
                 for j in range(p):
-                    if edges[i,j]:
-                        if logic == 'and':
-                            self.assertTrue(
-                                (W[i,j] >= T[i]) & (W[j,i] >= T[j])
-                            )
+                    if edges[i, j]:
+                        if logic == "and":
+                            self.assertTrue((W[i, j] >= T[i]) & (W[j, i] >= T[j]))
                         else:
-                            self.assertTrue(
-                                (W[i,j] >= T[i]) | (W[j,i] >= T[j])
-                            )
+                            self.assertTrue((W[i, j] >= T[i]) | (W[j, i] >= T[j]))
                     else:
-                        if logic == 'and':
-                            self.assertTrue(
-                                (W[i,j] < T[i]) | (W[j,i] < T[j])
-                            )
+                        if logic == "and":
+                            self.assertTrue((W[i, j] < T[i]) | (W[j, i] < T[j]))
                         else:
-                            self.assertTrue(
-                                (W[i,j] < T[i]) & (W[j,i] < T[j])
-                            )
+                            self.assertTrue((W[i, j] < T[i]) & (W[j, i] < T[j]))
 
     def test_ggm_fdr(self):
         # Create W obeying flip-sign by column
@@ -57,11 +49,11 @@ class TestGGM(unittest.TestCase):
         true_edges = np.random.binomial(1, 0.1, (p, p)).astype(bool)
         true_edges = true_edges | true_edges.T
         for j in range(p):
-            true_edges[j,j] = False
+            true_edges[j, j] = False
 
         # W statistics under the global null and a non-global null
-        for tedges in [true_edges, np.zeros((p,p)).astype(bool)]:
-            for logic in ['and', 'or']:
+        for tedges in [true_edges, np.zeros((p, p)).astype(bool)]:
+            for logic in ["and", "or"]:
                 fdrs = []
                 for _ in range(reps):
                     # Create W-statistics
@@ -78,20 +70,20 @@ class TestGGM(unittest.TestCase):
                 fdr = np.mean(fdrs)
                 self.assertTrue(
                     fdr <= q,
-                    f"For gaussian graphical model, realized fdr={fdr} > target level q={q}."
+                    f"For gaussian graphical model, realized fdr={fdr} > target level q={q}.",
                 )
 
     def test_ggm_filter(self):
-        """ Make sure knockoff GGM does not error """
+        """Make sure knockoff GGM does not error"""
         n, p = 100, 10
         X = np.random.randn(n, p)
         gkf = ggm.KnockoffGGM()
         gkf.forward(X=X, fdr=0.1, ggm_kwargs=dict(a=0.01))
 
 
-
 if __name__ == "__main__":
     import pytest
     import sys
+
     pytest.main(sys.argv)
-    #unittest.main()
+    # unittest.main()

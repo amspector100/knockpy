@@ -9,6 +9,7 @@ try:
 except ImportError:
     cythonize = None
 
+
 # https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#distributing-cython-modules
 def no_cythonize(extensions, **_ignore):
     for extension in extensions:
@@ -25,18 +26,21 @@ def no_cythonize(extensions, **_ignore):
         extension.sources[:] = sources
     return extensions
 
+
 def read(rel_path):
     here = os.path.abspath(os.path.dirname(__file__))
-    with codecs.open(os.path.join(here, rel_path), 'r') as fp:
+    with codecs.open(os.path.join(here, rel_path), "r") as fp:
         return fp.read()
+
 
 def get_version(rel_path):
     for line in read(rel_path).splitlines():
-        if line.startswith('__version__'):
+        if line.startswith("__version__"):
             delim = '"' if '"' in line else "'"
             return line.split(delim)[1]
     else:
         raise RuntimeError("Unable to find version string.")
+
 
 ext_modules = [
     Extension(
@@ -58,7 +62,7 @@ ext_modules = [
     Extension(
         "knockpy.mlr._mlr_oracle",
         sources=["knockpy/mlr/_mlr_oracle.pyx"],
-    )
+    ),
 ]
 
 CYTHONIZE = cythonize is not None
@@ -72,7 +76,7 @@ else:
     ext_modules = no_cythonize(ext_modules)
 
 setuptools.setup(
-    version=get_version('knockpy/__init__.py'),
+    version=get_version("knockpy/__init__.py"),
     packages=setuptools.find_packages(),
     ext_modules=ext_modules,
     include_dirs=[np.get_include()],

@@ -1,4 +1,4 @@
-""" Numerical constants for the whole package plus docstring constants. """
+"""Numerical constants for the whole package plus docstring constants."""
 
 # Default regularization values for cross-validated
 # penalized regressions.
@@ -14,27 +14,27 @@ GAMMA_VALS = [0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.9999, 1]
 # max exp to avoid overflow
 MAXEXP32 = 50.0
 # DSDP warning
-DSDP_WARNING = f"""
+DSDP_WARNING = """
 	---------------------------------------------------------
 	---------------------------------------------------------
 	The scikit-dsdp package is not installed:
 	solving an SDP without it will be roughly
 	10-100x slower. For installation instructions, see
 	https://amspector100.github.io/knockpy/installation.html.
-	To disable this warning, set dsdp_warning=False as an 
+	To disable this warning, set dsdp_warning=False as an
 	argument or a knockoff_kwarg.
 	----------------------------------------------------------
 	----------------------------------------------------------
 """
 # choldate warning
-CHOLDATE_WARNING = f"""
+CHOLDATE_WARNING = """
 	---------------------------------------------------------
 	---------------------------------------------------------
 	The choldate package is not installed:
-	solving for MVR or maxent knockoffs without it will be 
+	solving for MVR or maxent knockoffs without it will be
 	~5x slower. For instructions on how to install choldate,
 	see https://amspector100.github.io/knockpy/installation.html.
-	To disable this warning, set choldate_warning=False as an 
+	To disable this warning, set choldate_warning=False as an
 	argument or a knockoff_kwarg.
 	----------------------------------------------------------
 	----------------------------------------------------------

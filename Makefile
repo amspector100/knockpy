@@ -7,6 +7,9 @@
     clean \
     fix-all \
     fix-format \
+    fix-lint \
+    fix-lint-unsafe \
+    help \
     install-pre-commit \
     lock \
     run-tests \
@@ -28,10 +31,19 @@ check-lock:
 clean:
 	rm -rf .ruff_cache .venv build .cache *.egg-info
 
-fix-all: fix-format lock
+fix-all: fix-format fix-lint lock
 
 fix-format:
 	uv run ruff format
+
+fix-lint:
+	uv run ruff check --fix
+
+fix-lint-unsafe:
+	uv run ruff check --fix --unsafe-fixes
+
+help:
+	@echo ${.PHONY}
 
 install-pre-commit:
 	uv run pre-commit install

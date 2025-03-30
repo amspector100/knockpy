@@ -1,21 +1,23 @@
-""" Methods for minimum-reconstructability knockoffs."""
+"""Methods for minimum-reconstructability knockoffs."""
 
 import warnings
 import time
 import numpy as np
 import scipy as sp
-from scipy import stats
 from . import utilities, constants, mac
+
 try:
     import choldate
+
     CHOLDATE_AVAILABLE = True
 except:
     CHOLDATE_AVAILABLE = False
 
+
 def cholupdate(R, x, add=True):
     """
     Performs rank one updates to a cholesky factor `R` in place.
-    
+
     Parameters
     ----------
     R : np.ndarray
@@ -30,13 +32,13 @@ def cholupdate(R, x, add=True):
     -------
     R : np.ndarray
         Suppose the parameter R was a cholesky factor of a matrix V.
-        Upon return, R is the cholesky factor of 
+        Upon return, R is the cholesky factor of
         ``V +/- np.outer(x, x)``.
 
     Notes
     -----
-    - This function modifies both ``R`` and ``x`` in place. 
-    - The ``choldate`` package is a much faster and more 
+    - This function modifies both ``R`` and ``x`` in place.
+    - The ``choldate`` package is a much faster and more
     numerically stable alternative.
 
     """
@@ -44,22 +46,23 @@ def cholupdate(R, x, add=True):
     x = x.T
     for k in range(p):
         if add:
-              r = np.sqrt(R[k,k]**2 + x[k]**2)
+            r = np.sqrt(R[k, k] ** 2 + x[k] ** 2)
         else:
-              r = np.sqrt(R[k,k]**2 - x[k]**2)
-        c = r/R[k,k]
-        s = x[k]/R[k,k]
-        R[k,k] = r
+            r = np.sqrt(R[k, k] ** 2 - x[k] ** 2)
+        c = r / R[k, k]
+        s = x[k] / R[k, k]
+        R[k, k] = r
         if add:
-            R[k,k+1:p] = (R[k,k+1:p] + s*x[k+1:p])/c
+            R[k, k + 1 : p] = (R[k, k + 1 : p] + s * x[k + 1 : p]) / c
         else:
-            R[k,k+1:p] = (R[k,k+1:p] - s*x[k+1:p])/c
-        x[k+1:p]= c*x[k+1:p] - s*R[k, k+1:p]
+            R[k, k + 1 : p] = (R[k, k + 1 : p] - s * x[k + 1 : p]) / c
+        x[k + 1 : p] = c * x[k + 1 : p] - s * R[k, k + 1 : p]
     return R
+
 
 ### MVR
 def mvr_loss(Sigma, S, smoothing=0):
-    """ 
+    """
     Computes minimum variance-based reconstructability
     loss for knockoffs, e.g., the trace of the feature-knockoff
     precision matrix.
@@ -90,6 +93,7 @@ def mvr_loss(Sigma, S, smoothing=0):
     trace_invG = (1 / (eigs_diff + smoothing)).sum() + (1 / (eigs_S + smoothing)).sum()
     return trace_invG
 
+
 def _solve_mvr_quadratic(cn, cd, sj, i=None, min_eig=None, acc_rate=1, smoothing=0):
     """
     Solves a quadratic equation to find
@@ -111,24 +115,20 @@ def _solve_mvr_quadratic(cn, cd, sj, i=None, min_eig=None, acc_rate=1, smoothing
     upper_bound = 1 / cd
     lower_bound = -1 * sj
     options = np.array(
-        [
-            delta
-            for delta in options
-            if delta < upper_bound and delta > lower_bound
-        ]
+        [delta for delta in options if delta < upper_bound and delta > lower_bound]
     )
     if options.shape[0] == 0:
         raise RuntimeError(
             f"All quadratic solutions ({orig_options}) were infeasible or imaginary"
         )
-        
+
     # 3. If multiple solutions left (unlikely), pick the smaller one
     losses = 1 / (sj + options) - (options * cn) / (1 - options * cd)
     if losses[0] == losses.min():
         delta = options[0]
     else:
         delta = options[1]
-        
+
     # 4. Account for rejections
     if acc_rate < 1:
         extra_space = min(min_eig, 0.05) / (i + 2)  # Helps deal with coord desc
@@ -139,8 +139,9 @@ def _solve_mvr_quadratic(cn, cd, sj, i=None, min_eig=None, acc_rate=1, smoothing
             max(opt_prerej_value, extra_space),
         )
         delta = opt_prerej_value - sj
-        
+
     return delta
+
 
 def solve_mvr_factored(
     D,
@@ -155,7 +156,7 @@ def solve_mvr_factored(
     using coordinate descent assuming that
     the covariance matrix follows a factor model.
     This means Sigma = D + UU^T for a p x p diagonal matrix
-    D and a p x k matrix U. 
+    D and a p x k matrix U.
 
     Parameters
     ----------
@@ -197,38 +198,37 @@ def solve_mvr_factored(
     decayed_improvement = 1
     Sdiag = np.zeros(p) + mineig
     # These are k x k matrices
-    Q, R = sp.linalg.qr(np.eye(k) + 2*np.dot(U.T / (2*D - Sdiag), U))
+    Q, R = sp.linalg.qr(np.eye(k) + 2 * np.dot(U.T / (2 * D - Sdiag), U))
 
     quadtime = 0
     solvetime = 0
     for i in range(num_iter):
         np.random.shuffle(inds)
         for j in inds:
-
             # 1. Calculate parameters cd/cn
             # (see https://arxiv.org/pdf/2011.14625.pdf)
-            b = np.dot(Q.T, U[j].T/(2*D[j] - Sdiag[j]))
+            b = np.dot(Q.T, U[j].T / (2 * D[j] - Sdiag[j]))
             x = sp.linalg.solve_triangular(R, b, lower=False)
-            diff_inv_ej =  -2*np.dot(U, x)/(2*D - Sdiag)
-            diff_inv_ej[j] = diff_inv_ej[j] + 1/(2*D[j] - Sdiag[j])
+            diff_inv_ej = -2 * np.dot(U, x) / (2 * D - Sdiag)
+            diff_inv_ej[j] = diff_inv_ej[j] + 1 / (2 * D[j] - Sdiag[j])
             cd = diff_inv_ej[j]
             cn = -1 * np.power(diff_inv_ej, 2).sum()
 
             # 2. Find optimal update
             delta = _solve_mvr_quadratic(cn=cn, cd=cd, sj=Sdiag[j])
-            
+
             # 3. Rank one update to QR decomp
-            muj = U[j].T / (2*D[j] - Sdiag[j])
-            c = -delta/(1 - delta/(2*D[j] - Sdiag[j]))
+            muj = U[j].T / (2 * D[j] - Sdiag[j])
+            c = -delta / (1 - delta / (2 * D[j] - Sdiag[j]))
             Q, R = sp.linalg.qr_update(
                 Q=Q,
                 R=R,
-                u=-2*c*muj,
+                u=-2 * c * muj,
                 v=muj,
             )
             # 4. Update S
             Sdiag[j] = Sdiag[j] + delta
-            
+
     return np.diag(Sdiag)
 
 
@@ -262,7 +262,7 @@ def _solve_mvr_ungrouped(
     converge_tol : float
         A parameter specifying the criteria for convergence.
     choldate_warning : bool
-        If True, will warn the user if choldate is not installed. 
+        If True, will warn the user if choldate is not installed.
         Defaults to True.
 
     Returns
@@ -306,7 +306,7 @@ def _solve_mvr_ungrouped(
             delta = _solve_mvr_quadratic(
                 cn=cn,
                 cd=cd,
-                sj=S[j,j],
+                sj=S[j, j],
                 min_eig=min_eig,
                 i=i,
                 smoothing=smoothing,
@@ -337,7 +337,7 @@ def _solve_mvr_ungrouped(
             decayed_improvement = decayed_improvement / 10 + 9 * (prev_loss - loss) / 10
         if verbose:
             print(
-                f"After iter {i} at time {np.around(time.time() - time0,3)}, loss={loss}, decayed_improvement={decayed_improvement}"
+                f"After iter {i} at time {np.around(time.time() - time0, 3)}, loss={loss}, decayed_improvement={decayed_improvement}"
             )
         if decayed_improvement < converge_tol:
             if verbose:
@@ -345,6 +345,7 @@ def _solve_mvr_ungrouped(
             break
 
     return S
+
 
 ### Group MVR
 def _solve_mvr_quadratic_group(cn_diff, cd_diff, cn_S, cd_S):
@@ -354,14 +355,14 @@ def _solve_mvr_quadratic_group(cn_diff, cd_diff, cn_S, cd_S):
     """
     # 1. Construct and solve quadratic equation
     coef0 = cn_diff - cn_S
-    coef1 = 2*(cd_S * cn_diff + cn_S * cd_diff)
+    coef1 = 2 * (cd_S * cn_diff + cn_S * cd_diff)
     coef2 = cn_diff * np.power(cd_S, 2) - cn_S * np.power(cd_diff, 2)
     orig_options = np.roots(np.array([coef2, coef1, coef0]))
 
     # 2. Eliminate complex solutions and solutions which violate PSD-ness
     options = np.array([delta for delta in orig_options if np.imag(delta) == 0])
-    upper_bound = 1 / cd_diff # Ensures 2 Sigma - S is PSD
-    lower_bound = -1 / cd_S # Ensures S is PSD
+    upper_bound = 1 / cd_diff  # Ensures 2 Sigma - S is PSD
+    lower_bound = -1 / cd_S  # Ensures S is PSD
     options = options[(options < upper_bound) & (options > lower_bound)]
     if options.shape[0] == 0:
         raise RuntimeError(
@@ -372,6 +373,7 @@ def _solve_mvr_quadratic_group(cn_diff, cd_diff, cn_S, cd_S):
             f"Multiple feasible solutions (options={options}), need the lower bound"
         )
     return options[0]
+
 
 def _mvr_group_contrib(Q, R, i, j):
     """
@@ -394,40 +396,39 @@ def _mvr_group_contrib(Q, R, i, j):
     max_delta : int
         Maximum value of delta for which the prior matrix is PSD.
     """
-    
+
     # Notational note: W = (QR)^{-1}
     Wj = sp.linalg.solve_triangular(a=R, b=Q[j], lower=False)
     Wi = sp.linalg.solve_triangular(a=R, b=Q[i], lower=False)
+
     def objective(delta):
-        num = 2 * np.dot(Wj, Wi)*(1 + delta * Wj[i])
+        num = 2 * np.dot(Wj, Wi) * (1 + delta * Wj[i])
         num -= delta * Wj[j] * np.dot(Wi, Wi)
         num -= delta * Wi[i] * np.dot(Wj, Wj)
         denom = np.power(1 + delta * Wj[i], 2) - np.power(delta, 2) * Wi[i] * Wj[j]
-        return delta * num/denom
-    
+        return delta * num / denom
+
     # Binary search for min / max. value of delta
     I = np.eye(2)
-    B = np.array([
-        [Wi[j], Wj[j]], 
-        [Wi[i], Wi[j]]
-    ])
+    B = np.array([[Wi[j], Wj[j]], [Wi[i], Wi[j]]])
     eigs_B = np.linalg.eig(B)[0]
     max_delta = -1 * (eigs_B[eigs_B < 0])
     if max_delta.shape[0] == 0:
         max_delta = np.inf
     else:
-        max_delta = (1/max_delta).max() - 1e-5
+        max_delta = (1 / max_delta).max() - 1e-5
     min_delta = -1 * (eigs_B[eigs_B > 0])
     if min_delta.shape[0] == 0:
         min_delta = -np.inf
     else:
-        min_delta = (1/min_delta).max() + 1e-5
-    
+        min_delta = (1 / min_delta).max() + 1e-5
+
     return objective, min_delta, max_delta
+
 
 def _solve_cn_cd(Q, R, j):
     """
-    Solves for cn/cd using QR decomp. This is 
+    Solves for cn/cd using QR decomp. This is
     specialized for diagonal elements for group knockoffs.
     See https://arxiv.org/abs/2011.14625.
     """
@@ -436,6 +437,7 @@ def _solve_cn_cd(Q, R, j):
     cd = Wj[j]
     cn = np.power(Wj, 2).sum()
     return cn, cd
+
 
 def _solve_mvr_grouped(
     Sigma,
@@ -456,7 +458,7 @@ def _solve_mvr_grouped(
     Sigma : np.ndarray
         ``(p, p)``-shaped covariance matrix of X
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
         is a member of group `i`. Defaults to ``None`` (regular knockoffs).
     tol : float
@@ -493,7 +495,7 @@ def _solve_mvr_grouped(
                 if j > i:
                     break
                 S_elems.append(((i, j), (i_within, j_within), g_id))
-                
+
     # Basis elements
     p = Sigma.shape[0]
     basis = []
@@ -510,7 +512,7 @@ def _solve_mvr_grouped(
     # Initialize values
     decayed_improvement = 10
     min_eig = utilities.calc_mineig(Sigma)
-    S = mac.solve_equicorrelated(Sigma, groups)/2
+    S = mac.solve_equicorrelated(Sigma, groups) / 2
     Q, R = np.linalg.qr(2 * Sigma - S + smoothing * np.eye(p))
 
     # Running QR decompositions of blocks of S
@@ -520,13 +522,12 @@ def _solve_mvr_grouped(
         Sblock = S[block_inds[g_id]][:, block_inds[g_id]]
         # Easy QR decomp for diagonal matrix
         Sblock_QR[g_id] = np.linalg.qr(Sblock)
-        
+
     for it in range(num_iter):
         np.random.shuffle(S_elems)
         # i, j are the coordinates within L
         # i_within, j_within are the coordinates within S
         for (i, j), (i_within, j_within), g_id in S_elems:
-            
             # Retrieve QR decomposition for this block of S
             Q_S, R_S = Sblock_QR[g_id]
             # Basis elements within the block
@@ -535,12 +536,11 @@ def _solve_mvr_grouped(
             ei[i_within] = 1
             ej = np.zeros(d)
             ej[j_within] = 1
-            
+
             # For off-diagonal elements: rank-2 update
             if i != j:
-               
                 # 1. Find optimal delta
-                #stime = time.time()
+                # stime = time.time()
                 loss_diff, lb_diff, ub_diff = _mvr_group_contrib(Q, R, i, j)
                 max_delta_diff = -1 * lb_diff
                 min_delta_diff = -1 * ub_diff
@@ -550,42 +550,33 @@ def _solve_mvr_grouped(
                 lower_bound = np.maximum(min_delta_diff, min_delta_S)
                 upper_bound = np.minimum(max_delta_diff, max_delta_S)
                 if lower_bound > upper_bound:
-                    raise RuntimeError(f"No feasible solutions: lower bound {lower_bound} > upper_bound {upper_bound} in coord descent")
-    
-                coord_loss = lambda delta: -loss_S(delta) - loss_diff(-1*delta)
-                delta = sp.optimize.fminbound(
-                    coord_loss, lower_bound, upper_bound
-                )
+                    raise RuntimeError(
+                        f"No feasible solutions: lower bound {lower_bound} > upper_bound {upper_bound} in coord descent"
+                    )
+
+                coord_loss = lambda delta: -loss_S(delta) - loss_diff(-1 * delta)
+                delta = sp.optimize.fminbound(coord_loss, lower_bound, upper_bound)
                 delta = np.maximum(np.minimum(upper_bound, delta), lower_bound)
 
                 # 2. Update QR decomp for 2 Sigma - S
                 U = np.array([basis[i], basis[j]]).T
                 V = np.array([basis[j], basis[i]]).T
-                Q, R = sp.linalg.qr_update(
-                    Q=Q, R=R, u=-1*delta*U, v=V
-                )
+                Q, R = sp.linalg.qr_update(Q=Q, R=R, u=-1 * delta * U, v=V)
                 # 3. Update QR decomp for S
                 U = np.array([ei, ej]).T
                 V = np.array([ej, ei]).T
-                Sblock_QR[g_id] = sp.linalg.qr_update(
-                    Q=Q_S, R=R_S, u=delta*U, v=V
-                )
+                Sblock_QR[g_id] = sp.linalg.qr_update(Q=Q_S, R=R_S, u=delta * U, v=V)
 
                 # 4. Update S
                 S[i, j] += delta
                 S[j, i] += delta
-
 
             # For diagonal elements, rank-1 update
             else:
                 cn_diff, cd_diff = _solve_cn_cd(Q, R, j)
 
                 # 2. Compute coefficients cn and cd for S
-                cn_S, cd_S = _solve_cn_cd(
-                    Q=Q_S,
-                    R=R_S,
-                    j=j_within
-                )
+                cn_S, cd_S = _solve_cn_cd(Q=Q_S, R=R_S, j=j_within)
 
                 # 2. Construct/solve quadratic equation
                 delta = _solve_mvr_quadratic_group(
@@ -600,16 +591,11 @@ def _solve_mvr_grouped(
                     Q=Q,
                     R=R,
                     u=basis[i],
-                    v=-1*delta*basis[j],
+                    v=-1 * delta * basis[j],
                 )
 
                 # 4. Update QR decomp for Sblock
-                Sblock_QR[g_id] = sp.linalg.qr_update(
-                    Q=Q_S,
-                    R=R_S,
-                    u=ei,
-                    v=delta*ej
-                )
+                Sblock_QR[g_id] = sp.linalg.qr_update(Q=Q_S, R=R_S, u=ei, v=delta * ej)
                 # 5. Set new value for S
                 S[i, j] += delta
 
@@ -620,7 +606,7 @@ def _solve_mvr_grouped(
             decayed_improvement = decayed_improvement / 10 + 9 * (prev_loss - loss) / 10
         if verbose:
             print(
-                f"After iter {it} at time {np.around(time.time() - time0,3)}, loss={loss}, decayed_improvement={decayed_improvement}"
+                f"After iter {it} at time {np.around(time.time() - time0, 3)}, loss={loss}, decayed_improvement={decayed_improvement}"
             )
         if decayed_improvement < converge_tol and decayed_improvement > 0:
             if verbose:
@@ -628,6 +614,7 @@ def _solve_mvr_grouped(
             break
 
     return S
+
 
 def solve_mvr(
     Sigma,
@@ -649,7 +636,7 @@ def solve_mvr(
     Sigma : np.ndarray
         ``(p, p)``-shaped covariance matrix of X
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
         is a member of group `i`. Defaults to ``None`` (regular knockoffs).
     tol : float
@@ -677,21 +664,21 @@ def solve_mvr(
     # Process groups
     p = Sigma.shape[0]
     if groups is None:
-        groups = np.arange(1, p+1)
+        groups = np.arange(1, p + 1)
     groups = utilities.preprocess_groups(groups)
 
     # Specialized implementations for ungrouped
-    if np.all(groups == np.arange(1, p+1)):
+    if np.all(groups == np.arange(1, p + 1)):
         S = _solve_mvr_ungrouped(
-            Sigma=Sigma, 
+            Sigma=Sigma,
             verbose=verbose,
             num_iter=num_iter,
             smoothing=smoothing,
             rej_rate=rej_rate,
             converge_tol=converge_tol,
-            choldate_warning=choldate_warning
+            choldate_warning=choldate_warning,
         )
-    else: 
+    else:
         S = _solve_mvr_grouped(
             Sigma=Sigma,
             groups=groups,
@@ -737,19 +724,21 @@ def maxent_loss(Sigma, S, smoothing=0):
     if np.min(eigs_S) < 0 or np.min(eigs_diff) < 0:
         return np.inf
 
-    det_invG = np.log(1/(eigs_diff + smoothing)).sum()
-    det_invG = det_invG + np.log(1/(eigs_S + smoothing)).sum()
+    det_invG = np.log(1 / (eigs_diff + smoothing)).sum()
+    det_invG = det_invG + np.log(1 / (eigs_S + smoothing)).sum()
     return det_invG
+
 
 def mmi_loss(*args, **kwargs):
     """
     Computes the log determinant of the feature-knockoff precision
     matrix, which is proportional mutual information between X and knockoffs.
 
-    This is identical to ``maxent_loss`` and exists only for backwards 
+    This is identical to ``maxent_loss`` and exists only for backwards
     compatability.
     """
     return maxent_loss(*args, **kwargs)
+
 
 def solve_maxent_factored(
     D,
@@ -764,7 +753,7 @@ def solve_maxent_factored(
     knockoffs using coordinate descent assuming that
     the covariance matrix follows a factor model.
     This means Sigma = D + UU^T for a p x p diagonal matrix
-    D and a p x k matrix U. 
+    D and a p x k matrix U.
 
     Parameters
     ----------
@@ -793,7 +782,7 @@ def solve_maxent_factored(
         tol=tol,
         verbose=verbose,
         num_iter=num_iter,
-        converge_tol=converge_tol
+        converge_tol=converge_tol,
     )
 
 
@@ -861,10 +850,10 @@ def _solve_maxent_sdp_factored(
         Sdiag = np.zeros(p) + 0.01 * mineig
     else:
         Sdiag = np.zeros(p) + mineig
-    lambd = min(2*mineig, lambd)
+    lambd = min(2 * mineig, lambd)
 
     # These are all k x k matrices
-    Q, R = sp.linalg.qr(np.eye(k) + 2*np.dot(U.T / (2*D - Sdiag), U))
+    Q, R = sp.linalg.qr(np.eye(k) + 2 * np.dot(U.T / (2 * D - Sdiag), U))
 
     for i in range(num_iter):
         np.random.shuffle(inds)
@@ -874,34 +863,32 @@ def _solve_maxent_sdp_factored(
             Qprime, Rprime = sp.linalg.qr_update(
                 Q=Q,
                 R=R,
-                u=U[j].T/(2*D[j] - Sdiag[j]),
-                v=-2*U[j].T,
-                overwrite_qruv=False
+                u=U[j].T / (2 * D[j] - Sdiag[j]),
+                v=-2 * U[j].T,
+                overwrite_qruv=False,
             )
 
             # Calculate update for S---for notation, see
             # https://arxiv.org/pdf/2006.08790.pdf
-            MjUjT = np.dot(np.dot(Qprime, Rprime) - np.eye(k), U[j].T)/2
+            MjUjT = np.dot(np.dot(Qprime, Rprime) - np.eye(k), U[j].T) / 2
             x = sp.linalg.solve_triangular(
-                a=Rprime,
-                b=np.dot(Qprime.T, MjUjT),
-                lower=False
+                a=Rprime, b=np.dot(Qprime.T, MjUjT), lower=False
             )
-            sub_term = 4*np.dot(U[j], MjUjT) - 8*np.dot(MjUjT, x)
+            sub_term = 4 * np.dot(U[j], MjUjT) - 8 * np.dot(MjUjT, x)
             if solve_sdp:
-                Sjstar = max(min(1, 2*diag_Sigma[j] - sub_term - lambd), 0)
+                Sjstar = max(min(1, 2 * diag_Sigma[j] - sub_term - lambd), 0)
             else:
-                Sjstar = (2*diag_Sigma[j] - sub_term)/2
-            
+                Sjstar = (2 * diag_Sigma[j] - sub_term) / 2
+
             # Rank one update to QR decomp
-            delta = Sdiag[j] - Sjstar 
-            muj = U[j].T / (2*D[j] - Sdiag[j])
-            denom = 1 + delta/(2*D[j] - Sdiag[j])
-            c = delta/denom
+            delta = Sdiag[j] - Sjstar
+            muj = U[j].T / (2 * D[j] - Sdiag[j])
+            denom = 1 + delta / (2 * D[j] - Sdiag[j])
+            c = delta / denom
             Q, R = sp.linalg.qr_update(
                 Q=Q,
                 R=R,
-                u=-2*c*muj,
+                u=-2 * c * muj,
                 v=muj,
             )
 
@@ -915,7 +902,7 @@ def _solve_maxent_sdp_factored(
 
 
 def solve_maxent(
-    Sigma, 
+    Sigma,
     tol=1e-5,
     verbose=False,
     num_iter=50,
@@ -939,7 +926,7 @@ def solve_maxent(
     converge_tol : float
         A parameter specifying the criteria for convergence.
     choldate_warning : bool
-        If True, will warn the user if choldate is not installed. 
+        If True, will warn the user if choldate is not installed.
         Defaults to True
 
     Returns
@@ -959,7 +946,7 @@ def solve_maxent(
 
 
 def _solve_maxent_sdp_cd(
-    Sigma, 
+    Sigma,
     solve_sdp,
     tol=1e-5,
     verbose=False,
@@ -988,7 +975,7 @@ def _solve_maxent_sdp_cd(
     converge_tol : float
         A parameter specifying the criteria for convergence.
     choldate_warning : bool
-        If True, will warn the user if choldate is not installed. 
+        If True, will warn the user if choldate is not installed.
         Defaults to True
     solve_sdp : bool
         If True, will solve SDP. Otherwise, will solve maxent formulation.
@@ -1022,7 +1009,7 @@ def _solve_maxent_sdp_cd(
     else:
         S = mineig * np.eye(p)
     L = np.linalg.cholesky(2 * V - S)
-    lambd = min(2*mineig, lambd)
+    lambd = min(2 * mineig, lambd)
 
     # Loss function
     if solve_sdp:
@@ -1073,13 +1060,13 @@ def _solve_maxent_sdp_cd(
         prev_loss = loss
         loss = loss_fn(V, S)
         if i != 0:
-            loss_diff = prev_loss - loss 
+            loss_diff = prev_loss - loss
             if solve_sdp:
                 loss_diff = max(loss_diff, lambd)
             decayed_improvement = decayed_improvement / 10 + 9 * (loss_diff) / 10
         if verbose:
             print(
-                f"After iter {i} at time {np.around(time.time() - time0,3)}, loss={loss}, decayed_improvement={decayed_improvement}"
+                f"After iter {i} at time {np.around(time.time() - time0, 3)}, loss={loss}, decayed_improvement={decayed_improvement}"
             )
         if decayed_improvement < converge_tol:
             if verbose:
@@ -1095,6 +1082,7 @@ def _solve_maxent_sdp_cd(
     S, _ = utilities.scale_until_PSD(V, S, tol=tol, num_iter=10)
     return S
 
+
 def solve_mmi(*args, **kwargs):
     """
     Computes S-matrix used to generate minimum mutual information
@@ -1103,8 +1091,11 @@ def solve_mmi(*args, **kwargs):
     """
     return solve_maxent(*args, **kwargs)
 
+
 def solve_ciknock(
-    Sigma, tol=1e-5, num_iter=10,
+    Sigma,
+    tol=1e-5,
+    num_iter=10,
 ):
     """
     Computes S-matrix used to generate conditional independence
@@ -1128,7 +1119,7 @@ def solve_ciknock(
     Notes
     -----
     When the S-matrix corresponding to conditional independence knockoffs
-    is not feasible, this computes that S matrix and then does a binary 
+    is not feasible, this computes that S matrix and then does a binary
     search to find the maximum gamma such that gamma * S is feasible.
     """
     # Compute vanilla S_CI
