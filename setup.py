@@ -1,9 +1,8 @@
+import codecs
 import numpy as np
 import os
-import codecs
 import setuptools
 from setuptools import Extension
-#from distutils.extension import Extension
 
 try:
     from Cython.Build import cythonize
@@ -25,9 +24,6 @@ def no_cythonize(extensions, **_ignore):
             sources.append(sfile)
         extension.sources[:] = sources
     return extensions
-
-with open("README.md", "r") as fh:
-    long_description = fh.read()
 
 def read(rel_path):
     here = os.path.abspath(os.path.dirname(__file__))
@@ -65,7 +61,6 @@ ext_modules = [
     )
 ]
 
-#CYTHONIZE = bool(int(os.getenv("CYTHONIZE", 0))) and cythonize is not None
 CYTHONIZE = cythonize is not None
 
 if CYTHONIZE:
@@ -77,40 +72,8 @@ else:
     ext_modules = no_cythonize(ext_modules)
 
 setuptools.setup(
-    name="knockpy",
     version=get_version('knockpy/__init__.py'),
-    author="Asher Spector",
-    author_email="amspector100@gmail.com",
-    description="Knockoffs for variable selection",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/amspector100/knockpy",
     packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-    python_requires='>=3.6',
-    install_requires=[
-        "numpy>=1.19",
-        "cython>=0.29.21",
-        "scipy>=1.5.2",
-        "cvxpy>=1.0.25", 
-        "scikit_learn>=0.22",
-        "networkx>=2.4",
-        "tqdm>=4.36.1",
-    ],
-    extras_require={
-        "kpytorch":["torch>=1.4.0"],
-        "fast":["choldate", "scikit-dsdp"],
-        "docs": ["sphinx", "sphinx-rtd-theme"],
-    },
-    setup_requires=[
-        'numpy>=1.19',
-        'setuptools>=58.0',
-        #'cython>=0.29.21',
-    ],
     ext_modules=ext_modules,
     include_dirs=[np.get_include()],
 )

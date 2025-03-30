@@ -1,3 +1,57 @@
+[project]
+name = "knockpy"
+dynamic = [
+  "version",
+]
+authors = [
+  {name = "Asher Spector", email = "amspector100@gmail.com"},
+]
+description = "Knockoffs for variable selection"
+readme = "README.md"
+classifiers=[
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]  
+requires-python = ">= 3.6"
+dependencies = [
+  "choldate@git+http://github.com/jamieleecho/choldate.git@main",
+  "cvxpy>=1.0.25", 
+  "networkx>=2.4",
+  "numpy>=1.19",
+  "scikit_learn>=0.22",
+  "scipy>=1.5.2",
+  "tqdm>=4.36.1",
+]
+
+[project.optional-dependencies]
+kpytorch = [
+  "torch>=1.4.0",
+]
+fast = [
+  "scikit-dsdp",
+]
+docs = [
+  "sphinx",
+  "sphinx-rtd-theme",
+]
+
+[project.urls]
+Documentation = "https://amspector100.github.io/knockpy"
+Repository = "https://github.com/amspector100/knockpy"
+Issues = "https://github.com/amspector100/knockpy/issues"
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+
 [build-system]
-requires = ["setuptools", "wheel", "numpy>=1.19.0", "Cython>=0.29.21", "scipy"]
+requires = [
+  "cython>=0.29.21",
+  "numpy>=1.19.0",
+  "setuptools",
+  "scipy",
+  "wheel",
+]
 build-backend = "setuptools.build_meta"

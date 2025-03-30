@@ -4,15 +4,21 @@ A python implementation of the knockoffs framework for variable selection. See h
 
 ## Installation
 
-To install knockpy, first install choldate using the following command:
+To install and begin using knockpy, simply enter:
+```
+pip install knockpy[fast]
+```
 
-``pip install git+https://github.com/jcrudy/choldate.git``
+To use the (optional) kpytorch submodule, you will need to install [pytorch](https://pytorch.org/).
 
-Then, install knockpy using pip:
-
-``pip install knockpy[fast]``
-
-To use the (optional) kpytorch submodule, you will need to install [pytorch](https://pytorch.org/). 
+To install knockpy for development, you must first install [uv](https://github.com/astral-sh/uv).
+```bash
+# Install uv
+git clone https://github.com/amspector100/knockpy.git
+cd knockpy
+uv venv
+uv sync
+```
 
 ### What if installation fails?
 
