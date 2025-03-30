@@ -151,8 +151,8 @@ def compute_smatrix_factored(
     # Compute factor model if not inputted
     if D is None or U is None:
         D, U = utilities.estimate_factor(Sigma, num_factors=num_factors)
-    p = D.shape[0]
-    k = U.shape[1]
+    D.shape[0]
+    U.shape[1]
 
     # Solve using specialized methods
     if method == "mvr":

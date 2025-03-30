@@ -128,8 +128,8 @@ class TestUtils(unittest.TestCase):
         }
 
         # Extracta couple of constants
-        n = sample_kwargs["n"]
-        p = sample_kwargs["p"]
+        sample_kwargs["n"]
+        sample_kwargs["p"]
 
         # Create data generating process
         np.random.seed(seed)

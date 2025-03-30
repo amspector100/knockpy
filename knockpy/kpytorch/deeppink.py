@@ -8,7 +8,7 @@ from .. import utilities
 def create_batches(features, y, batchsize):
     # Create random indices to reorder datapoints
     n = features.shape[0]
-    p = features.shape[1]
+    features.shape[1]
     inds = torch.randperm(n)
 
     # Iterate through and create batches

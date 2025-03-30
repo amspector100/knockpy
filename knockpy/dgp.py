@@ -631,7 +631,7 @@ def construct_gibbs_grid(n, p, temp=1):
     """
     # Infer dimensionality
     gridwidth = int(np.sqrt(p))
-    variables = set(list(range(p)))
+    set(list(range(p)))
 
     # Generate
     gibbs_graph = np.zeros((p, p))

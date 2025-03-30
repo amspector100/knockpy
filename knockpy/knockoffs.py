@@ -84,7 +84,7 @@ class KnockoffSampler:
         alpha : float
             The significance level. Defaults to 0.001
         """
-        n = X.shape[0]
+        X.shape[0]
         p = X.shape[1]
 
         # Marginal KS tests

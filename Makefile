@@ -15,7 +15,7 @@
     run-tests \
     sync
 
-default: check-all test
+default: check-all run-tests
 
 build-dist:
 	uv build

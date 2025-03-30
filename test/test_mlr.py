@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from .context import knockpy
+import knockpy
 
 from knockpy import knockoffs, mlr, utilities
 

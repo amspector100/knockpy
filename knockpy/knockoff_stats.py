@@ -487,7 +487,7 @@ class FeatureStatistic:
             )
 
         # Permute features to prevent FDR control violations
-        n = X.shape[0]
+        X.shape[0]
         p = X.shape[1]
         features = np.concatenate([X, Xk], axis=1)
         self.inds, self.rev_inds = utilities.random_permutation_inds(2 * p)
@@ -544,7 +544,7 @@ class FeatureStatistic:
         """
 
         # Parse aspects of the DGP
-        n = features.shape[0]
+        features.shape[0]
         p = int(features.shape[1] / 2)
         y_dist = parse_y_dist(y)
 
@@ -571,7 +571,7 @@ class FeatureStatistic:
         """
 
         # Parse aspects of the DGP
-        n = features.shape[0]
+        features.shape[0]
         p = int(features.shape[1] / 2)
         y_dist = parse_y_dist(y)
 
@@ -759,7 +759,7 @@ class RidgeStatistic(FeatureStatistic):
         """
 
         # Possibly set default groups
-        n = X.shape[0]
+        X.shape[0]
         p = X.shape[1]
         if groups is None:
             groups = np.arange(1, p + 1, 1)
@@ -1300,7 +1300,7 @@ class DeepPinkStatistic(FeatureStatistic):
         self.groups = groups
 
         # Parse y_dist, hidden_sizes, initialize model
-        y_dist = parse_y_dist(y)
+        parse_y_dist(y)
         if "hidden_sizes" not in kwargs:
             kwargs["hidden_sizes"] = [min(n, p)]
         self.model = deeppink.DeepPinkModel(p=p, **kwargs)

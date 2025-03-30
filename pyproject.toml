@@ -18,7 +18,7 @@ dependencies = [
   "choldate@git+http://github.com/jamieleecho/choldate.git@main",
   "cvxpy>=1.0.25",
   "networkx>=2.4",
-  "numpy>=1.19",
+  "numpy>=1.19.0",
   "scikit_learn>=0.22",
   "scipy>=1.5.2",
   "tqdm>=4.36.1",
@@ -45,6 +45,7 @@ Issues = "https://github.com/amspector100/knockpy/issues"
 dev = [
   "pytest",
   "pre-commit",
+  "scikit-dsdp",
 ]
 
 [build-system]
@@ -55,4 +56,13 @@ requires = [
   "scipy",
   "wheel",
 ]
-build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+rootdir = "."
+pythonpath = [
+  ".",
+]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "quick: marks tests as fast",
+]

@@ -183,25 +183,21 @@ def solve_mvr_factored(
     p = D.shape[0]
     k = U.shape[1]
     inds = np.arange(p)
-    loss = np.inf
 
     # TODO: this is Omega(p^3).
     # Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062
     Sigma = np.diag(D) + np.dot(U, U.T)
-    diag_Sigma = np.diag(Sigma)
+    np.diag(Sigma)
     mineig = utilities.calc_mineig(Sigma)
     if mineig < 0:
         raise ValueError("D + UU^T is not PSD")
 
     # Initialize values
-    time0 = time.time()
-    decayed_improvement = 1
+    time.time()
     Sdiag = np.zeros(p) + mineig
     # These are k x k matrices
     Q, R = sp.linalg.qr(np.eye(k) + 2 * np.dot(U.T / (2 * D - Sdiag), U))
 
-    quadtime = 0
-    solvetime = 0
     for i in range(num_iter):
         np.random.shuffle(inds)
         for j in inds:
@@ -409,7 +405,7 @@ def _mvr_group_contrib(Q, R, i, j):
         return delta * num / denom
 
     # Binary search for min / max. value of delta
-    I = np.eye(2)
+    np.eye(2)
     B = np.array([[Wi[j], Wj[j]], [Wi[i], Wi[j]]])
     eigs_B = np.linalg.eig(B)[0]
     max_delta = -1 * (eigs_B[eigs_B < 0])
@@ -511,14 +507,14 @@ def _solve_mvr_grouped(
 
     # Initialize values
     decayed_improvement = 10
-    min_eig = utilities.calc_mineig(Sigma)
+    utilities.calc_mineig(Sigma)
     S = mac.solve_equicorrelated(Sigma, groups) / 2
     Q, R = np.linalg.qr(2 * Sigma - S + smoothing * np.eye(p))
 
     # Running QR decompositions of blocks of S
     Sblock_QR = {}
     for g_id in block_inds:
-        blocksize = block_inds[g_id].shape[0]
+        block_inds[g_id].shape[0]
         Sblock = S[block_inds[g_id]][:, block_inds[g_id]]
         # Easy QR decomp for diagonal matrix
         Sblock_QR[g_id] = np.linalg.qr(Sblock)
@@ -554,7 +550,8 @@ def _solve_mvr_grouped(
                         f"No feasible solutions: lower bound {lower_bound} > upper_bound {upper_bound} in coord descent"
                     )
 
-                coord_loss = lambda delta: -loss_S(delta) - loss_diff(-1 * delta)
+                def coord_loss(delta):
+                    return -loss_S(delta) - loss_diff(-1 * delta)
                 delta = sp.optimize.fminbound(coord_loss, lower_bound, upper_bound)
                 delta = np.maximum(np.minimum(upper_bound, delta), lower_bound)
 
@@ -718,7 +715,7 @@ def maxent_loss(Sigma, S, smoothing=0):
     loss : float
         The maxent loss for Sigma and S. This is infinite if S is not feasible.
     """
-    p = Sigma.shape[0]
+    Sigma.shape[0]
     eigs_S = np.diag(S)
     eigs_diff = np.linalg.eigh(2 * Sigma - S)[0]
     if np.min(eigs_S) < 0 or np.min(eigs_diff) < 0:
@@ -833,7 +830,6 @@ def _solve_maxent_sdp_factored(
     p = D.shape[0]
     k = U.shape[1]
     inds = np.arange(p)
-    loss = np.inf
 
     # TODO: this is Omega(p^3).
     # Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062
@@ -844,8 +840,7 @@ def _solve_maxent_sdp_factored(
         raise ValueError("D + UU^T is not PSD")
 
     # Initialize values
-    time0 = time.time()
-    decayed_improvement = 1
+    time.time()
     if solve_sdp:
         Sdiag = np.zeros(p) + 0.01 * mineig
     else:
@@ -1013,7 +1008,8 @@ def _solve_maxent_sdp_cd(
 
     # Loss function
     if solve_sdp:
-        loss_fn = lambda V, S: S.shape[0] - np.diag(S).sum()
+        def loss_fn(V, S):
+            return S.shape[0] - np.diag(S).sum()
     else:
         loss_fn = maxent_loss
 

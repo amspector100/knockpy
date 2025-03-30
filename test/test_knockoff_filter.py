@@ -1,13 +1,17 @@
+import os
 import time
 import pytest
 import numpy as np
 from scipy import stats
 import unittest
-from .context import knockpy
-from .context import file_directory
+import knockpy
 
 from knockpy import dgp, utilities
 from knockpy.knockoff_filter import KnockoffFilter
+
+
+file_directory = os.path.dirname(os.path.abspath(__file__))
+
 
 NUM_REPS = 1
 try:
@@ -82,7 +86,7 @@ class TestFdrControl(unittest.TestCase):
 
             # Solve for S matrix
             if S is None and not fixedX and not infer_sigma:
-                ksampler = knockpy.knockoffs.GaussianSampler(
+                knockpy.knockoffs.GaussianSampler(
                     X=X0,
                     Sigma=Sigma,
                     groups=groups,
@@ -104,9 +108,9 @@ class TestFdrControl(unittest.TestCase):
 
                 # Infer y_dist
                 if "y_dist" in kwargs:
-                    y_dist = kwargs["y_dist"]
+                    kwargs["y_dist"]
                 else:
-                    y_dist = "gaussian"
+                    pass
 
                 # Run (MX) knockoff filter
                 if fixedX or infer_sigma:
@@ -165,7 +169,7 @@ class TestFdrControl(unittest.TestCase):
                 del knockoff_filter
 
             fdps = np.array(fdps)
-            fdr = fdps.mean()
+            fdps.mean()
             # fdr_se = fdps.std() / np.sqrt(reps)
 
             # norm_quant = stats.norm.ppf(1 - alpha)

@@ -4,12 +4,7 @@ import warnings
 import numpy as np
 import unittest
 
-# for regular pytest calls
-try:
-    from .context import knockpy
-# for running directly with python
-except ImportError:
-    from context import knockpy
+import knockpy
 from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
 
 try:
@@ -438,7 +433,7 @@ class TestMRCSolvers(CheckSMatrix):
 
         # Try to initialize
         def init_unsorted_model():
-            model = kpytorch.mrcgrad.MVRLoss(Sigma, groups)
+            kpytorch.mrcgrad.MVRLoss(Sigma, groups)
 
         self.assertRaisesRegex(
             ValueError,
@@ -450,7 +445,6 @@ class TestMRCSolvers(CheckSMatrix):
         """
         Smoothing is not required for this, but this is a nice check anyway.
         """
-        p = 50
         smoothing = 0.1
         dgprocess = dgp.DGP()
         _, _, _, _, V = dgprocess.sample_data(
@@ -490,8 +484,8 @@ class TestMRCSolvers(CheckSMatrix):
                     Sigma = Sigma + (1 - rho) * np.eye(p)
 
                     # Expected solution
-                    opt_prop_rec = min(rho, 0.5)
-                    max_S_val = min(1, 2 - 2 * rho)
+                    min(rho, 0.5)
+                    min(1, 2 - 2 * rho)
                     expected = (1 - rho) * np.eye(p)
 
                     # Test optimizer
@@ -1053,7 +1047,6 @@ class TestKnockoffGen(CheckValidKnockoffs):
         # on equicorrelated matrices
         np.random.seed(110)
         n = 100000
-        copies = 3
         p = 5
 
         # Check with a non-correlation matrix
@@ -1110,7 +1103,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
                         n=n, p=p, gamma=gamma, rho=rho
                     )
                     # S matrix
-                    trivial_groups = np.arange(0, p, 1) + 1
+                    np.arange(0, p, 1) + 1
                     ksampler = knockoffs.FXSampler(X=X, method=method, verbose=False)
                     Xk = ksampler.sample_knockoffs()
                     S = ksampler.fetch_S()

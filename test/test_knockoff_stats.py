@@ -3,12 +3,7 @@ import unittest
 import sklearn.naive_bayes
 import sklearn.neural_network
 
-# for regular pytest calls
-try:
-    from .context import knockpy
-# for running directly with python
-except ImportError:
-    from context import knockpy
+import knockpy
 from knockpy import knockoff_stats as kstats
 from knockpy import utilities, dgp
 from knockpy.knockoff_stats import data_dependent_threshhold
@@ -81,7 +76,7 @@ class KStatVal(unittest.TestCase):
             S=(1 - rho) * np.eye(p),
         )
         Xk = ksampler.sample_knockoffs()
-        S = ksampler.fetch_S()
+        ksampler.fetch_S()
 
         # Fit and extract coeffs/T
         fstat.fit(
@@ -112,7 +107,7 @@ class KStatVal(unittest.TestCase):
         selections = (W >= T).astype("float32")
         group_nnulls = utilities.fetch_group_nonnulls(beta, groups)
         power = ((group_nnulls != 0) * selections).sum() / np.sum(group_nnulls != 0)
-        fdp = ((group_nnulls == 0) * selections).sum() / max(np.sum(selections), 1)
+        ((group_nnulls == 0) * selections).sum() / max(np.sum(selections), 1)
         self.assertTrue(
             power >= min_power,
             msg=f"Power {power} for {fstat_name} in equicor case (n={n},p={p},rho={rho}, y_dist {y_dist}, grouped={group_features}) should be > {min_power}. W stats are {W}, beta is {beta}",
@@ -154,7 +149,7 @@ class TestFeatureStatistics(KStatVal):
         p = 5
         X = np.random.randn(n, p)
         knockoffs = np.random.randn(n, p)
-        groups = np.array([1, 1, 2, 2, 2])
+        np.array([1, 1, 2, 2, 2])
 
         # Calc y
         beta = np.array([1, 1, 0, 0, 0])
@@ -293,7 +288,7 @@ class TestFeatureStatistics(KStatVal):
         X, y, beta, _, corr_matrix = dgprocess.sample_data(
             n=n, p=p, y_dist="gaussian", coeff_size=100, sign_prob=1
         )
-        groups = np.arange(1, p + 1, 1)
+        np.arange(1, p + 1, 1)
 
         # These are not real, just helpful syntatically
         fake_knockoffs = np.zeros((n, p))
@@ -347,7 +342,7 @@ class TestFeatureStatistics(KStatVal):
         X, y, beta, _, corr_matrix = dgprocess.sample_data(
             n=n, p=p, y_dist="gaussian", coeff_size=100, sign_prob=1
         )
-        groups = np.arange(1, p + 1, 1)
+        np.arange(1, p + 1, 1)
 
         # These are not real, just helpful syntatically
         knockoffs = np.zeros((n, p))
@@ -705,7 +700,7 @@ class TestBaseFeatureStatistic(KStatVal):
     """Tests performance of Vanilla feature statistic"""
 
     def test_errors(self):
-        fstat = kstats.FeatureStatistic()
+        kstats.FeatureStatistic()
 
     def test_nbayes(self):
         """Checks that a random sklearn class works with feature stat"""

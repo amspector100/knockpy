@@ -2,13 +2,7 @@ import numpy as np
 import unittest
 import pytest
 
-# for regular pytest calls
-try:
-    from .context import knockpy
-# for running directly with python
-except ImportError:
-    pass
-
+import knockpy
 from knockpy import ggm
 
 

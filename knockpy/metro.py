@@ -438,7 +438,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         # Cholesky decomposition of Sigma
         self.invSigma = self.Q.copy()
         self.L = np.linalg.cholesky(self.V)
-        initial_error = np.max(np.abs(self.V - np.dot(self.L, self.L.T)))
+        np.max(np.abs(self.V - np.dot(self.L, self.L.T)))
 
         # Suppose X sim N(mu, Sigma) and we have proposals X_{1:j-1}star
         # Then the conditional mean of the proposal Xjstar
@@ -461,7 +461,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         for j in j_iter:
             # G up to and excluding knockoff j
             Gprej = self.G[0 : self.p + j, 0 : self.p + j]
-            gammaprej = Gprej[-1, 0:-1]  # marginal corrs btwn knockoff j + others
+            Gprej[-1, 0:-1]  # marginal corrs btwn knockoff j + others
             sigma2prej = Gprej[-1, -1]
 
             # 1. Compute inverse Sigma
@@ -1031,7 +1031,6 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
         )
 
         # Loop across variables to compute acc ratios
-        prev_proposals = None
         if self.metro_verbose:
             print("Metro computing acceptance probabilities...")
             j_iter = tqdm(range(self.p))

@@ -4,7 +4,7 @@ import networkx as nx
 from networkx.algorithms.approximation import treewidth
 from scipy import stats
 import unittest
-from .context import knockpy
+import knockpy
 from knockpy import dgp, metro
 
 
@@ -550,7 +550,7 @@ class TestGibbsGraph(unittest.TestCase):
         )
 
         # Sample and hope for no errors
-        Xk = metro_sampler.sample_knockoffs()
+        metro_sampler.sample_knockoffs()
 
     def test_small_ising_samples(self):
         # Test samples to make sure the

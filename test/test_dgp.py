@@ -2,13 +2,7 @@ import numpy as np
 import scipy as sp
 import unittest
 import pytest
-
-# for regular pytest calls
-try:
-    from .context import knockpy
-# for running directly with python
-except ImportError:
-    from context import knockpy
+import knockpy
 
 from knockpy import dgp
 
@@ -278,7 +272,7 @@ class TestSampleData(unittest.TestCase):
             diag_diff < 1e-4,
             f"Factor Sigma={V} for rank={rank} is not a correlation matrix",
         )
-        mineig = np.linalg.eigh(V)[0].min()
+        np.linalg.eigh(V)[0].min()
 
     def test_blockequi_sample(self):
         # Check that defaults are correct - start w cov matrix
@@ -305,7 +299,6 @@ class TestSampleData(unittest.TestCase):
         )
 
         # Check number of nonzero groups
-        groupsize = 5
         nonzero_inds = np.arange(0, 1000, 1)[beta != 0]
         num_nonzero_groups = np.unique(nonzero_inds // 5).shape[0]
         self.assertTrue(

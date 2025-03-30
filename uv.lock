@@ -955,32 +955,12 @@ wheels = [
 name = "importlib-resources"
 version = "5.2.3"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.6.8' and python_full_version < '3.7'",
-    "python_full_version >= '3.6.2' and python_full_version < '3.6.8'",
-    "python_full_version >= '3.6.1' and python_full_version < '3.6.2'",
-]
 dependencies = [
-    { name = "zipp", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
+    { name = "zipp", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e6/eb/9a21e2ae696a0530c73304f9d1d3c063065f82d3562822b55466c6ef62ef/importlib_resources-5.2.3.tar.gz", hash = "sha256:203d70dda34cfbfbb42324a8d4211196e7d3e858de21a5eb68c6d1cdd99e4e98", size = 30055 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/11/8e/84a6a778a1160cefcef1192a7bd26e4e6689981553aff13c2b2b6f1c352f/importlib_resources-5.2.3-py3-none-any.whl", hash = "sha256:ae35ed1cfe8c0d6c1a53ecd168167f01fa93b893d51a62cdf23aea044c67211b", size = 27859 },
-]
-
-[[package]]
-name = "importlib-resources"
-version = "5.4.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.6.1'",
-]
-dependencies = [
-    { name = "zipp", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b5/d8/51ace1c1ea6609c01c7f46ca2978e11821aa0efaaa7516002ef6df000731/importlib_resources-5.4.0.tar.gz", hash = "sha256:d756e2f85dd4de2ba89be0b21dba2a3bbec2e871a42a3a16719258a11f87506b", size = 30554 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/24/1b/33e489669a94da3ef4562938cd306e8fa915e13939d7b8277cb5569cb405/importlib_resources-5.4.0-py3-none-any.whl", hash = "sha256:33a95faed5fc19b4bc16b29a6eeae248a3fe69dd55d4d229d2b480e23eeaad45", size = 28066 },
 ]
 
 [[package]]
@@ -1172,6 +1152,7 @@ dev = [
     { name = "pytest", version = "7.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
     { name = "pytest", version = "7.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
     { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.8'" },
+    { name = "scikit-dsdp" },
 ]
 
 [package.metadata]
@@ -1179,7 +1160,7 @@ requires-dist = [
     { name = "choldate", git = "http://github.com/jamieleecho/choldate.git?rev=main" },
     { name = "cvxpy", specifier = ">=1.0.25" },
     { name = "networkx", specifier = ">=2.4" },
-    { name = "numpy", specifier = ">=1.19" },
+    { name = "numpy", specifier = ">=1.19.0" },
     { name = "scikit-dsdp", marker = "extra == 'fast'" },
     { name = "scikit-learn", specifier = ">=0.22" },
     { name = "scipy", specifier = ">=1.5.2" },
@@ -1194,6 +1175,7 @@ provides-extras = ["kpytorch", "fast", "docs"]
 dev = [
     { name = "pre-commit" },
     { name = "pytest" },
+    { name = "scikit-dsdp" },
 ]
 
 [[package]]
@@ -2000,7 +1982,7 @@ dependencies = [
     { name = "scipy", version = "1.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
     { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "scipy", version = "1.15.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "setuptools", version = "68.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "setuptools", version = "75.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
     { name = "setuptools", version = "78.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/61/8f/660684ca6114893a997d7b0ea1ef1584834579af8a1a9e520e6a151b8ada/osqp-1.0.1.tar.gz", hash = "sha256:8425d24067d9f20ee97919965950f6e661178654114d6f8ce21418cc123eb0b3", size = 54645 }
@@ -2195,7 +2177,7 @@ dependencies = [
     { name = "cfgv", version = "3.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
     { name = "identify", version = "1.6.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
     { name = "importlib-metadata", version = "4.8.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
-    { name = "importlib-resources", version = "5.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
+    { name = "importlib-resources", marker = "python_full_version < '3.6.1'" },
     { name = "nodeenv", marker = "python_full_version < '3.6.1'" },
     { name = "pyyaml", version = "6.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
     { name = "toml", marker = "python_full_version < '3.6.1'" },
@@ -2219,7 +2201,7 @@ dependencies = [
     { name = "cfgv", version = "3.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
     { name = "identify", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
     { name = "importlib-metadata", version = "4.8.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
-    { name = "importlib-resources", version = "5.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
+    { name = "importlib-resources", marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
     { name = "nodeenv", marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
     { name = "pyyaml", version = "6.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
     { name = "toml", marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
@@ -3222,12 +3204,23 @@ name = "setuptools"
 version = "68.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version == '3.8.*'",
     "python_full_version == '3.7.*'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/dc/98/5f896af066c128669229ff1aa81553ac14cfb3e5e74b6b44594132b8540e/setuptools-68.0.0.tar.gz", hash = "sha256:baf1fdb41c6da4cd2eae722e135500da913332ab3f2f5c7d33af9b492acb5235", size = 2194111 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/42/be1c7bbdd83e1bfb160c94b9cafd8e25efc7400346cf7ccdbdb452c467fa/setuptools-68.0.0-py3-none-any.whl", hash = "sha256:11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f", size = 804037 },
+]
+
+[[package]]
+name = "setuptools"
+version = "75.3.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version == '3.8.*'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5c/01/771ea46cce201dd42cff043a5eea929d1c030fb3d1c2ee2729d02ca7814c/setuptools-75.3.2.tar.gz", hash = "sha256:3c1383e1038b68556a382c1e8ded8887cd20141b0eb5708a6c8d277de49364f5", size = 1354489 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/65/3f0dba35760d902849d39d38c0a72767794b1963227b69a587f8a336d08c/setuptools-75.3.2-py3-none-any.whl", hash = "sha256:90ab613b6583fc02d5369cbca13ea26ea0e182d1df2d943ee9cbe81d4c61add9", size = 1251198 },
 ]
 
 [[package]]
@@ -4066,8 +4059,7 @@ resolution-markers = [
 ]
 dependencies = [
     { name = "colorama", marker = "python_full_version < '3.7' and sys_platform == 'win32'" },
-    { name = "importlib-resources", version = "5.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
-    { name = "importlib-resources", version = "5.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
+    { name = "importlib-resources", marker = "python_full_version < '3.7'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c1/c2/d8a40e5363fb01806870e444fc1d066282743292ff32a9da54af51ce36a2/tqdm-4.64.1.tar.gz", hash = "sha256:5f4f682a004951c1b450bc753c710e9280c5746ce6ffedee253ddbcbf54cf1e4", size = 169599 }
 wheels = [
@@ -4241,8 +4233,7 @@ dependencies = [
     { name = "distlib", marker = "python_full_version < '3.7'" },
     { name = "filelock", version = "3.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
     { name = "importlib-metadata", version = "4.8.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
-    { name = "importlib-resources", version = "5.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
-    { name = "importlib-resources", version = "5.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
+    { name = "importlib-resources", marker = "python_full_version < '3.7'" },
     { name = "platformdirs", version = "2.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9d/17/5a822952d90f791947f9d1d11c84c055ffc3b7a315c2552d4f46a0d6cd12/virtualenv-20.16.2.tar.gz", hash = "sha256:0ef5be6d07181946891f5abc8047fda8bc2f0b4b9bf222c64e6e8963baee76db", size = 12217706 }

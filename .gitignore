@@ -1,4 +1,4 @@
-
+*.swp
 
 # Don't save data
 data/*
