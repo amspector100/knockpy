@@ -1152,7 +1152,6 @@ dev = [
     { name = "pytest", version = "7.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
     { name = "pytest", version = "7.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
     { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.8'" },
-    { name = "scikit-dsdp" },
 ]
 
 [package.metadata]
@@ -1175,7 +1174,6 @@ provides-extras = ["kpytorch", "fast", "docs"]
 dev = [
     { name = "pre-commit" },
     { name = "pytest" },
-    { name = "scikit-dsdp" },
 ]
 
 [[package]]

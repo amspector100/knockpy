@@ -45,7 +45,7 @@ Issues = "https://github.com/amspector100/knockpy/issues"
 dev = [
   "pytest",
   "pre-commit",
-  "scikit-dsdp",
+#  "scikit-dsdp",
 ]
 
 [build-system]
