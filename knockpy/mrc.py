@@ -10,7 +10,7 @@ try:
     import choldate
 
     CHOLDATE_AVAILABLE = True
-except:
+except:  # noqa: E722
     CHOLDATE_AVAILABLE = False
 
 
@@ -552,6 +552,7 @@ def _solve_mvr_grouped(
 
                 def coord_loss(delta):
                     return -loss_S(delta) - loss_diff(-1 * delta)
+
                 delta = sp.optimize.fminbound(coord_loss, lower_bound, upper_bound)
                 delta = np.maximum(np.minimum(upper_bound, delta), lower_bound)
 
@@ -1008,6 +1009,7 @@ def _solve_maxent_sdp_cd(
 
     # Loss function
     if solve_sdp:
+
         def loss_fn(V, S):
             return S.shape[0] - np.diag(S).sum()
     else:

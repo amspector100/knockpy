@@ -13,12 +13,12 @@ try:
     from pydsdp.dsdp5 import dsdp
 
     DSDP_AVAILABLE = True
-except:
+except:  # noqa: E722
     DSDP_AVAILABLE = False
-try:
 
+try:
     CHOLDATE_AVAILABLE = True
-except:
+except:  # noqa: E722
     CHOLDATE_AVAILABLE = False
 
 # Options for group SDP solver

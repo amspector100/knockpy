@@ -2,7 +2,6 @@ import numpy as np
 import unittest
 import pytest
 
-import knockpy
 from knockpy import ggm
 
 

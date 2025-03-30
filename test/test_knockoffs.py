@@ -8,20 +8,18 @@ import knockpy
 from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
 
 try:
-    import torch
+    import torch as torch
 
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
 try:
-
     CHOLDATE_AVAILABLE = True
-except:
+except:  # noqa: E722
     CHOLDATE_AVAILABLE = False
 try:
-
     DSDP_AVAILABLE = True
-except:
+except:  # noqa: E722
     DSDP_AVAILABLE = False
 
 

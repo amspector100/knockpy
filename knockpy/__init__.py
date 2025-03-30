@@ -1,5 +1,4 @@
-name = "knockpy"
-all = [
+__all__ = [
     "constants",
     "dgp",
     "ggm",
@@ -12,9 +11,8 @@ all = [
     "mrc",
     "smatrix",
     "utilities",
+    "KnockoffFilter",
 ]
-
-__version__ = "1.3.2"
 
 from . import constants
 from . import dgp
@@ -30,3 +28,7 @@ from . import smatrix
 from . import utilities
 
 from .knockoff_filter import KnockoffFilter
+
+name = "knockpy"
+
+__version__ = "1.3.2"

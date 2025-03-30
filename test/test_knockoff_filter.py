@@ -15,7 +15,7 @@ file_directory = os.path.dirname(os.path.abspath(__file__))
 
 NUM_REPS = 1
 try:
-    import torch
+    import torch as torch
 
     TORCH_AVAILABLE = True
 except ImportError:

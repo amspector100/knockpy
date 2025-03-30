@@ -8,19 +8,20 @@ from knockpy import knockoff_stats as kstats
 from knockpy import utilities, dgp
 from knockpy.knockoff_stats import data_dependent_threshhold
 
+try:
+    import torch as torch
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+
+
 DEFAULT_SAMPLE_KWARGS = {
     "coeff_size": 5,
     "method": "blockequi",
     "gamma": 0,
     "sparsity": 0.5,
 }
-
-try:
-    import torch
-
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
 
 
 class KStatVal(unittest.TestCase):

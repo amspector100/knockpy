@@ -598,13 +598,13 @@ def num2coords(i, gridwidth=10):
     return int(length_coord), int(width_coord)
 
 
-def coords2num(l, w, gridwidth=10):
+def coords2num(lcoord, wcoord, gridwidth=10):
     """Takes coordinates of variable in a Gibbs grid, returns position"""
-    if l < 0 or w < 0:
+    if lcoord < 0 or wcoord < 0:
         return -1
-    if l >= gridwidth or w >= gridwidth:
+    if lcoord >= gridwidth or wcoord >= gridwidth:
         return -1
-    return int(w * gridwidth + l)
+    return int(wcoord * gridwidth + lcoord)
 
 
 def graph2cliques(Q):

@@ -420,7 +420,7 @@ def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
 ### Dependency management
 def check_kpytorch_available(purpose):
     try:
-        import torch
+        import torch as torch
     except ImportError as err:
         raise ValueError(
             f"Pytorch is required for {purpose}, but importing torch raised {err}. See https://pytorch.org/get-started/."
@@ -429,7 +429,7 @@ def check_kpytorch_available(purpose):
 
 def check_pyglmnet_available(purpose):
     try:
-        import pyglmnet
+        import pyglmnet as pyglmnet
     except ImportError as err:
         raise ValueError(
             f"pyglmnet is required for {purpose}, but importing pyglmnet raised {err}. See https://github.com/glm-tools/pyglmnet/."

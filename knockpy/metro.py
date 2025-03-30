@@ -1474,7 +1474,7 @@ class GibbsGridSampler(KnockoffSampler):
         return dgp.num2coords(i=i, gridwidth=self.gridwidth)
 
     def coords2num(self, lc, wc):
-        return dgp.coords2num(l=lc, w=wc, gridwidth=self.gridwidth)
+        return dgp.coords2num(lcoord=lc, wcoord=wc, gridwidth=self.gridwidth)
 
     def _get_ac(self, i, div_type):
         """
