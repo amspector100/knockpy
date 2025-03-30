@@ -1,0 +1,19 @@
+{
+  "scheme": "custom",
+  "schemeDefinition": "major.minor[.build][->patch]",
+  "versionFile": "./package.json",
+  "files": [{
+      "path": "./pyproject.toml",
+      "line": 3
+  }, {
+    "path": "./knockpy/__init__.py",
+    "line": 1
+  }],
+  "rules": [{
+      "trigger": "manual",
+      "bump": "minor",
+      "branch": "main",
+      "reset": "build",
+      "tag": true
+  }]
+}

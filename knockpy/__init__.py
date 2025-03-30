@@ -1,3 +1,4 @@
+__version__ = "1.3.2"
 __all__ = [
     "constants",
     "dgp",
@@ -30,5 +31,3 @@ from . import utilities
 from .knockoff_filter import KnockoffFilter
 
 name = "knockpy"
-
-__version__ = "1.3.2"

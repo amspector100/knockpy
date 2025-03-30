@@ -15,6 +15,8 @@ To install knockpy for development, you must first install [uv](https://github.c
 ```bash
 # Install uv
 git clone https://github.com/amspector100/knockpy.git
+cd knockpy
+make sync
 make install-pre-commit
 make
 ```
@@ -29,9 +31,10 @@ The `Makefile` makes it easy to perform the most common operations:
 * `make fix-lint` fixes linting issues
 * `make fix-lint-unsafe` fixes linting issues potentially adding inadvertant bugs
 * `make help` outputs the different make options
+* `make install-pre-commit` installs pre-commit hooks
 * `make lock` locks `uv.lock` to `pyproject.toml`
 * `make install-pre-commit` installs pre-commit hooks
-* `make run-tests` will run the unit tests
+* `make run-tests` runs the unit tests
 * `make sync` syncs the python environment with `uv.lock`
 
 `.vscode/settings.json` is set so that unit tests can be run without further configuration.
