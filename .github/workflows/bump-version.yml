@@ -17,6 +17,9 @@ jobs:
 
       - uses: actions/checkout@master
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -29,8 +32,23 @@ jobs:
           options-file: './bump-info.json'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Sync and Tag
+        run: |
+          export TAG=`grep "version" package.json | sed 's/.*: *"//' | sed 's/" *//'`
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          make lock
+          make sync
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          message: Update uv.lock to new version (${{ env.TAG }})'
+          push: true
+          tag: ${{ env.TAG }}
+          committer_name: GitHub Actions
+          committer_email: actions@github.com
+
       - name: Trigger release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run make-release.yml --ref `grep "version" package.json | sed 's/.*: *"//' | sed 's/" *//'`
+          gh workflow run make-release.yml --ref $TAG
