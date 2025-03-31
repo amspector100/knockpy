@@ -10,6 +10,7 @@
     fix-lint \
     fix-lint-unsafe \
     help \
+    install \
     install-pre-commit \
     lock \
     run-tests \
@@ -17,7 +18,7 @@
 
 default: check-all run-tests
 
-build-dist:
+build-dist: sync
 	uv build --verbose --sdist
 
 check-all: check-lint check-lock
@@ -44,6 +45,9 @@ fix-lint-unsafe:
 
 help:
 	@echo ${.PHONY}
+
+install: build-dist
+	uv pip install .
 
 install-pre-commit:
 	uv run pre-commit install

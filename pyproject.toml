@@ -44,8 +44,12 @@ dev = [
   "pytest",
   "pre-commit",
   "ruff",
-  "scikit-dsdp",
+#  "scikit-dsdp",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["test"]
 
 [build-system]
 requires = [
