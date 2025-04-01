@@ -299,19 +299,6 @@ wheels = [
 ]
 
 [[package]]
-name = "choldate"
-version = "0.1.0"
-source = { git = "http://github.com/jamieleecho/choldate.git?rev=main#56053010ba5315fca4fc9df9799b5488ef945ece" }
-dependencies = [
-    { name = "cython" },
-    { name = "numpy", version = "1.19.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
-    { name = "numpy", version = "1.21.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
-    { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
-    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
-    { name = "numpy", version = "2.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-]
-
-[[package]]
 name = "clarabel"
 version = "0.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1046,6 +1033,42 @@ wheels = [
 ]
 
 [[package]]
+name = "jlc-choldate"
+version = "0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cython" },
+    { name = "numpy", version = "1.19.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
+    { name = "numpy", version = "1.21.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
+    { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "numpy", version = "2.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/78/f3/12fbcf459e4105d0016cab691453d8ee825cf36b44fa3fdf848cf875203f/jlc_choldate-0.3.tar.gz", hash = "sha256:9faf137d42120e21b396fd493b32f01452c4da0cb36085fa23aaaeb722112876", size = 70098 }
+
+[[package]]
+name = "jlc-scikit-dsdp"
+version = "0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "1.19.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
+    { name = "numpy", version = "1.21.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
+    { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "numpy", version = "2.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "scikit-learn", version = "0.24.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
+    { name = "scikit-learn", version = "1.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
+    { name = "scikit-learn", version = "1.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "scipy", version = "1.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
+    { name = "scipy", version = "1.7.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
+    { name = "scipy", version = "1.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "scipy", version = "1.15.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1b/1c/8603ef542a87d2b1698b4ba2c01f5f0e36aa788cc9857ca44d87f0b20192/jlc_scikit_dsdp-0.2.tar.gz", hash = "sha256:f4ade9193672ed2614912236453e39c43718aa37fee6b80f0dfad1c3d643368e", size = 179033 }
+
+[[package]]
 name = "joblib"
 version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1093,11 +1116,11 @@ name = "knockpy"
 version = "1.3.2"
 source = { editable = "." }
 dependencies = [
-    { name = "choldate" },
     { name = "cvxpy", version = "1.1.24", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
     { name = "cvxpy", version = "1.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
     { name = "cvxpy", version = "1.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
     { name = "cvxpy", version = "1.6.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "jlc-choldate" },
     { name = "networkx", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
     { name = "networkx", version = "2.6.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
     { name = "networkx", version = "3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
@@ -1132,7 +1155,7 @@ docs = [
     { name = "sphinx-rtd-theme", version = "3.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.8'" },
 ]
 fast = [
-    { name = "scikit-dsdp" },
+    { name = "jlc-scikit-dsdp" },
 ]
 kpytorch = [
     { name = "torch", version = "1.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
@@ -1145,6 +1168,7 @@ kpytorch = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "jlc-scikit-dsdp" },
     { name = "pre-commit", version = "2.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.6.1'" },
     { name = "pre-commit", version = "2.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.6.1' and python_full_version < '3.7'" },
     { name = "pre-commit", version = "2.21.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.7.*'" },
@@ -1159,11 +1183,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "choldate", git = "http://github.com/jamieleecho/choldate.git?rev=main" },
     { name = "cvxpy", specifier = ">=1.0.25" },
+    { name = "jlc-choldate" },
+    { name = "jlc-scikit-dsdp", marker = "extra == 'fast'" },
     { name = "networkx", specifier = ">=2.4" },
     { name = "numpy", specifier = ">=1.19.0" },
-    { name = "scikit-dsdp", marker = "extra == 'fast'" },
     { name = "scikit-learn", specifier = ">=0.22" },
     { name = "scipy", specifier = ">=1.5.2" },
     { name = "sphinx", marker = "extra == 'docs'" },
@@ -1175,6 +1199,7 @@ provides-extras = ["kpytorch", "fast", "docs"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "jlc-scikit-dsdp" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
@@ -2781,12 +2806,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/86/54/3c12d3af58012a5e2cd7ebdbe9983f4834af3f8cbea0e8a8c74fa1e23b2b/ruff-0.11.2-py3-none-win_amd64.whl", hash = "sha256:3170150172a8f994136c0c66f494edf199a0bbea7a409f649e4bc8f4d7084080", size = 11373713 },
     { url = "https://files.pythonhosted.org/packages/d6/d4/dd813703af8a1e2ac33bf3feb27e8a5ad514c9f219df80c64d69807e7f71/ruff-0.11.2-py3-none-win_arm64.whl", hash = "sha256:52933095158ff328f4c77af3d74f0379e34fd52f175144cefc1b192e7ccd32b4", size = 10441990 },
 ]
-
-[[package]]
-name = "scikit-dsdp"
-version = "0.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2b/97/484d0a49b446c2077be4bd51dfd9c113899bdda83d5e3b7789cfbbe3d07f/scikit-dsdp-0.0.1.tar.gz", hash = "sha256:79a3a3dd90e5d0db35316dea91e1ef652a5748053ddd00a100f64cb738a77816", size = 177603 }
 
 [[package]]
 name = "scikit-learn"

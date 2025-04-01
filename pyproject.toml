@@ -13,7 +13,7 @@ classifiers=[
 ]
 requires-python = ">= 3.6"
 dependencies = [
-  "choldate@git+http://github.com/jamieleecho/choldate.git@main",
+  "jlc-choldate",
   "cvxpy>=1.0.25",
   "networkx>=2.4",
   "numpy>=1.19.0",
@@ -27,7 +27,7 @@ kpytorch = [
   "torch>=1.4.0",
 ]
 fast = [
-  "scikit-dsdp",
+  "jlc-scikit-dsdp",
 ]
 docs = [
   "sphinx",
@@ -44,7 +44,7 @@ dev = [
   "pytest",
   "pre-commit",
   "ruff",
-#  "scikit-dsdp",
+  "jlc-scikit-dsdp",
 ]
 
 [tool.setuptools.packages.find]
