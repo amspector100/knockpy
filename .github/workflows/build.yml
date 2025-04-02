@@ -25,7 +25,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest] # skip windows-latest for now
+        os: [macos-latest, ubuntu-latest] # skip windows-latest for now
         python-version: ['3.9', '3.10', '3.13']
     steps:
       - name:  Install requirements (Linux)

@@ -1199,7 +1199,7 @@ provides-extras = ["kpytorch", "fast", "docs"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "jlc-scikit-dsdp" },
+    { name = "jlc-scikit-dsdp", specifier = ">=0.3" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },

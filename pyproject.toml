@@ -44,7 +44,7 @@ dev = [
   "pytest",
   "pre-commit",
   "ruff",
-  "jlc-scikit-dsdp",
+  "jlc-scikit-dsdp>=0.3",
 ]
 
 [tool.setuptools.packages.find]
