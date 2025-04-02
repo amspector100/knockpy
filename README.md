@@ -15,11 +15,9 @@ To use the (optional) kpytorch submodule, you will need to install [pytorch](htt
 To install knockpy for development, you must first install [uv](https://github.com/astral-sh/uv).
 
 ```bash
-# Install uv
 git clone https://github.com/amspector100/knockpy.git
 cd knockpy
 make install-pre-commit
-make install
 ```
 
 The `Makefile` makes it easy to perform the most common operations:
@@ -103,6 +101,18 @@ rejections = kfilter.forward(X=X, y=y, Sigma=Sigma)
 ```
 
 Most importantly, ``knockpy`` is built to be modular, so researchers and analysts can easily layer functionality on top of it.
+
+## Releasing to pypi
+
+If you are an owner of the knockpy repo, you can publish a new version to pypi by:
+
+1. Selecting the [Bump Version and Start New Release workflow](https://github.com/amspector100/knockpy/actions/workflows/pages/bump-version.yml)
+2. Selecting `Run workflow`
+3. Ensure that the `main` branch is selected
+4. Pressing `Run workflow`
+5. This should trigger a new build and release in the [Make a New Release](https://github.com/amspector100/knockpy/actions/workflows/bump-version.yml) workflow page. This will publish to pypi.org.
+6. Select the new release in the [Releases](https://github.com/amspector100/knockpy/releases) page
+7. Add release notes and publish the release.
 
 ## Reference
 

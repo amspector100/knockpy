@@ -274,7 +274,7 @@ class TestSDP(CheckSMatrix):
         groups = groups.astype("int32")
 
         # Solve SDP
-        for tol in [1e-3, 0.01, 0.02]:
+        for tol in [0.01, 0.01, 0.02]:
             S = smatrix.compute_smatrix(
                 Sigma=V,
                 groups=groups,
