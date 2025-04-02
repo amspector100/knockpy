@@ -5,7 +5,7 @@ A python implementation of the knockoffs framework for variable selection. See h
 ## Installation
 
 To install and begin using knockpy, simply enter:
-```
+```bash
 pip install knockpy[fast]
 ```
 
@@ -68,28 +68,28 @@ knockpy relies on heavy-duty linear algebra routines which sometimes fail on non
 
 Given a data-matrix `X` and a response vector `y`, knockpy makes it easy to use knockoffs to perform variable selection using a wide variety of machine learning algorithms (also known as "feature statistic") and types of knockoffs. One quick example is shown below, where we use the cross-validated lasso to assign variable importances to the features and knockoffs.
 
-```
-    import knockpy as kpy
-    from knockpy.knockoff_filter import KnockoffFilter
+```python
+import knockpy as kpy
+from knockpy.knockoff_filter import KnockoffFilter
 
-    # Generate synthetic data from a Gaussian linear model
-    data_gen_process = kpy.dgp.DGP()
-    data_gen_process.sample_data(
-        n=1500, # Number of datapoints
-        p=500, # Dimensionality
-        sparsity=0.1,
-        x_dist='gaussian',
-    )
-    X = data_gen_process.X
-    y = data_gen_process.y
-    Sigma=data_gen_process.Sigma
+# Generate synthetic data from a Gaussian linear model
+data_gen_process = kpy.dgp.DGP()
+data_gen_process.sample_data(
+    n=1500, # Number of datapoints
+    p=500, # Dimensionality
+    sparsity=0.1,
+    x_dist='gaussian',
+)
+X = data_gen_process.X
+y = data_gen_process.y
+Sigma=data_gen_process.Sigma
 
-    # Run model-X knockoffs
-    kfilter = KnockoffFilter(
-        fstat='lasso',
-        ksampler='gaussian',
-    )
-    rejections = kfilter.forward(X=X, y=y, Sigma=Sigma)
+# Run model-X knockoffs
+kfilter = KnockoffFilter(
+    fstat='lasso',
+    ksampler='gaussian',
+)
+rejections = kfilter.forward(X=X, y=y, Sigma=Sigma)
 ```
 
 Most importantly, ``knockpy`` is built to be modular, so researchers and analysts can easily layer functionality on top of it.
