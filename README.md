@@ -1,10 +1,11 @@
 # Knockpy
 
-A python implementation of the knockoffs framework for variable selection. See https://amspector100.github.io/knockpy/ for detailed documentation and tutorials.
+A python implementation of the knockoffs framework for variable selection. See <https://amspector100.github.io/knockpy/> for detailed documentation and tutorials.
 
 ## Installation
 
 To install and begin using knockpy, simply enter:
+
 ```bash
 pip install knockpy[fast]
 ```
@@ -12,6 +13,7 @@ pip install knockpy[fast]
 To use the (optional) kpytorch submodule, you will need to install [pytorch](https://pytorch.org/).
 
 To install knockpy for development, you must first install [uv](https://github.com/astral-sh/uv).
+
 ```bash
 # Install uv
 git clone https://github.com/amspector100/knockpy.git
@@ -21,6 +23,7 @@ make install
 ```
 
 The `Makefile` makes it easy to perform the most common operations:
+
 * `make check-all` runs linting and `uv.lock` checks
 * `make check-lint` checks for linting issues
 * `make check-lock` verifies the `uv.lock` is aligned to `pyproject.toml`
@@ -45,24 +48,31 @@ The `Makefile` makes it easy to perform the most common operations:
 knockpy relies on heavy-duty linear algebra routines which sometimes fail on non-Linux environments.
 
 1. To start, install a lightweight version of knockpy using
-``pip install knockpy``. This should install correctly on all devices, and contains nearly all of the functionality of the prior installation. However, the algorithms for computing optimal distributions for Gaussian knockoffs, such as [minimum reconstructability knockoffs](https://arxiv.org/abs/2011.14625) and [SDP knockoffs](https://arxiv.org/abs/1610.02351), may be an order of magnitude slower.
+`pip install knockpy`. This should install correctly on all devices, and contains nearly all of the functionality of the prior installation. However, the algorithms for computing optimal distributions for Gaussian knockoffs, such as [minimum reconstructability knockoffs](https://arxiv.org/abs/2011.14625) and [SDP knockoffs](https://arxiv.org/abs/1610.02351), may be an order of magnitude slower.
+
 2. [Optional] To speed up computation for minimum reconstructability knockoffs (the default knockoff type):
 
     (a) Run
 
-        `pip install cython>=0.29.14`
+    ```bash
+    pip install cython>=0.29.14`
+    ```
 
     If the installation fails, likely due to the incorrect configuration of a C compiler, you have three options. First, the [Anaconda](https://docs.anaconda.com/anaconda/user-guide/tasks/install-packages/) package manager includes a compiler, so the command
 
-        `conda install cython`
+    ```bash
+    install cython
+    ```
 
     should work on all platforms. Second, on Windows, you can install precompiled binaries for cython [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/). Lastly, on all platforms, the documentation [here](https://cython.readthedocs.io/en/latest/src/quickstart/install.html) describes how to properly configure a C compiler during installation.
 
     (b) Run
 
-        `pip install git+https://github.com/jcrudy/choldate.git`
+    ```bash
+    pip install git+https://github.com/jcrudy/choldate.git
+    ```
 
-3. [Optional] To speed up computation for (non-default) SDP knockoffs, you will need to install ``scikit-dsdp``. This can be challenging on non-Linux environments. We hope to provide more explicit instructions for installation of this package in the future.
+3. [Optional] To speed up computation for (non-default) SDP knockoffs, you will need to install `scikit-dsdp`. This can be challenging on non-Linux environments. We hope to provide more explicit instructions for installation of this package in the future.
 
 ## Quickstart
 
@@ -98,7 +108,7 @@ Most importantly, ``knockpy`` is built to be modular, so researchers and analyst
 
 If you use knockpy in an academic publication, please consider citing [Spector and Janson (2020)](https://arxiv.org/abs/2011.14625). The bibtex entry is below:
 
-```
+```latex
 @article{AS-LJ:2020,
   title={Powerful Knockoffs via Minimizing Reconstructability},
   author={Spector, Asher and Janson, Lucas},
