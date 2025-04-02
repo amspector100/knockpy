@@ -13,7 +13,7 @@ classifiers=[
 ]
 requires-python = ">= 3.6"
 dependencies = [
-  "jlc-choldate",
+  "jlc-choldate>=0.4",
   "cvxpy>=1.0.25",
   "networkx>=2.4",
   "numpy>=1.19.0",
@@ -27,7 +27,7 @@ kpytorch = [
   "torch>=1.4.0",
 ]
 fast = [
-  "jlc-scikit-dsdp",
+  "jlc-scikit-dsdp>=0.3",
 ]
 docs = [
   "sphinx",
@@ -59,6 +59,7 @@ requires = [
   "scipy",
   "wheel",
 ]
+build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 rootdir = "."

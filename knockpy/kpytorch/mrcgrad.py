@@ -357,7 +357,7 @@ class PSGDSolver:
                 # Break if improvement is small
                 if improvement < self.convergence_tol and j % 10 == 0:
                     if self.losscalc.smoothing > self.losscalc.min_smoothing:
-                        improvement = 1 + convergence_tol  # Reset
+                        improvement = 1 + self.convergence_tol  # Reset
                         self.losscalc.smoothing = max(
                             self.losscalc.min_smoothing, self.losscalc.smoothing / 10
                         )

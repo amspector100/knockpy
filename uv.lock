@@ -1034,7 +1034,7 @@ wheels = [
 
 [[package]]
 name = "jlc-choldate"
-version = "0.3"
+version = "0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cython" },
@@ -1044,11 +1044,11 @@ dependencies = [
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "numpy", version = "2.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/f3/12fbcf459e4105d0016cab691453d8ee825cf36b44fa3fdf848cf875203f/jlc_choldate-0.3.tar.gz", hash = "sha256:9faf137d42120e21b396fd493b32f01452c4da0cb36085fa23aaaeb722112876", size = 70098 }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/55/63599387e9b94d472c2765381c43fddf762678bd78b0496c609271e52712/jlc_choldate-0.4.tar.gz", hash = "sha256:89608af446ac65aa4f8a07b0246eed1866f35dcfac9447981e48a82ae8f9bd8f", size = 70011 }
 
 [[package]]
 name = "jlc-scikit-dsdp"
-version = "0.2"
+version = "0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "1.19.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
@@ -1066,7 +1066,7 @@ dependencies = [
     { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "scipy", version = "1.15.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1b/1c/8603ef542a87d2b1698b4ba2c01f5f0e36aa788cc9857ca44d87f0b20192/jlc_scikit_dsdp-0.2.tar.gz", hash = "sha256:f4ade9193672ed2614912236453e39c43718aa37fee6b80f0dfad1c3d643368e", size = 179033 }
+sdist = { url = "https://files.pythonhosted.org/packages/84/2a/b47b382eb71ef2bc77d23d109fb4818416526d6321a79072251650d607dd/jlc_scikit_dsdp-0.3.tar.gz", hash = "sha256:6ce8f30a45cc3f51a897392fddc60c524115fb821b552be4573ecb7e094e5ad5", size = 178989 }
 
 [[package]]
 name = "joblib"
@@ -1184,8 +1184,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "cvxpy", specifier = ">=1.0.25" },
-    { name = "jlc-choldate" },
-    { name = "jlc-scikit-dsdp", marker = "extra == 'fast'" },
+    { name = "jlc-choldate", specifier = ">=0.4" },
+    { name = "jlc-scikit-dsdp", marker = "extra == 'fast'", specifier = ">=0.3" },
     { name = "networkx", specifier = ">=2.4" },
     { name = "numpy", specifier = ">=1.19.0" },
     { name = "scikit-learn", specifier = ">=0.22" },

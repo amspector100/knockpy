@@ -60,7 +60,6 @@ else:
     ext_modules = no_cythonize(ext_modules)
 
 setuptools.setup(
-    packages=setuptools.find_packages(),
     ext_modules=ext_modules,
     include_dirs=[np.get_include()],
 )

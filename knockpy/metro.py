@@ -458,6 +458,7 @@ class MetropolizedKnockoffSampler(KnockoffSampler):
 
         # Loop through and compute
         # j corresponds to the jth knockoff variable
+        c = float("nan")  # to avoid lint errors
         for j in j_iter:
             # G up to and excluding knockoff j
             Gprej = self.G[0 : self.p + j, 0 : self.p + j]
