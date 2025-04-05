@@ -822,14 +822,12 @@ class TestDataThreshhold(unittest.TestCase):
         W3 = np.array([-1] * 10)
         combined = np.stack([W1, W2, W3]).transpose()
         Ts = data_dependent_threshhold(combined, fdr=q)
-        expected1 = np.array([1, 2, np.inf])
-        expected2 = np.array(
-            [1, 3, np.inf]
-        )  # second comparison needed because abs(W2) has two 1s.
-        assert (
-            np.allclose(Ts, expected1) or np.allclose(Ts, expected2)
-        ), f"Incorrect data dependent threshhold (batched): Ts should be {expected1} or {expected2}, not {Ts}"
-
+        expected = np.array([1, 3, np.inf])
+        np.testing.assert_array_almost_equal(
+            Ts,
+            expected,
+            err_msg=f"Incorrect data dependent threshhold (batched): Ts should be {expected}, not {Ts}",
+        )
         for j in range(len(Ts)):
             self.check_T(W=combined[:, j], T=Ts[j], q=q)
 

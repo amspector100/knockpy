@@ -1362,7 +1362,7 @@ def data_dependent_threshhold(W, fdr=0.10, offset=1):
     if len(W.shape) == 1:
         # sort by abs values
         absW = np.abs(W)
-        inds = np.argsort(-absW)
+        inds = np.argsort(-absW, stable="stable")
         negatives = np.cumsum(W[inds] <= 0)
         positives = np.cumsum(W[inds] > 0)
         positives[positives == 0] = 1  # Don't divide by 0
