@@ -769,7 +769,7 @@ class TestDataThreshhold(unittest.TestCase):
                 )
         else:
             # Check that we truly cannot make any discoveries
-            inds = np.argsort(-np.abs(W))
+            inds = np.argsort(-np.abs(W), stable="stable")
             W_sorted = W[inds]
             positives = np.cumsum(W_sorted > 0)
             negatives = np.cumsum(W_sorted <= 0)

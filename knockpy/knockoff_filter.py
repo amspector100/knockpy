@@ -438,7 +438,7 @@ class KnockoffFilter:
             max_rank = self.X.shape[1]
 
         # sort W statistics
-        inds = np.argsort(-1 * np.abs(self.W))
+        inds = np.argsort(-1 * np.abs(self.W), stable="stable")
         sortW = self.W[inds][0:max_rank]
         xvals = np.arange(max_rank)
 

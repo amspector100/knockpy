@@ -96,7 +96,7 @@ def compute_ggm_threshold(W, fdr=0.1, logic="and", a=1, offset=1):
         return np.zeros(p) + np.inf
 
     # Preprocess signs
-    inds = np.argsort(-1 * np.abs(W), axis=1)
+    inds = np.argsort(-1 * np.abs(W), axis=1, stable="stable")
     sortW = np.take_along_axis(W, inds, axis=1)
     np.cumsum(sortW > 0, axis=1)
     cumneg = np.cumsum(sortW < 0, axis=1)
