@@ -1,7 +1,8 @@
 name: Continuous Integration
 
 on:
-  - push
+  pull_request:
+  push:
 
 jobs:
   check-linting-and-formatting:
