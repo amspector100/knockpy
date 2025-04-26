@@ -1,5 +1,6 @@
-""" Submodule of classes/functions depending on Pytorch."""
-all = ["deeppink", "mrcgrad"]
+"""Submodule of classes/functions depending on Pytorch."""
 
-from . import deeppink
-from . import mrcgrad
+from . import deeppink as deeppink
+from . import mrcgrad as mrcgrad
+
+all = ["deeppink", "mrcgrad"]

@@ -1,19 +1,14 @@
-import warnings
 import numpy as np
-import scipy as sp
-from scipy import stats
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from .. import utilities
 
 
 def create_batches(features, y, batchsize):
-
     # Create random indices to reorder datapoints
     n = features.shape[0]
-    p = features.shape[1]
+    features.shape[1]
     inds = torch.randperm(n)
 
     # Iterate through and create batches
@@ -42,7 +37,7 @@ class DeepPinkModel(nn.Module):
         p : int
             The dimensionality of the data
         hidden_sizes: list
-            A list of hidden sizes for the mlp layer(s). 
+            A list of hidden sizes for the mlp layer(s).
             Defaults to [64].
         normalize_Z : bool
             If True, the first sparse linear layer is normalized
@@ -61,8 +56,8 @@ class DeepPinkModel(nn.Module):
 
         # Save indices/reverse indices to prevent violations of FDR control
         self.inds, self.rev_inds = utilities.random_permutation_inds(2 * p)
-        self.feature_inds = self.rev_inds[0:self.p]
-        self.ko_inds = self.rev_inds[self.p:]
+        self.feature_inds = self.rev_inds[0 : self.p]
+        self.ko_inds = self.rev_inds[self.p :]
 
         # Create MLP layers
         mlp_layers = [nn.Linear(p, hidden_sizes[0])]
@@ -80,12 +75,11 @@ class DeepPinkModel(nn.Module):
         self.mlp = nn.Sequential(*mlp_layers)
 
     def _fetch_Z_weight(self):
-
         # Possibly don't normalize
         if not self.norm_Z_weight:
             return self.Z_weight
 
-        # Else normalize, first construct denominator            
+        # Else normalize, first construct denominator
         normalizer = torch.abs(self.Z_weight[self.feature_inds]) + torch.abs(
             self.Z_weight[self.ko_inds]
         )
@@ -103,7 +97,7 @@ class DeepPinkModel(nn.Module):
         # First layer: pairwise weights (and sum)
         if not isinstance(features, torch.Tensor):
             features = torch.tensor(features).float()
-        features = features[:, self.inds] # shuffle features to prevent FDR violations
+        features = features[:, self.inds]  # shuffle features to prevent FDR violations
         features = self._fetch_Z_weight().unsqueeze(dim=0) * features
         features = features[:, self.feature_inds] - features[:, self.ko_inds]
 
@@ -128,12 +122,11 @@ class DeepPinkModel(nn.Module):
     def l2norm(self):
         out = 0
         for parameter in self.mlp.parameters():
-            out += (parameter ** 2).sum()
-        out += (self.Z_weight ** 2).sum()
+            out += (parameter**2).sum()
+        out += (self.Z_weight**2).sum()
         return out
 
     def feature_importances(self, weight_scores=True):
-
         with torch.no_grad():
             # Calculate weights from MLP
             if weight_scores:
@@ -166,7 +159,6 @@ def train_deeppink(
     verbose=True,
     **kwargs,
 ):
-
     # Infer n, p, set default lambda1, lambda2
     n = features.shape[0]
     p = int(features.shape[1] / 2)
@@ -191,12 +183,10 @@ def train_deeppink(
 
     # Loop through epochs
     for j in range(num_epochs):
-
         # Create batches, loop through
         batches = create_batches(features, y, batchsize=batchsize)
         predictive_loss = 0
         for Xbatch, ybatch in batches:
-
             # Forward pass and loss
             output = model(Xbatch)
             loss = criterion(output, ybatch.unsqueeze(-1))

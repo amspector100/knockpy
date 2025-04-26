@@ -2,21 +2,15 @@ import numpy as np
 import scipy as sp
 import unittest
 import pytest
-# for regular pytest calls
-try:
-    from .context import knockpy
-# for running directly with python
-except ImportError:
-    from context import knockpy
+import knockpy
 
 from knockpy import dgp
 
 
 class TestSampleData(unittest.TestCase):
-    """ Tests sample_data function """
+    """Tests sample_data function"""
 
     def test_logistic(self):
-
         np.random.seed(110)
 
         p = 50
@@ -43,11 +37,14 @@ class TestSampleData(unittest.TestCase):
         np.testing.assert_almost_equal(cond_mean, emp_cond_mean, decimal=2)
 
     def test_beta_gen(self):
-
         # Test sparsity
         p = 100
         dgprocess = dgp.DGP()
-        _, _, beta, _, _ = dgprocess.sample_data(p=p, sparsity=0.3, coeff_size=0.3,)
+        _, _, beta, _, _ = dgprocess.sample_data(
+            p=p,
+            sparsity=0.3,
+            coeff_size=0.3,
+        )
         self.assertTrue(
             (beta != 0).sum() == 30, msg="sparsity parameter yields incorrect sparsity"
         )
@@ -62,7 +59,11 @@ class TestSampleData(unittest.TestCase):
         sparsity = 0.2
         groups = np.concatenate([np.arange(0, 50, 1), np.arange(0, 50, 1)])
         dgprocess = dgp.DGP()
-        _, _, beta, _, _ = dgprocess.sample_data(p=p, sparsity=sparsity, groups=groups,)
+        _, _, beta, _, _ = dgprocess.sample_data(
+            p=p,
+            sparsity=sparsity,
+            groups=groups,
+        )
 
         # First, test that the correct number of features is chosen
         num_groups = np.unique(groups).shape[0]
@@ -81,7 +82,6 @@ class TestSampleData(unittest.TestCase):
         )
 
     def test_y_response(self):
-
         # Sample design matrix, beta
         # np.random.seed(100)
         n = 100000
@@ -97,7 +97,7 @@ class TestSampleData(unittest.TestCase):
         # Test if a feature has the expected marginal covariance w y
         def test_cov(feature, y, name, expected=1):
             ycov = (feature * y).mean()
-            var = (feature ** 2).mean()
+            var = (feature**2).mean()
             coef = ycov / var
             self.assertTrue(
                 np.abs(coef - expected) < 0.05,
@@ -120,7 +120,7 @@ class TestSampleData(unittest.TestCase):
         mean2 = y[~feature].mean()
         self.assertTrue(
             np.abs(mean1 - mean2 - 1) < 0.05,
-            msg=f"when sampling y, trunclinear cond_mean yields unexpected results for conditional means {mean1} vs {mean2+1}",
+            msg=f"when sampling y, trunclinear cond_mean yields unexpected results for conditional means {mean1} vs {mean2 + 1}",
         )
 
         # Cond mean 4: pairwise interactions
@@ -141,7 +141,6 @@ class TestSampleData(unittest.TestCase):
         test_cov(feature, y, name="quadratic", expected=0)
 
     def test_coeff_dist(self):
-
         # Test normal
         np.random.seed(110)
         p = 1000
@@ -190,7 +189,6 @@ class TestSampleData(unittest.TestCase):
         )
 
     def test_beta_sign_prob(self):
-
         # Test signs of beta
         p = 100
         for sign_prob in [0, 1]:
@@ -226,7 +224,6 @@ class TestSampleData(unittest.TestCase):
                 )
 
     def test_beta_corr_signals(self):
-
         # Test signals are grouped together
         p = 4
         sparsity = 0.5
@@ -248,7 +245,6 @@ class TestSampleData(unittest.TestCase):
             )
 
     def test_partialcorr_sample(self):
-
         p = 50
         rho = 0.99
         dgprocess = dgp.DGP()
@@ -266,7 +262,6 @@ class TestSampleData(unittest.TestCase):
         )
 
     def test_factor_sample(self):
-
         p = 50
         rank = 3
         np.random.seed(100)
@@ -277,17 +272,15 @@ class TestSampleData(unittest.TestCase):
             diag_diff < 1e-4,
             f"Factor Sigma={V} for rank={rank} is not a correlation matrix",
         )
-        mineig = np.linalg.eigh(V)[0].min()
+        np.linalg.eigh(V)[0].min()
 
     def test_blockequi_sample(self):
-
         # Check that defaults are correct - start w cov matrix
         _, _, beta, _, V, _ = dgp.block_equi_graph()
 
         # Construct expected cov matrix -  this is a different
         # construction than the actual function
         def construct_expected_V(p, groupsize, rho, gamma):
-
             # Construct groups with rho ingroup correlation
             block = np.zeros((groupsize, groupsize)) + rho
             block += (1 - rho) * np.eye(groupsize)
@@ -306,7 +299,6 @@ class TestSampleData(unittest.TestCase):
         )
 
         # Check number of nonzero groups
-        groupsize = 5
         nonzero_inds = np.arange(0, 1000, 1)[beta != 0]
         num_nonzero_groups = np.unique(nonzero_inds // 5).shape[0]
         self.assertTrue(
@@ -322,7 +314,6 @@ class TestSampleData(unittest.TestCase):
         )
 
     def test_dsliu2020_sample(self):
-
         rho = 0.8
         n = 500
         p = 500
@@ -337,7 +328,7 @@ class TestSampleData(unittest.TestCase):
             coeff_dist="dsliu2020",
         )
         self.assertTrue(
-            (beta != 0).sum() == 50, f"Sparsity constraint for dsliu2020 violated"
+            (beta != 0).sum() == 50, "Sparsity constraint for dsliu2020 violated"
         )
 
         p = 2000
@@ -352,11 +343,10 @@ class TestSampleData(unittest.TestCase):
             coeff_dist="dsliu2020",
         )
         self.assertTrue(
-            (beta != 0).sum() == 50, f"Sparsity constraint for dsliu2020 violated"
+            (beta != 0).sum() == 50, "Sparsity constraint for dsliu2020 violated"
         )
 
     def test_gmliu2019_sample(self):
-
         n = 300
         p = 1000
         rho = 0.8
@@ -372,11 +362,10 @@ class TestSampleData(unittest.TestCase):
             coeff_dist="gmliu2019",
         )
         self.assertTrue(
-            (beta != 0).sum() == 60, f"Sparsity constraint for gmliu2019 violated"
+            (beta != 0).sum() == 60, "Sparsity constraint for gmliu2019 violated"
         )
 
     def test_AR1_sample(self):
-
         # Check that rho parameter works
         rho = 0.3
         p = 500
@@ -421,12 +410,11 @@ class TestSampleData(unittest.TestCase):
         )
         obs_max_corr = np.max(np.diag(Sigma, 1))
         self.assertTrue(
-            max_corr >= obs_max_corr - 1e-5, # float errors
-            f"observed max corr {obs_max_corr} > max_corr {max_corr}"
+            max_corr >= obs_max_corr - 1e-5,  # float errors
+            f"observed max corr {obs_max_corr} > max_corr {max_corr}",
         )
 
     def test_nested_AR1(self):
-
         # Check that a, b parameters work
         np.random.seed(110)
         a = 100
@@ -445,7 +433,7 @@ class TestSampleData(unittest.TestCase):
         )
 
     def test_dot_corr_matrices(self):
-        """ Tests wishart and uniform corr matrices """
+        """Tests wishart and uniform corr matrices"""
 
         d = 1000
         p = 4
@@ -470,8 +458,8 @@ class TestSampleData(unittest.TestCase):
         )
 
     def test_dirichlet_matrices(self):
-        """ Simple test that ensures there are no errors, we get corr matrix 
-		with expected eigenvalues"""
+        """Simple test that ensures there are no errors, we get corr matrix
+        with expected eigenvalues"""
 
         # Try one with low temp
         p = 300
@@ -509,7 +497,7 @@ class TestSampleData(unittest.TestCase):
         )
 
     def test_trueER_sample(self):
-        """ ER sampling following nodewise knockoffs paper """
+        """ER sampling following nodewise knockoffs paper"""
 
         # Try er = Q
         p = 500
@@ -524,7 +512,7 @@ class TestSampleData(unittest.TestCase):
             "True (Q)ErdosRenyi sampler fails to give correct sparsity",
         )
 
-        mean_val = (Q.sum() - np.diag(Q).sum()) / (p ** 2 - p)
+        mean_val = (Q.sum() - np.diag(Q).sum()) / (p**2 - p)
         self.assertTrue(
             abs(mean_val) < 0.1,
             "True (Q)ErdosRenyi sampler fails to give correct mean val",
@@ -541,7 +529,7 @@ class TestSampleData(unittest.TestCase):
             "True (V)ErdosRenyi sampler fails to give correct sparsity",
         )
 
-        mean_val = (V.sum() - np.diag(V).sum()) / (p ** 2 - p)
+        mean_val = (V.sum() - np.diag(V).sum()) / (p**2 - p)
         self.assertTrue(
             abs(mean_val) < 0.1,
             "True (V)ErdosRenyi sampler fails to give correct mean val",
@@ -551,21 +539,22 @@ class TestSampleData(unittest.TestCase):
         max_corr = 0.1
         delta = 0.05
         dgprocess = dgp.DGP()
-        _, _, _, _, V = dgprocess.sample_data(p=p, delta=delta, method="ver", max_corr=max_corr)
+        _, _, _, _, V = dgprocess.sample_data(
+            p=p, delta=delta, method="ver", max_corr=max_corr
+        )
         np.testing.assert_array_almost_equal(
             np.diag(V),
             np.ones(p),
-            err_msg=f"After setting max_corr={max_corr}, ER cov is not corr. matrix")
-        hV = V - np.diag(np.diag(V)) # zero out diagonals 
+            err_msg=f"After setting max_corr={max_corr}, ER cov is not corr. matrix",
+        )
+        hV = V - np.diag(np.diag(V))  # zero out diagonals
         obs_max_corr = np.abs(hV).max()
         self.assertTrue(
             obs_max_corr <= max_corr + 1e-5,
-            f"For VER, obs_max_corr {obs_max_corr} >= max_corr {max_corr}"
+            f"For VER, obs_max_corr {obs_max_corr} >= max_corr {max_corr}",
         )
 
-
     def test_tblock_sample(self):
-
         # Fake data --> we want the right cov matrix
         np.random.seed(110)
         n = 1000000
@@ -588,11 +577,10 @@ class TestSampleData(unittest.TestCase):
             V,
             emp_corr,
             decimal=2,
-            err_msg=f"t-block empirical correlation matrix does not match theoretical one",
+            err_msg="t-block empirical correlation matrix does not match theoretical one",
         )
 
     def test_t_sample(self):
-
         # Check that we get the right covariance matrix
         np.random.seed(110)
         n = 100000
@@ -607,7 +595,7 @@ class TestSampleData(unittest.TestCase):
             V,
             emp_corr,
             decimal=2,
-            err_msg=f"ar1t empirical correlation matrix does not match theoretical one",
+            err_msg="ar1t empirical correlation matrix does not match theoretical one",
         )
 
         # Check that this fails correctly for non-ar1-method
@@ -618,14 +606,18 @@ class TestSampleData(unittest.TestCase):
         self.assertRaisesRegex(ValueError, "should equal 'ar1'", non_ar1_t)
 
     def test_gibbs_sample(self):
-
         # Check that we get a decent correlation matrix
         # with the right type of Q matrix
         np.random.seed(110)
         n = 60000
         p = 4
         dgprocess = dgp.DGP()
-        X,_,_,_,V = dgprocess.sample_data(n=n, p=p, method="ising", x_dist="gibbs",)
+        X, _, _, _, V = dgprocess.sample_data(
+            n=n,
+            p=p,
+            method="ising",
+            x_dist="gibbs",
+        )
         gibbs_graph = dgprocess.gibbs_graph
 
         # Mean test
@@ -644,7 +636,7 @@ class TestSampleData(unittest.TestCase):
         )
         # Check consistency of gibbs_graph when passed in
         dgprocess2 = dgp.DGP(gibbs_graph=gibbs_graph)
-        X2,_,_,_,V2 = dgprocess2.sample_data(
+        X2, _, _, _, V2 = dgprocess2.sample_data(
             n=n, p=p, x_dist="gibbs", y_dist="binomial"
         )
         gibbs_graph2 = dgprocess2.gibbs_graph
@@ -652,7 +644,7 @@ class TestSampleData(unittest.TestCase):
             gibbs_graph,
             gibbs_graph2,
             decimal=5,
-            err_msg=f"Gibbs (non-ising) sampler is not consistent when gibbs_graph passed in",
+            err_msg="Gibbs (non-ising) sampler is not consistent when gibbs_graph passed in",
         )
         error = np.abs(V - V2).mean()
         self.assertTrue(
@@ -665,7 +657,6 @@ class TestSampleData(unittest.TestCase):
         _ = dgprocess.sample_data(n=5, p=p, x_dist="gibbs", y_dist="binomial")
 
     def test_xdist_error(self):
-
         # Check that we get an error for wrong dist
         def bad_xdist():
             dgprocess = dgp.DGP()
@@ -673,37 +664,38 @@ class TestSampleData(unittest.TestCase):
 
         self.assertRaisesRegex(ValueError, "x_dist must be one of", bad_xdist)
 
+
 class TestGroupings(unittest.TestCase):
-
     def test_group_creation(self):
-
         # Random covariance matrix
         np.random.seed(110)
         dgprocess = knockpy.dgp.DGP()
         dgprocess.sample_data(p=100)
         # Check within-group correlations are less than 0.5
         Sigma = dgprocess.Sigma
-        #helper_Sigma = dgprocess.Sigma.copy()
-        #helper_Sigma = helper_Sigma - 1 * np.diag(np.diag(helper_Sigma))
+        # helper_Sigma = dgprocess.Sigma.copy()
+        # helper_Sigma = helper_Sigma - 1 * np.diag(np.diag(helper_Sigma))
         for cutoff in [0.1, 0.5, 0.9]:
-            groups = knockpy.dgp.create_grouping(Sigma, cutoff=cutoff, method='single')
+            groups = knockpy.dgp.create_grouping(Sigma, cutoff=cutoff, method="single")
             for j in np.unique(groups):
-                between_group_corrs = Sigma[groups==j][:, groups!=j]
+                between_group_corrs = Sigma[groups == j][:, groups != j]
                 maxcorr = np.max(np.abs(between_group_corrs))
                 self.assertTrue(
-                     maxcorr <= cutoff,
-                    f"Max between-group corr is {maxcorr} > cutoff {cutoff}"
+                    maxcorr <= cutoff,
+                    f"Max between-group corr is {maxcorr} > cutoff {cutoff}",
                 )
 
-        groups = knockpy.dgp.create_grouping(Sigma, cutoff=1, method='single')
+        groups = knockpy.dgp.create_grouping(Sigma, cutoff=1, method="single")
         np.testing.assert_array_almost_equal(
             np.sort(groups),
             np.arange(1, Sigma.shape[0] + 1),
-            err_msg=f"When cutoff=1, groups are not trivial groups"
+            err_msg="When cutoff=1, groups are not trivial groups",
         )
+
 
 if __name__ == "__main__":
     import pytest
     import sys
+
     pytest.main(sys.argv)
-    #unittest.main()
+    # unittest.main()

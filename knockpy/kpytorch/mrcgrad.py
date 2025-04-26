@@ -1,21 +1,19 @@
-""" Gradient-based methods for solving MRC problems.
+"""Gradient-based methods for solving MRC problems.
 Currently only used for group-knockoffs."""
 
 import warnings
-import time
 import numpy as np
 import scipy as sp
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from ..constants import GAMMA_VALS
 from .. import utilities, mrc
 
 
 def block_diag_sparse(*arrs):
-    """ Given a list of 2D torch tensors, creates a sparse block-diagonal matrix
+    """Given a list of 2D torch tensors, creates a sparse block-diagonal matrix
     See https://github.com/pytorch/pytorch/issues/31942
     """
     bad_args = []
@@ -42,21 +40,21 @@ def block_diag_sparse(*arrs):
 
 class MVRLoss(nn.Module):
     """
-    A pytorch class to compute S-matrices for 
-    (gaussian) MX knockoffs which minimizes the 
+    A pytorch class to compute S-matrices for
+    (gaussian) MX knockoffs which minimizes the
     trace of the feature-knockoff precision matrix
-    (the inverse of the feature-knockoff 
+    (the inverse of the feature-knockoff
     covariance/Grahm matrix, G).
 
     :param Sigma: p x p numpy matrix. Must already
     be sorted by groups.
-    :param groups: p length numpy array of groups. 
-    These must already be sorted and correspond to 
+    :param groups: p length numpy array of groups.
+    These must already be sorted and correspond to
     the Sigma.
     :param init_S: The initialization values for the S
-    block-diagonal matrix. 
+    block-diagonal matrix.
     - A p x p matrix. The block-diagonal of this matrix,
-    as specified by groups, will be the initial values 
+    as specified by groups, will be the initial values
     for the S matrix.
     - A list of square numpy matrices, with the ith element
     corresponding to the block of the ith group in S.
@@ -67,8 +65,8 @@ class MVRLoss(nn.Module):
     :param rec_prop: The proportion of knockoffs that will be
     recycled.
     :param smoothing: Calculate the loss as sum 1/(eigs + smoothing)
-    as opposed to sum 1/eigs. This is helpful if fitting lasso 
-    statistics on extremely degenerate covariance matrices. Over the 
+    as opposed to sum 1/eigs. This is helpful if fitting lasso
+    statistics on extremely degenerate covariance matrices. Over the
     course of optimization, this smoothing parameter will go to 0.
     :param method: One of mvr or maxent (mmi for backwards compatability).
     """
@@ -84,7 +82,6 @@ class MVRLoss(nn.Module):
         min_smoothing=1e-4,
         method="mvr",
     ):
-
         super().__init__()
 
         # Groups MUST be sorted
@@ -132,7 +129,10 @@ class MVRLoss(nn.Module):
         else:
             objective = mrc.maxent_loss
         for gamma in GAMMA_VALS:
-            loss = objective(Sigma=Sigma, S=(1 - self.rec_prop) * gamma * init_S,)
+            loss = objective(
+                Sigma=Sigma,
+                S=(1 - self.rec_prop) * gamma * init_S,
+            )
             if loss >= 0 and loss < best_loss:
                 best_gamma = gamma
                 best_loss = loss
@@ -154,17 +154,17 @@ class MVRLoss(nn.Module):
         self.scale_sqrt_S(tol=1e-5, num_iter=10)
 
     def update_sqrt_S(self):
-        """ Updates sqrt_S using the block parameters """
+        """Updates sqrt_S using the block parameters"""
         self.sqrt_S = block_diag_sparse(*self.blocks)
 
     def pull_S(self):
-        """ Returns the S matrix """
+        """Returns the S matrix"""
         self.update_sqrt_S()
         S = torch.mm(self.sqrt_S.t(), self.sqrt_S)
         return S
 
     def forward(self, smoothing=None):
-        """ Calculates trace of inverse grahm feature-knockoff matrix"""
+        """Calculates trace of inverse grahm feature-knockoff matrix"""
 
         # TODO: This certainly works and is more efficient in a forward
         # pass than taking the eigenvalues of both S and 2*Sigma - S.
@@ -181,9 +181,7 @@ class MVRLoss(nn.Module):
         G_schurr = self.Sigma - torch.mm(torch.mm(diff, self.invSigma), diff)
 
         # Take eigenvalues
-        eigvals = torch.linalg.eigvalsh(
-            G_schurr, UPLO="U"
-        )
+        eigvals = torch.linalg.eigvalsh(G_schurr, UPLO="U")
         if self.method == "mvr":
             inv_eigs = 1 / (smoothing + eigvals)
         elif self.method == "maxent":
@@ -193,11 +191,10 @@ class MVRLoss(nn.Module):
         return inv_eigs.sum()
 
     def scale_sqrt_S(self, tol, num_iter):
-        """ Scales sqrt_S such that 2 Sigma - S is PSD."""
+        """Scales sqrt_S such that 2 Sigma - S is PSD."""
 
         # No gradients
         with torch.no_grad():
-
             # This shift only applies for
             for block in self.blocks:
                 if block.data.shape[0] == 1:
@@ -215,12 +212,12 @@ class MVRLoss(nn.Module):
             self.update_sqrt_S()
 
     def project(self, **kwargs):
-        """ Project by scaling sqrt_S """
+        """Project by scaling sqrt_S"""
         self.scale_sqrt_S(**kwargs)
 
 
 class PSGDSolver:
-    """ 
+    """
     Projected gradient descent to solve for MRC knockoffs.
     This will work for non-convex loss objectives as well,
     although it's a heuristic optimization method.
@@ -233,7 +230,7 @@ class PSGDSolver:
     - .project() which ensures that both the internally-stored
     S matrix as well as (2*Sigma - S) are PSD.
     - .pull_S(), which returns the internally-stored S matrix.
-    If None, creates a MVRLoss class. 
+    If None, creates a MVRLoss class.
     :param lr: Initial learning rate (default 1e-2)
     :param verbose: if true, reports progress
     :param max_epochs: Maximum number of epochs in SGD
@@ -243,7 +240,7 @@ class PSGDSolver:
     :param convergence_tol: After each projection, we calculate
     improvement = 2/3 * ||prev_opt_S - opt_S||_1 + 1/3 * (improvement)
     When improvement < convergence_tol, we return.
-    :param kwargs: Passed to MVRLoss 
+    :param kwargs: Passed to MVRLoss
     """
 
     def __init__(
@@ -259,7 +256,6 @@ class PSGDSolver:
         convergence_tol=1e-1,
         **kwargs,
     ):
-
         # Add Sigma
         self.p = Sigma.shape[0]
         self.Sigma = Sigma
@@ -319,7 +315,6 @@ class PSGDSolver:
         optimizer = torch.optim.Adam(params, lr=self.lr)
         improvement = self.convergence_tol + 10
         for j in range(self.max_epochs):
-
             # Step 1: Calculate loss (trace of feature-knockoff precision)
             loss = self.losscalc()
             if np.isnan(loss.detach().item()):
@@ -362,7 +357,7 @@ class PSGDSolver:
                 # Break if improvement is small
                 if improvement < self.convergence_tol and j % 10 == 0:
                     if self.losscalc.smoothing > self.losscalc.min_smoothing:
-                        improvement = 1 + convergence_tol  # Reset
+                        improvement = 1 + self.convergence_tol  # Reset
                         self.losscalc.smoothing = max(
                             self.losscalc.min_smoothing, self.losscalc.smoothing / 10
                         )
@@ -385,16 +380,19 @@ class PSGDSolver:
 
 
 def solve_mrc_psgd(
-    Sigma, groups=None, method="mvr", **kwargs,
+    Sigma,
+    groups=None,
+    method="mvr",
+    **kwargs,
 ):
     """
     Wraps the PSGDSolver class.
     :param Sigma: Covariance matrix
     :param groups: groups for group knockoffs
     :param method: MRC loss (mvr or maxent)
-    :param init_kwargs: kwargs to pass to 
+    :param init_kwargs: kwargs to pass to
     PSGDSolver.
-    :param optimize_kwargs: kwargs to pass 
+    :param optimize_kwargs: kwargs to pass
     to optimizer method.
     :returns: opt_S
     """

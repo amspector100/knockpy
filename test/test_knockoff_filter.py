@@ -1,17 +1,22 @@
+import os
 import time
 import pytest
 import numpy as np
 from scipy import stats
 import unittest
-from .context import knockpy
-from .context import file_directory
+import knockpy
 
-from knockpy import dgp, mlr, utilities
+from knockpy import dgp, utilities
 from knockpy.knockoff_filter import KnockoffFilter
+
+
+file_directory = os.path.dirname(os.path.abspath(__file__))
+
 
 NUM_REPS = 1
 try:
-    import torch
+    import torch as torch
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -22,12 +27,12 @@ class TestFdrControl(unittest.TestCase):
     NOTE: Due to resource limitations, this currently
     does not actually check FDR control.
 
-	This checkes FDR control for the KnockoffFilter class.
-	It is admittedly difficult to do this with high power
-	in a computationally efficient manner, so often we run only 
-	a few replications to check that the KnockoffFilter class behaves
-	roughly as expected.
-	"""
+        This checkes FDR control for the KnockoffFilter class.
+        It is admittedly difficult to do this with high power
+        in a computationally efficient manner, so often we run only
+        a few replications to check that the KnockoffFilter class behaves
+        roughly as expected.
+    """
 
     def check_fdr_control(
         self,
@@ -41,7 +46,6 @@ class TestFdrControl(unittest.TestCase):
         S_method="mvr",
         **kwargs,
     ):
-
         np.random.seed(110)
         filter_kwargs = filter_kwargs.copy()
         kwargs = kwargs.copy()
@@ -74,18 +78,19 @@ class TestFdrControl(unittest.TestCase):
         init_filter_kwargs = {}
         init_filter_kwargs["ksampler"] = filter_kwargs.pop("ksampler", "gaussian")
         init_filter_kwargs["fstat"] = filter_kwargs.pop("fstat", "lasso")
-        knockoff_kwargs = filter_kwargs.pop('knockoff_kwargs', {})
-
+        knockoff_kwargs = filter_kwargs.pop("knockoff_kwargs", {})
 
         for name, groups in zip([name1, name2], [groups1, groups2]):
-
-            if not test_grouped and np.all(groups==groups2):
+            if not test_grouped and np.all(groups == groups2):
                 continue
 
             # Solve for S matrix
             if S is None and not fixedX and not infer_sigma:
-                ksampler = knockpy.knockoffs.GaussianSampler(
-                    X=X0, Sigma=Sigma, groups=groups, method=S_method,
+                knockpy.knockoffs.GaussianSampler(
+                    X=X0,
+                    Sigma=Sigma,
+                    groups=groups,
+                    method=S_method,
                 )
             if not fixedX:
                 invSigma = utilities.chol2inv(Sigma)
@@ -103,9 +108,9 @@ class TestFdrControl(unittest.TestCase):
 
                 # Infer y_dist
                 if "y_dist" in kwargs:
-                    y_dist = kwargs["y_dist"]
+                    kwargs["y_dist"]
                 else:
-                    y_dist = "gaussian"
+                    pass
 
                 # Run (MX) knockoff filter
                 if fixedX or infer_sigma:
@@ -121,9 +126,9 @@ class TestFdrControl(unittest.TestCase):
                 knockoff_filter = KnockoffFilter(**init_filter_kwargs)
 
                 # Knockoff kwargs
-                knockoff_kwargs['S'] = S
-                knockoff_kwargs['invSigma'] = invSigma_arg
-                knockoff_kwargs['verbose'] = False
+                knockoff_kwargs["S"] = S
+                knockoff_kwargs["invSigma"] = invSigma_arg
+                knockoff_kwargs["verbose"] = False
 
                 if "df_t" in kwargs:
                     knockoff_kwargs["df_t"] = kwargs["df_t"]
@@ -144,8 +149,10 @@ class TestFdrControl(unittest.TestCase):
                 )
 
                 # Check null W-statistics are symmetric
-                pos_prop = (knockoff_filter.W[group_nonnulls == 0] > 0).mean() 
-                pos_prop_se = np.sqrt(pos_prop * (1 - pos_prop) / (1 - group_nonnulls).sum())
+                pos_prop = (knockoff_filter.W[group_nonnulls == 0] > 0).mean()
+                pos_prop_se = np.sqrt(
+                    pos_prop * (1 - pos_prop) / (1 - group_nonnulls).sum()
+                )
                 Zstat = (pos_prop - 0.5) / pos_prop_se
                 pval = 1 - stats.norm.cdf(Zstat)
                 self.assertTrue(
@@ -162,7 +169,7 @@ class TestFdrControl(unittest.TestCase):
                 del knockoff_filter
 
             fdps = np.array(fdps)
-            fdr = fdps.mean()
+            fdps.mean()
             # fdr_se = fdps.std() / np.sqrt(reps)
 
             # norm_quant = stats.norm.ppf(1 - alpha)
@@ -174,11 +181,11 @@ class TestFdrControl(unittest.TestCase):
 
 
 class TestKnockoffFilter(TestFdrControl):
-    """ Tests knockoff filter (mostly MX, some FX tests) """
+    """Tests knockoff filter (mostly MX, some FX tests)"""
 
     @pytest.mark.slow
     def test_gnull_control(self):
-        """ Test FDR control under global null """
+        """Test FDR control under global null"""
 
         # Scenario 1: AR1 a = 1, b = 1, global null
         self.check_fdr_control(
@@ -218,11 +225,16 @@ class TestKnockoffFilter(TestFdrControl):
 
     @pytest.mark.slow
     def test_sparse_control(self):
-        """ Test FDR control under sparsity """
+        """Test FDR control under sparsity"""
 
         # Scenario 1: AR1 a = 1, b = 1,
         self.check_fdr_control(
-            n=300, p=100, method="AR1", sparsity=0.2, y_dist="binomial", reps=NUM_REPS,
+            n=300,
+            p=100,
+            method="AR1",
+            sparsity=0.2,
+            y_dist="binomial",
+            reps=NUM_REPS,
         )
 
         # Scenario 2: Erdos Renyi
@@ -247,11 +259,16 @@ class TestKnockoffFilter(TestFdrControl):
 
     @pytest.mark.slow
     def test_dense_control(self):
-        """ Test FDR control in dense scenario """
+        """Test FDR control in dense scenario"""
 
         # Scenario 1: AR1 a = 1, b = 1, global null
         self.check_fdr_control(
-            n=300, p=50, method="AR1", sparsity=0.5, y_dist="gaussian", reps=NUM_REPS,
+            n=300,
+            p=50,
+            method="AR1",
+            sparsity=0.5,
+            y_dist="gaussian",
+            reps=NUM_REPS,
         )
 
         # Scenario 2: Erdos Renyi
@@ -271,7 +288,7 @@ class TestKnockoffFilter(TestFdrControl):
 
     @pytest.mark.slow
     def test_nonlinear_control(self):
-        """ Test FDR control for nonlinear responses """
+        """Test FDR control for nonlinear responses"""
 
         # Scenario 1: AR1 a = 1, b = 1, global null
         self.check_fdr_control(
@@ -298,7 +315,6 @@ class TestKnockoffFilter(TestFdrControl):
 
     @pytest.mark.slow
     def test_recycling_control(self):
-
         # Scenario 1: AR1, recycle half
         self.check_fdr_control(
             reps=NUM_REPS,
@@ -346,7 +362,6 @@ class TestKnockoffFilter(TestFdrControl):
 
     @pytest.mark.slow
     def test_fxknockoff_control(self):
-
         # Scenario 1: AR1, recycle, lasso, p = 50
         self.check_fdr_control(
             reps=NUM_REPS,
@@ -385,7 +400,7 @@ class TestKnockoffFilter(TestFdrControl):
 
     @pytest.mark.slow
     def test_t_control(self):
-        """ FDR control with t-distributed designs """
+        """FDR control with t-distributed designs"""
 
         # Scenario 1: AR1 a = 1, b = 1, low sparsity
         self.check_fdr_control(
@@ -396,7 +411,9 @@ class TestKnockoffFilter(TestFdrControl):
             x_dist="ar1t",
             reps=NUM_REPS,
             df_t=5,
-            filter_kwargs={"ksampler": "artk",},
+            filter_kwargs={
+                "ksampler": "artk",
+            },
         )
         # Scenario 2: block-T R1 a = 1, b = 1, high sparsity
         self.check_fdr_control(
@@ -408,12 +425,13 @@ class TestKnockoffFilter(TestFdrControl):
             x_dist="blockt",
             reps=NUM_REPS,
             df_t=5,
-            filter_kwargs={"ksampler": "blockt",},
+            filter_kwargs={
+                "ksampler": "blockt",
+            },
         )
 
     @pytest.mark.slow
     def test_gibbs_grid_control(self):
-
         # Need to pull in specially-estimated Sigma
         p = 49
         V = np.loadtxt(f"{file_directory}/test_covs/vout{p}.txt")
@@ -425,12 +443,14 @@ class TestKnockoffFilter(TestFdrControl):
             sparsity=0.5,
             x_dist="gibbs",
             reps=NUM_REPS,
-            filter_kwargs={"ksampler": "gibbs_grid",},
+            filter_kwargs={
+                "ksampler": "gibbs_grid",
+            },
         )
 
     @pytest.mark.slow
     def test_gibbs_grid_dlasso(self):
-        """ Makes sure gibbs_grid works in combination with debiased lasso """
+        """Makes sure gibbs_grid works in combination with debiased lasso"""
 
         # Need to pull in specially-estimated Sigma
         p = 49
@@ -444,12 +464,14 @@ class TestKnockoffFilter(TestFdrControl):
             x_dist="gibbs",
             reps=1,
             q=1,
-            filter_kwargs={"ksampler": "gibbs_grid", "fstat": "dlasso",},
+            filter_kwargs={
+                "ksampler": "gibbs_grid",
+                "fstat": "dlasso",
+            },
         )
 
     @pytest.mark.slow
     def test_lars_control(self):
-
         # Scenario 1: blockequi
         p = 500
         rho = 0.3
@@ -479,12 +501,12 @@ class TestKnockoffFilter(TestFdrControl):
             reps=NUM_REPS,
             n=n,
             p=p,
-            y_dist='gaussian',
+            y_dist="gaussian",
             test_grouped=False,
             filter_kwargs={
-                "ksampler":"fx",
-                "fstat":"mlr",
-                "fstat_kwargs":{"n_iter":10, "chains":2, "num_mixture":4},
+                "ksampler": "fx",
+                "fstat": "mlr",
+                "fstat_kwargs": {"n_iter": 10, "chains": 2, "num_mixture": 4},
             },
         )
         # 2. MX
@@ -492,12 +514,12 @@ class TestKnockoffFilter(TestFdrControl):
             reps=NUM_REPS,
             n=n,
             p=p,
-            y_dist='gaussian',
+            y_dist="gaussian",
             test_grouped=True,
             filter_kwargs={
-                "fstat":"mlr",
-                "fstat_kwargs":{"n_iter":10, "chains":2},
-            },        
+                "fstat": "mlr",
+                "fstat_kwargs": {"n_iter": 10, "chains": 2},
+            },
         )
 
         # 3. splines
@@ -505,17 +527,16 @@ class TestKnockoffFilter(TestFdrControl):
             reps=NUM_REPS,
             n=n,
             p=p,
-            y_dist='gaussian',
+            y_dist="gaussian",
             test_grouped=True,
             filter_kwargs={
-                "fstat":"mlr_spline",
-                "fstat_kwargs":{"n_iter":10, "chains":2, "degree":4, "n_knots":3},
+                "fstat": "mlr_spline",
+                "fstat_kwargs": {"n_iter": 10, "chains": 2, "degree": 4, "n_knots": 3},
             },
         )
 
     @pytest.mark.slow
     def test_factor_model(self):
-
         p = 1000
         n = 300
         gamma = 1
@@ -524,12 +545,12 @@ class TestKnockoffFilter(TestFdrControl):
         self.check_fdr_control(
             n=n,
             p=p,
-            method='blockequi',
+            method="blockequi",
             gamma=gamma,
             rho=rho,
             infer_sigma=True,
             S_method="mvr",
-            filter_kwargs={"num_factors":2, 'fstat':'margcorr'},
+            filter_kwargs={"num_factors": 2, "fstat": "margcorr"},
             test_grouped=False,
         )
         time_factored = time.time() - time0
@@ -539,16 +560,14 @@ class TestKnockoffFilter(TestFdrControl):
         self.check_fdr_control(
             n=n,
             p=p,
-            method='blockequi',
+            method="blockequi",
             gamma=gamma,
             rho=rho,
             infer_sigma=True,
             S_method="mvr",
             filter_kwargs={
-                "knockoff_kwargs":{
-                    'how_approx':'factor'
-                }, 
-                'fstat':'margcorr'
+                "knockoff_kwargs": {"how_approx": "factor"},
+                "fstat": "margcorr",
             },
             test_grouped=False,
         )
@@ -559,29 +578,27 @@ class TestKnockoffFilter(TestFdrControl):
         self.check_fdr_control(
             n=n,
             p=p,
-            method='blockequi',
+            method="blockequi",
             gamma=gamma,
             rho=rho,
             infer_sigma=True,
             S_method="mvr",
-            filter_kwargs={"num_factors":None, 'fstat':'margcorr'},
+            filter_kwargs={"num_factors": None, "fstat": "margcorr"},
             test_grouped=False,
         )
         time_unfactored = time.time() - time0
         print(f"Unfactored time is {time_unfactored}")
         self.assertTrue(
-            1.5*time_factored < time_unfactored,
-            msg=f"time for factor assumption ({time_factored}) > 1.5*time for no apprx ({time_unfactored})"
+            1.5 * time_factored < time_unfactored,
+            msg=f"time for factor assumption ({time_factored}) > 1.5*time for no apprx ({time_unfactored})",
         )
         self.assertTrue(
-            1.2*time_apprx_factored < time_unfactored,
-            msg=f"time for factor apprx ({time_apprx_factored}) > 1.2*time for no apprx ({time_unfactored})"
+            1.2 * time_apprx_factored < time_unfactored,
+            msg=f"time for factor apprx ({time_apprx_factored}) > 1.2*time for no apprx ({time_unfactored})",
         )
-
 
     @pytest.mark.quick
     def test_selection_procedure(self):
-
         mxfilter = KnockoffFilter()
         W1 = np.concatenate([np.ones(10), -0.4 * np.ones(100)])
         selections = mxfilter.make_selections(W1, fdr=0.1)
