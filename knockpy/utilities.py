@@ -439,6 +439,10 @@ def check_pyglmnet_available(purpose):
 
 
 def srand(val: int) -> None:
+    """
+    Some knockpy functions invoke the C rand() function to generate random numbers. Invoking
+    srand() with some fixed value can help ensure repeatable results.
+    """
     libc = ctypes.CDLL(None)
     libc.srand.argtypes = [ctypes.c_uint]
     libc.srand(val)
