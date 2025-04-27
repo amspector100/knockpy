@@ -6,6 +6,7 @@ import unittest
 
 import knockpy
 from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
+from test.utilities import srand
 
 try:
     import torch as torch
@@ -266,6 +267,8 @@ class TestSDP(CheckSMatrix):
         )
 
     def test_sdp_tolerance(self):
+        srand(42)
+
         # Get graph
         np.random.seed(110)
         Q = dgp.ErdosRenyi(p=50, tol=1e-1)

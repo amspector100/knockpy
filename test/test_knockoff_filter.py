@@ -2,12 +2,14 @@ import os
 import time
 import pytest
 import numpy as np
-from scipy import stats
 import unittest
-import knockpy
+from scipy import stats
 
+import knockpy
 from knockpy import dgp, utilities
 from knockpy.knockoff_filter import KnockoffFilter
+
+from test.utilities import srand
 
 
 file_directory = os.path.dirname(os.path.abspath(__file__))
@@ -494,6 +496,7 @@ class TestKnockoffFilter(TestFdrControl):
     @pytest.mark.quick
     def test_mlr_fit(self):
         """Tests that MLR statistics work"""
+        srand(42)
         n = 200
         p = 50
         # 1. FX
