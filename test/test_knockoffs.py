@@ -1,12 +1,13 @@
 """Tests knockpy.knockoffs and knockpy.smatrix modules"""
 
-import warnings
-import numpy as np
 import unittest
+import warnings
+
+import numpy as np
 
 import knockpy
-from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
-from test.utilities import srand
+from knockpy import dgp, knockoffs, mac, mrc, smatrix, utilities
+from knockpy.utilities import srand
 
 try:
     import torch as torch
@@ -1163,8 +1164,9 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
 
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
 
     pytest.main(sys.argv)
     # unittest.main()

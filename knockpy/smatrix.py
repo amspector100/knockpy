@@ -1,10 +1,7 @@
 import numpy as np
 import scipy.cluster.hierarchy as hierarchy
-from . import mrc
-from . import mac
-from . import dgp
-from . import utilities
-from . import constants
+
+from . import constants, dgp, mac, mrc, utilities
 
 # These methods don't require approximation
 NON_APPROX_METHODS = ["equicorrelated", "eq", "ci", "ciknock"]

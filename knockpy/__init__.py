@@ -15,19 +15,20 @@ __all__ = [
     "KnockoffFilter",
 ]
 
-from . import constants
-from . import dgp
-from . import ggm
-from . import knockoffs
-from . import knockoff_filter
-from . import knockoff_stats
-from . import mac
-from . import metro
-from . import mlr
-from . import mrc
-from . import smatrix
-from . import utilities
-
+from . import (
+    constants,
+    dgp,
+    ggm,
+    knockoff_filter,
+    knockoff_stats,
+    knockoffs,
+    mac,
+    metro,
+    mlr,
+    mrc,
+    smatrix,
+    utilities,
+)
 from .knockoff_filter import KnockoffFilter
 
 name = "knockpy"

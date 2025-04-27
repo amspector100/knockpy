@@ -1,5 +1,6 @@
-import numpy as np
 import unittest
+
+import numpy as np
 import pytest
 
 from knockpy import ggm
@@ -75,8 +76,9 @@ class TestGGM(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
 
     pytest.main(sys.argv)
     # unittest.main()

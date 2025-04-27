@@ -1,15 +1,14 @@
-import numpy as np
 import unittest
+
+import numpy as np
 import sklearn.naive_bayes
 import sklearn.neural_network
 
 import knockpy
+from knockpy import dgp, utilities
 from knockpy import knockoff_stats as kstats
-from knockpy import utilities, dgp
 from knockpy.knockoff_stats import data_dependent_threshhold
-
-from test.utilities import srand
-
+from knockpy.utilities import srand
 
 try:
     import torch as torch
@@ -883,8 +882,9 @@ class TestHelpers(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
 
     pytest.main(sys.argv)
     # unittest.main()

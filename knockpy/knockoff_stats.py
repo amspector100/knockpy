@@ -1,9 +1,11 @@
 import warnings
+
 import numpy as np
 
 # Model-fitters
 import sklearn
-from sklearn import linear_model, model_selection, ensemble
+from sklearn import ensemble, linear_model, model_selection
+
 from . import utilities
 from .constants import DEFAULT_REG_VALS
 

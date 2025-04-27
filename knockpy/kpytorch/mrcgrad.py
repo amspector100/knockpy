@@ -2,14 +2,14 @@
 Currently only used for group-knockoffs."""
 
 import warnings
+
 import numpy as np
 import scipy as sp
-
 import torch
 import torch.nn as nn
 
+from .. import mrc, utilities
 from ..constants import GAMMA_VALS
-from .. import utilities, mrc
 
 
 def block_diag_sparse(*arrs):

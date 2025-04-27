@@ -1,7 +1,8 @@
-import numpy as np
-import scipy as sp
 import unittest
 import warnings
+
+import numpy as np
+import scipy as sp
 
 from knockpy import dgp, utilities
 

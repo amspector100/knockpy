@@ -4,12 +4,13 @@ Note to self: should this be in "knockoff_stats.py"?
 
 import numpy as np
 import scipy.special
-from ._mlr_spikeslab_fx import _sample_mlr_spikeslab_fx
-from ._mlr_spikeslab import _sample_mlr_spikeslab
-from ._mlr_spikeslab_group import _sample_mlr_spikeslab_group
-from ._mlr_oracle import _sample_mlr_oracle_gaussian, _sample_mlr_oracle_logistic
+
 from .. import knockoff_stats as kstats
 from .. import utilities
+from ._mlr_oracle import _sample_mlr_oracle_gaussian, _sample_mlr_oracle_logistic
+from ._mlr_spikeslab import _sample_mlr_spikeslab
+from ._mlr_spikeslab_fx import _sample_mlr_spikeslab_fx
+from ._mlr_spikeslab_group import _sample_mlr_spikeslab_group
 
 
 def check_no_groups(groups, p, error=None):

@@ -1,12 +1,14 @@
 import os
-import numpy as np
+import unittest
+
 import networkx as nx
+import numpy as np
 from networkx.algorithms.approximation import treewidth
 from scipy import stats
-import unittest
+
 import knockpy
 from knockpy import dgp, metro
-from test.utilities import srand
+from knockpy.utilities import srand
 
 
 class TestMetroProposal(unittest.TestCase):

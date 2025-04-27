@@ -1,13 +1,13 @@
 import warnings
+
+# For SDP
+import cvxpy as cp
 import numpy as np
 import scipy as sp
 import scipy.linalg
 
+from . import constants, utilities
 from .constants import DEFAULT_TOL
-from . import utilities, constants
-
-# For SDP
-import cvxpy as cp
 
 try:
     from pydsdp.dsdp5 import dsdp

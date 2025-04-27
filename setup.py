@@ -1,5 +1,6 @@
-import numpy as np
 import os
+
+import numpy as np
 import setuptools
 from setuptools import Extension
 
