@@ -1,11 +1,13 @@
 """Tests knockpy.knockoffs and knockpy.smatrix modules"""
 
-import warnings
-import numpy as np
 import unittest
+import warnings
+
+import numpy as np
 
 import knockpy
-from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
+from knockpy import dgp, knockoffs, mac, mrc, smatrix, utilities
+from knockpy.utilities import srand
 
 try:
     import torch as torch
@@ -266,6 +268,8 @@ class TestSDP(CheckSMatrix):
         )
 
     def test_sdp_tolerance(self):
+        srand(42)
+
         # Get graph
         np.random.seed(110)
         Q = dgp.ErdosRenyi(p=50, tol=1e-1)
@@ -1160,8 +1164,9 @@ class TestKnockoffGen(CheckValidKnockoffs):
 
 
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
 
     pytest.main(sys.argv)
     # unittest.main()

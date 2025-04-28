@@ -1,10 +1,12 @@
 """Methods for minimum-reconstructability knockoffs."""
 
-import warnings
 import time
+import warnings
+
 import numpy as np
 import scipy as sp
-from . import utilities, constants, mac
+
+from . import constants, mac, utilities
 
 try:
     import choldate

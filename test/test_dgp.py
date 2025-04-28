@@ -1,9 +1,10 @@
-import numpy as np
-import scipy as sp
 import unittest
-import pytest
-import knockpy
 
+import numpy as np
+import pytest
+import scipy as sp
+
+import knockpy
 from knockpy import dgp
 
 
@@ -694,8 +695,9 @@ class TestGroupings(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
 
     pytest.main(sys.argv)
     # unittest.main()

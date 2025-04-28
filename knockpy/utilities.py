@@ -1,11 +1,13 @@
+import ctypes
 import warnings
+from functools import partial
+from multiprocessing import Pool
+
 import numpy as np
 import scipy as sp
 import scipy.sparse.linalg
-from scipy.sparse.linalg import eigsh
 import sklearn.covariance
-from multiprocessing import Pool
-from functools import partial
+from scipy.sparse.linalg import eigsh
 
 
 ### Group helpers
@@ -434,3 +436,13 @@ def check_pyglmnet_available(purpose):
         raise ValueError(
             f"pyglmnet is required for {purpose}, but importing pyglmnet raised {err}. See https://github.com/glm-tools/pyglmnet/."
         )
+
+
+def srand(val: int) -> None:
+    """
+    Some knockpy functions invoke the C rand() function to generate random numbers. Invoking
+    srand() with some fixed value can help ensure repeatable results.
+    """
+    libc = ctypes.CDLL(None)
+    libc.srand.argtypes = [ctypes.c_uint]
+    libc.srand(val)

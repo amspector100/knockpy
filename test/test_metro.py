@@ -1,15 +1,19 @@
 import os
-import numpy as np
+import unittest
+
 import networkx as nx
+import numpy as np
 from networkx.algorithms.approximation import treewidth
 from scipy import stats
-import unittest
+
 import knockpy
 from knockpy import dgp, metro
+from knockpy.utilities import srand
 
 
 class TestMetroProposal(unittest.TestCase):
     def test_gaussian_likelihood(self):
+        srand(24)
         X = np.array([0.5, 1, 2, 3])
         mu = 0.5
         var = 0.2
@@ -28,6 +32,7 @@ class TestMetroProposal(unittest.TestCase):
     def test_proposal_covs(self):
         # Fake data
         np.random.seed(110)
+        srand(42)
         n = 5
         p = 200
         dgprocess = dgp.DGP()
@@ -82,6 +87,7 @@ class TestMetroSample(unittest.TestCase):
     def test_ar1_sample(self):
         # Fake data
         np.random.seed(110)
+        srand(42)
         n = 30000
         p = 8
         dgprocess = dgp.DGP()

@@ -1,9 +1,7 @@
 import numpy as np
-from . import utilities
-from . import knockoffs
-from . import metro
-from . import mlr
+
 from . import knockoff_stats as kstats
+from . import knockoffs, metro, mlr, utilities
 
 
 class KnockoffFilter:

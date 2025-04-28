@@ -10,22 +10,22 @@ This code was based on initial code written by Stephen Bates in October
 """
 
 # The basics
-import numpy as np
-import scipy as sp
-import scipy.special
 import itertools
-from functools import reduce
-from . import utilities, dgp
-
-# Network and UGM tools
-import networkx as nx
-from networkx.algorithms.approximation import treewidth
-from .knockoffs import KnockoffSampler
-from . import smatrix, constants
 
 # Logging
 import warnings
+from functools import reduce
+
+# Network and UGM tools
+import networkx as nx
+import numpy as np
+import scipy as sp
+import scipy.special
+from networkx.algorithms.approximation import treewidth
 from tqdm import tqdm
+
+from . import constants, dgp, smatrix, utilities
+from .knockoffs import KnockoffSampler
 
 
 def gaussian_log_likelihood(X, mu, var):

@@ -4,7 +4,9 @@ See https://arxiv.org/pdf/1908.11611.pdf.
 """
 
 import copy
+
 import numpy as np
+
 from .knockoff_filter import KnockoffFilter as KF
 
 

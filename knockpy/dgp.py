@@ -1,15 +1,15 @@
 """A collection of functions for generating synthetic datasets."""
 
 import numpy as np
-from scipy import stats
-
-# Utility functions
-from . import utilities
-from .utilities import shift_until_PSD, cov2corr
 
 # Tree methods
 import scipy.cluster.hierarchy as hierarchy
 import scipy.spatial.distance as ssd
+from scipy import stats
+
+# Utility functions
+from . import utilities
+from .utilities import cov2corr, shift_until_PSD
 
 DEFAULT_DF_T = 3
 

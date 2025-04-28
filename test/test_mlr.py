@@ -1,7 +1,8 @@
-import numpy as np
 import unittest
-import knockpy
 
+import numpy as np
+
+import knockpy
 from knockpy import knockoffs, mlr, utilities
 
 

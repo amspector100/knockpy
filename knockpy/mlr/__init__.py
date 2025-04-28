@@ -9,4 +9,4 @@ __all__ = [
 ]
 
 from . import mlr
-from .mlr import MLR_Spikeslab, MLR_FX_Spikeslab, MLR_Spikeslab_Splines, OracleMLR
+from .mlr import MLR_FX_Spikeslab, MLR_Spikeslab, MLR_Spikeslab_Splines, OracleMLR

@@ -1,12 +1,14 @@
-import numpy as np
 import unittest
+
+import numpy as np
 import sklearn.naive_bayes
 import sklearn.neural_network
 
 import knockpy
+from knockpy import dgp, utilities
 from knockpy import knockoff_stats as kstats
-from knockpy import utilities, dgp
 from knockpy.knockoff_stats import data_dependent_threshhold
+from knockpy.utilities import srand
 
 try:
     import torch as torch
@@ -816,6 +818,7 @@ class TestDataThreshhold(unittest.TestCase):
                 self.check_T(W, T, q)
 
     def test_batched(self):
+        srand(42)
         q = 0.2
         W1 = np.array([1] * 10)
         W2 = np.array([-2, -1, 1, 2, 3, 4, 5, 6, 7, 8])
@@ -834,6 +837,7 @@ class TestDataThreshhold(unittest.TestCase):
     def test_zero_handling(self):
         """Makes sure Ts != 0"""
 
+        srand(42)
         q = 0.2
         W1 = np.array([1] * 10 + [0] * 10)
         W2 = np.array([-2, -1, 1, 2, 3, 4, 5, 6, 7, 8] + [0] * 10)
@@ -878,8 +882,9 @@ class TestHelpers(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
 
     pytest.main(sys.argv)
     # unittest.main()

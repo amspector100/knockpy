@@ -1,11 +1,11 @@
 import warnings
+
 import numpy as np
-from scipy import stats
 import scipy.linalg
+from scipy import stats
 
+from . import constants, smatrix, utilities
 from .utilities import shift_until_PSD
-from . import utilities, smatrix, constants
-
 
 ### Base Knockoff Class and Gaussian Knockoffs
 
