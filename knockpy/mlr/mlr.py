@@ -28,6 +28,21 @@ def _calc_group_blocks(groups, group_sizes):
 		group_blocks[gj, 0:gsize] = np.where(groups == (gj+1))[0]
 	return group_blocks.astype(int)
 
+def _mlr_to_adj_mlr(mlr_sign, prob_mlr_pos, prob_mlr_pos_nonnull, fdr):
+	mlr_abs = np.log(prob_mlr_pos / (1 - prob_mlr_pos))
+	# threshold
+	thresh = 1 / (1+fdr)
+	thresh = np.log(thresh / (1 - thresh))
+	# Adjusted statistics
+	nu_ratio = prob_mlr_pos_nonnull / (thresh - prob_mlr_pos)
+	amlr_abs = mlr_abs.copy()
+	amlr_abs[mlr_abs <= thresh] = thresh * scipy.special.expit(nu_ratio[mlr_abs <= thresh])
+	# Final statistic
+	W = amlr_abs * mlr_sign
+	# Clip numerical errors and return
+	W[np.abs(W) < 1e-15] = 0
+	return W
+
 class MLR_Spikeslab(kstats.FeatureStatistic):
 	"""
 	Masked likelihood ratio statistics using a spike-and-slab
@@ -42,6 +57,16 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 		the ``(n, p)``-shaped matrix of knockoffs
 	y : np.ndarray
 		``(n,)``-shaped response vector
+    groups : np.ndarray
+        For group knockoffs, a p-length array of integers from 1 to 
+        num_groups such that ``groups[j] == i`` indicates that variable `j`
+        is a member of group `i`. Defaults to None (regular knockoffs).
+	adjusted_mlr : bool
+		If True, adjusts the MLR statistics to maximize the expected number
+		of true discoveries (as opposed to the expected number of discoveries).
+		In this case, q (FDR level) must be provided.
+	fdr : float
+		FDR level. Optional; only used if adjusted_mlr=True.
 	n_iter : int
 		Number of samples per MCMC chain used to compute
 		MLR statistics. Default: 2000.
@@ -112,6 +137,8 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 		self.kwargs["n_iter"] = self.kwargs.get("n_iter", 2000)
 		self.kwargs["burn_prop"] = self.kwargs.get("burn_prop", 0.1)
 		self.kwargs["chains"] = self.kwargs.get("chains", 5)
+		self.adjusted_mlr = self.kwargs.pop("adjusted_mlr", False)
+		self.fdr = self.kwargs.pop("fdr", 0.05)
 
 	def fit(
 		self, X, Xk, y, groups, **kwargs
@@ -182,6 +209,7 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 				self.groups += 1
 			all_out.append(out)
 		self.betas = np.concatenate([x['betas'][self.burn:] for x in all_out])
+		#self.beta_logodds = np.concatenate([x['beta_logodds'][self.burn:] for x in all_out])
 		self.etas = np.concatenate([x['etas'][self.burn:] for x in all_out])
 		self.p0s = np.concatenate([x['p0s'][self.burn:] for x in all_out])
 		self.psis = np.concatenate([x['psis'][self.burn:] for x in all_out])
@@ -192,29 +220,58 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 		return self.compute_W()
 
 	def compute_W(self):
+		# Compute default MLR statistics
+		if not self.adjusted_mlr:
+			# Compute P(choose feature)
+			# etas = log(P(choose feature) / P(choose knockoff))
+			etas_cat = np.concatenate(
+				[
+					self.etas.reshape(self.N, self.ngroup, 1),
+					np.zeros((self.N, self.ngroup, 1))
+				],
+				axis=2
+			)
+			# this equals log(P(choose feature))
+			log_prob = scipy.special.log_softmax(etas_cat, axis=2)[:, :, 0]
+			self.log_prob = scipy.special.logsumexp(log_prob, b=1/self.N, axis=0)
+			self.W = np.exp(self.log_prob) - 0.5
+			# clip numerical errors
+			self.W[np.abs(self.W) < 1e-15] = 0
+			return self.W
+		# Else, compute adjusted MLR statistics.
+		if self.adjusted_mlr:
+			tol = 1e-10
+			# Compute sign guess based on psis
+			guess = np.mean(self.psis, axis=0)
+			guess[guess > 0.5] = 1
+			guess[guess < 0.5] = 0
+			guess[guess == 0.5] = np.random.binomial(1, 0.5, size=np.sum(guess == 0.5))
+			# Compute P_j(MLR_j > 0 | D)
+			mlr_pos = np.clip(np.mean(self.psis == guess, axis=0), tol, 1-tol)
+			# Compute P(MLR_j > 0, j is non-null | masked data)
+			mlr_pos_nonnull = np.clip(
+				np.mean((self.psis == guess) * (self.betas != 0), axis=0), tol, 1-tol
+			)
+			# MLR signs
+			mlr_sign = 2 * (guess == 0) - 1
+			# AMLR stats
+			self.W = _mlr_to_adj_mlr(
+				mlr_sign=mlr_sign, 
+				prob_mlr_pos=mlr_pos, 
+				prob_mlr_pos_nonnull=mlr_pos_nonnull, 
+				fdr=self.fdr,
+			)
+			return self.W
 
-		# Compute P(choose feature)
-		# etas = log(P(choose feature) / P(choose knockoff))
-		etas_cat = np.concatenate(
-			[
-				self.etas.reshape(self.N, self.ngroup, 1),
-				np.zeros((self.N, self.ngroup, 1))
-			],
-			axis=2
-		)
-		# this equals log(P(choose feature))
-		log_prob = scipy.special.log_softmax(etas_cat, axis=2)[:, :, 0]
-		self.log_prob = scipy.special.logsumexp(log_prob, b=1/self.N, axis=0)
-		self.W = np.exp(self.log_prob) - 0.5
-		# clip numerical errors
-		self.W[np.abs(self.W) < 1e-15] = 0
-		return self.W
 
 		
 class MLR_Spikeslab_Splines(MLR_Spikeslab):
 	"""
 	Masked likelihood ratio statistics using a spike-and-slab
 	prior for a linear or probit model based on regression splines.
+
+	All parameters are the same as MLR_Spikeslab except the 
+	following additional parameters.
 
 	Parameters
 	----------
@@ -347,6 +404,9 @@ class OracleMLR(MLR_Spikeslab):
 		self.Z = None
 		self.score = None
 		self.score_type = None
+		# Adjusted MLR stat, makes no difference for oracle though
+		self.adjusted_mlr = self.kwargs.pop("adjusted_mlr", False)
+		self.fdr = self.kwargs.pop("fdr", 0.05)
 
 	def fit(self, X, Xk, groups, y, **kwargs):
 		self.n, self.p = X.shape
@@ -392,6 +452,7 @@ class OracleMLR(MLR_Spikeslab):
 			all_out.append(out)
 		self.etas = np.concatenate([x['etas'][self.burn:] for x in all_out])
 		self.psis = np.concatenate([x['psis'][self.burn:] for x in all_out])
+		self.betas = np.stack([self.beta for _ in range(len(self.psis))], axis=0)
 		return self.compute_W()
 
 class MLR_FX_Spikeslab(kstats.FeatureStatistic):
@@ -434,6 +495,10 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		self.kwargs["n_iter"] = self.kwargs.get("n_iter", 2000)
 		self.kwargs["burn_prop"] = self.kwargs.get("burn_prop", 0.1)
 		self.kwargs["chains"] = self.kwargs.get("chains", 5)
+
+		# adjusted MLR parameters
+		self.adjusted_mlr = self.kwargs.pop("adjusted_mlr", False)
+		self.fdr = self.kwargs.pop("fdr", 0.05)
 
 	def calc_whiteout_statistics(
 		self,
@@ -524,36 +589,58 @@ class MLR_FX_Spikeslab(kstats.FeatureStatistic):
 		self.etas = np.concatenate([x['etas'][self.burn:] for x in all_out])
 		self.p0s = np.concatenate([x['p0s'][self.burn:] for x in all_out])
 		self.tau2s = np.concatenate([x['tau2s'][self.burn:] for x in all_out])
-		self.stb = np.concatenate([x['stb'][self.burn:] for x in all_out])
+		self.stb = np.concatenate([x['stb'][self.burn:] for x in all_out]) # sign(tildebeta)
 		self.sigma2s = np.concatenate([x['sigma2'][self.burn:] for x in all_out])
 		self.mixtures = np.concatenate([x['mixtures'][self.burn:] for x in all_out])
 		return self.compute_W(signs=self.betas)
 
-	def compute_W(self, signs):
+	def compute_W(self, signs=None):
+		if signs is None:
+			signs = self.betas
 
 		# 1. Guess sign(beta)
 		self.sign_guess = np.sign(
 			np.sum(signs > 0, axis=0) - np.sum(signs < 0, axis=0)
 		)
 		nzeros = np.sum(self.sign_guess == 0)
-		self.sign_guess[self.sign_guess == 0] = 1 - 2*np.random.binomial(1, 0.5, nzeros)			# Compute log(P(tildebeta) = sign_guess)
-		
-		# 2. Compute P(log(tildebeta) = sign_guess)
-		eta_g0 = self.sign_guess == np.sign(signs)
-		adj_eta = self.etas * (2*eta_g0 - 1)
-		etas_cat = np.concatenate(
-			[
-				adj_eta.reshape(self.N, self.p, 1), 
-				np.zeros((self.N, self.p, 1))
-			],
-			axis=2
-		)
-		# This equals: log(P(sgn(tildebeta) = sign guess))
-		log_prob = scipy.special.log_softmax(etas_cat, axis=2)[:, :, 0]
-		log_prob = scipy.special.logsumexp(log_prob, b=1/self.N, axis=0)
-		self.W = np.exp(log_prob) - 0.5
-
-		# 3. Compute sign(W)
+		self.sign_guess[self.sign_guess == 0] = 1 - 2*np.random.binomial(1, 0.5, nzeros)
 		self.wrong_guesses = np.sign(self.tildebeta) != self.sign_guess
-		self.W[self.wrong_guesses] = -1 * self.W[self.wrong_guesses]
-		return self.W
+		## regular MLR statistics
+		if not self.adjusted_mlr:			
+			# 2. Compute log(P(tildebeta = sign_guess))
+			eta_g0 = self.sign_guess == np.sign(signs)
+			adj_eta = self.etas * (2*eta_g0 - 1)
+			etas_cat = np.concatenate(
+				[
+					adj_eta.reshape(self.N, self.p, 1), 
+					np.zeros((self.N, self.p, 1))
+				],
+				axis=2
+			)
+			# This equals: log(P(sgn(tildebeta) = sign guess))
+			log_prob = scipy.special.log_softmax(etas_cat, axis=2)[:, :, 0]
+			log_prob = scipy.special.logsumexp(log_prob, b=1/self.N, axis=0)
+			self.W = np.exp(log_prob) - 0.5
+
+			# 3. Compute sign(W)
+			self.W[self.wrong_guesses] = -1 * self.W[self.wrong_guesses]
+			return self.W
+		## Adjusted MLR statistics
+		else:
+			tol = 1e-10
+			# Compute P_j(MLR_j > 0 | D)
+			mlr_pos = np.clip(np.mean(self.stb == self.sign_guess, axis=0), tol, 1-tol)
+			# Compute P(MLR_j > 0, j is non-null | masked data)
+			mlr_pos_nonnull = np.clip(
+				np.mean((self.stb == self.sign_guess) * (self.betas != 0), axis=0), tol, 1-tol
+			)
+			# MLR signs
+			mlr_sign = 1 - 2 * self.wrong_guesses
+			# Return AMLR stats
+			self.W = _mlr_to_adj_mlr(
+				mlr_sign=mlr_sign, 
+				prob_mlr_pos=mlr_pos, 
+				prob_mlr_pos_nonnull=mlr_pos_nonnull, 
+				fdr=self.fdr,
+			)
+			return self.W
