@@ -1,0 +1,54 @@
+name: Bump Version and Start New Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump:
+    if: "!contains(github.event.head_commit.author.name, 'version-bumper')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail if branch is not master
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'
+        run: |
+          echo "This workflow should not be triggered with workflow_dispatch on a branch other than master"
+          exit 1
+
+      - uses: actions/checkout@master
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bump Versions
+        uses: michmich112/version-bumper@master
+        env:
+          CI: false
+        with:
+          options-file: './bump-info.json'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync and Tag
+        run: |
+          export TAG=`grep "version" package.json | sed 's/.*: *"//' | sed 's/" *//'`
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          make lock
+          make sync
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          message: Update uv.lock to new version (${{ env.TAG }})'
+          push: true
+          tag: ${{ env.TAG }}
+          committer_name: GitHub Actions
+          committer_email: actions@github.com
+
+      - name: Trigger release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run make-release.yml --ref $TAG

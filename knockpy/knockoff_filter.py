@@ -1,22 +1,17 @@
-import warnings
 import numpy as np
-from . import constants
-from . import utilities
-from . import mrc
-from . import knockoffs
-from . import metro
-from . import mlr
+
 from . import knockoff_stats as kstats
+from . import knockoffs, metro, mlr, utilities
 
 
 class KnockoffFilter:
     """
     Performs knockoff-based inference, from start to finish.
 
-    This wraps both the ``knockoffs.KnockoffSampler`` and 
+    This wraps both the ``knockoffs.KnockoffSampler`` and
     ``knockoff_stats.FeatureStatistic`` classes.
 
-    Parameters 
+    Parameters
     ----------
     fstat : str or knockpy.knockoff_stats.FeatureStatistic
         The feature statistic to use in the knockoff filter.
@@ -51,7 +46,7 @@ class KnockoffFilter:
         in a knockoff matrix during the ``forward`` call.
     fstat_kwargs : dict
         Kwargs to pass to the feature statistic ``fit`` function,
-        excluding the required arguments, defaults to {} 
+        excluding the required arguments, defaults to {}
     knockoff_kwargs : dict
         Kwargs for instantiating the knockoff sampler argument if
         the ksampler argument is a string identifier. This can be
@@ -86,7 +81,7 @@ class KnockoffFilter:
     Xk : np.ndarray
         the ``(n, p)``-shaped matrix of knockoffs
     groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
+        For group knockoffs, a p-length array of integers from 1 to
         num_groups such that ``groups[j] == i`` indicates that variable `j`
         is a member of group `i`. Defaults to None (regular knockoffs).
     rejections : np.ndarray
@@ -109,17 +104,21 @@ class KnockoffFilter:
 
         # LCD statistic with Gaussian MX knockoffs
         # This uses LedoitWolf covariance estimation by default.
-        from knockpy.knockoff_filter import KnockoffFilter 
-        kfilter = KnockoffFilter( 
-            fstat='lcd', 
-            ksampler='gaussian', 
-            knockoff_kwargs={"method":"mvr"}, 
+        from knockpy.knockoff_filter import KnockoffFilter
+        kfilter = KnockoffFilter(
+            fstat='lcd',
+            ksampler='gaussian',
+            knockoff_kwargs={"method":"mvr"},
         )
         rejections = kfilter.forward(X=dgprocess.X, y=dgprocess.y)
     """
 
     def __init__(
-        self, fstat="lasso", ksampler="gaussian", fstat_kwargs={}, knockoff_kwargs={},
+        self,
+        fstat="lasso",
+        ksampler="gaussian",
+        fstat_kwargs={},
+        knockoff_kwargs={},
     ):
         """
         Initialize the class.
@@ -170,12 +169,12 @@ class KnockoffFilter:
             fstat = kstats.RandomForestStatistic()
         elif fstat == "deeppink":
             fstat = kstats.DeepPinkStatistic()
-        elif fstat == 'mlr':
+        elif fstat == "mlr":
             if self._mx:
                 fstat = mlr.MLR_Spikeslab()
             else:
                 fstat = mlr.MLR_FX_Spikeslab()
-        elif fstat in ['mlr_spline', 'spline']:
+        elif fstat in ["mlr_spline", "spline"]:
             fstat = mlr.MLR_Spikeslab_Splines()
         else:
             raise ValueError(f"Unrecognized fstat {fstat}")
@@ -202,12 +201,20 @@ class KnockoffFilter:
                 )
             elif self.knockoff_type == "fx":
                 self.ksampler = knockoffs.FXSampler(
-                    X=self.X, groups=self.groups, **self.knockoff_kwargs,
+                    X=self.X,
+                    groups=self.groups,
+                    **self.knockoff_kwargs,
                 )
             elif self.knockoff_type == "artk":
-                self.ksampler = metro.ARTKSampler(**args, **self.knockoff_kwargs,)
+                self.ksampler = metro.ARTKSampler(
+                    **args,
+                    **self.knockoff_kwargs,
+                )
             elif self.knockoff_type == "blockt":
-                self.ksampler = metro.BlockTSampler(**args, **self.knockoff_kwargs,)
+                self.ksampler = metro.BlockTSampler(
+                    **args,
+                    **self.knockoff_kwargs,
+                )
             elif self.knockoff_type == "metro":
                 self.ksampler = metro.MetropolizedKnockoffSampler(
                     **args, mu=self.mu, **self.knockoff_kwargs
@@ -247,7 +254,7 @@ class KnockoffFilter:
         return self.Xk
 
     def make_selections(self, W, fdr):
-        """" Calculate data dependent threshhold and selections """
+        """ " Calculate data dependent threshhold and selections"""
         self.threshold = kstats.data_dependent_threshhold(W=W, fdr=fdr)
         selected_flags = (W >= self.threshold).astype("float32")
         return selected_flags
@@ -269,7 +276,7 @@ class KnockoffFilter:
     ):
         """
         Runs the knockoff filter; returns whether each feature was rejected.
-        
+
         Parameters
         ----------
         X : np.ndarray
@@ -287,9 +294,9 @@ class KnockoffFilter:
             is estimated using the ``shrinkage`` option. This is ignored for
             fixed-X knockoffs.
         groups : np.ndarray
-            For group knockoffs, a p-length array of integers from 1 to 
+            For group knockoffs, a p-length array of integers from 1 to
             num_groups such that ``groups[j] == i`` indicates that variable `j`
-            is a member of group `i`. Defaults to ``None`` (regular knockoffs). 
+            is a member of group `i`. Defaults to ``None`` (regular knockoffs).
         fdr : float
             The desired level of false discovery rate control.
         fstat_kwargs : dict
@@ -302,18 +309,18 @@ class KnockoffFilter:
             but additional keyword arguments are required for complex samplers
             such as the "metro" identifier. Defaults to {}
         shrinkage : str
-            Shrinkage method if estimating the covariance matrix. Defaults to 
+            Shrinkage method if estimating the covariance matrix. Defaults to
             "LedoitWolf." Other options are "MLE" and "glasso" (graphical lasso).
         num_factors : int
             If num_factors is not ``None`` and Sigma is estimated,
-            assumes that the ground-truth Sigma is a factor model 
+            assumes that the ground-truth Sigma is a factor model
             with rank ``num_factors`` to speed up computation.
         recycle_up_to : int or float
             Three options:
 
                 - if ``None``, does nothing.
                 - if an integer > 1, uses the first "recycle_up_to" rows of X as the the first ``recycle_up_to`` rows of knockoffs
-                - if a float between 0 and 1 (inclusive), interpreted as the proportion of rows to recycle. 
+                - if a float between 0 and 1 (inclusive), interpreted as the proportion of rows to recycle.
 
             For more on recycling, see https://arxiv.org/abs/1602.03574
         """
@@ -327,15 +334,14 @@ class KnockoffFilter:
                     Sigma, num_factors=num_factors
                 )
                 Sigma = np.diag(self.D) + np.dot(self.U, self.U.T)
-                self.knockoff_kwargs['how_approx'] = 'factor'
-                self.knockoff_kwargs['D'] = self.D
-                self.knockoff_kwargs['U'] = self.U
+                self.knockoff_kwargs["how_approx"] = "factor"
+                self.knockoff_kwargs["D"] = self.D
+                self.knockoff_kwargs["U"] = self.U
             else:
                 self.D = None
                 self.U = None
         if not self._mx:
             Sigma = None
-
 
         # Save objects
         self.X = X
@@ -374,15 +380,10 @@ class KnockoffFilter:
         # When using FX knockoffs and lcd statistic,
         # we cannot use cross-validation. Thus, we pick
         # a default regularization parameter
-        if not self._mx and isinstance(
-            self.fstat, kstats.LassoStatistic
-        ):
-            if self.fstat_kwargs.get('zstat', 'coef') != 'lars_path':
-                hatsigma2 = kstats.compute_residual_variance(
-                    self.X, self.Xk, self.y
-                )
-                self.fstat_kwargs['alphas'] = hatsigma2 * np.sqrt(np.log(p)/n)
-
+        if not self._mx and isinstance(self.fstat, kstats.LassoStatistic):
+            if self.fstat_kwargs.get("zstat", "coef") != "lars_path":
+                hatsigma2 = kstats.compute_residual_variance(self.X, self.Xk, self.y)
+                self.fstat_kwargs["alphas"] = hatsigma2 * np.sqrt(np.log(p) / n)
 
         # As an edge case, pass Ginv to debiased lasso
         if "debias" in self.fstat_kwargs:
@@ -392,7 +393,7 @@ class KnockoffFilter:
                         self.Ginv = np.linalg.inv(self.G)
                     else:
                         self.G, self.Ginv = utilities.estimate_covariance(
-                           np.concatenate([self.X, self.Xk], axis=1)
+                            np.concatenate([self.X, self.Xk], axis=1)
                         )
                 self.fstat_kwargs["Ginv"] = self.Ginv
 
@@ -435,7 +436,7 @@ class KnockoffFilter:
             max_rank = self.X.shape[1]
 
         # sort W statistics
-        inds = np.argsort(-1*np.abs(self.W))
+        inds = np.argsort(-1 * np.abs(self.W), stable="stable")
         sortW = self.W[inds][0:max_rank]
         xvals = np.arange(max_rank)
 
@@ -443,20 +444,18 @@ class KnockoffFilter:
         threshold_ind = np.sum(np.abs(self.W) >= self.threshold)
 
         # Plot and show
-        plt.bar(xvals[sortW < 0], sortW[sortW < 0], color='red')
-        plt.bar(xvals[sortW >= 0], sortW[sortW >= 0], color='blue')
+        plt.bar(xvals[sortW < 0], sortW[sortW < 0], color="red")
+        plt.bar(xvals[sortW >= 0], sortW[sortW >= 0], color="blue")
         if threshold_ind >= max_rank:
             print("Not plotting threshold since threshold <= max_rank.")
         else:
             plt.axvline(
-                threshold_ind, 
-                color='black', 
-                linestyle='dashed', 
-                label=f'Threshold\n(q={self.fdr})'
+                threshold_ind,
+                color="black",
+                linestyle="dashed",
+                label=f"Threshold\n(q={self.fdr})",
             )
             plt.legend()
         plt.xlabel("Rank")
         plt.ylabel("Feature statistic")
         plt.show()
-
-

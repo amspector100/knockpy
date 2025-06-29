@@ -1,12 +1,14 @@
+import ctypes
 import warnings
+from functools import partial
+from multiprocessing import Pool
+
 import numpy as np
 import scipy as sp
 import scipy.sparse.linalg
-from scipy.sparse.linalg import eigs, eigsh
 import sklearn.covariance
-import itertools
-from multiprocessing import Pool
-from functools import partial
+from scipy.sparse.linalg import eigsh
+
 
 ### Group helpers
 def preprocess_groups(groups):
@@ -19,7 +21,7 @@ def preprocess_groups(groups):
 
 
 def fetch_group_nonnulls(non_nulls, groups):
-    """ 
+    """
     Combines feature-level null hypotheses into group-level hypothesis.
     """
 
@@ -42,15 +44,15 @@ def fetch_group_nonnulls(non_nulls, groups):
 def calc_group_sizes(groups):
     """
     Given a list of groups, finds the sizes of the groups.
-    
+
     Parameters
     ----------
     groups : np.ndarray
         ``(p, )``-shaped array which takes m integer values from
         1 to m. If ``groups[i] == j``, this indicates that coordinate
         ``i`` belongs to group ``j``.
-    :param groups: p-length array of integers between 1 and m, 
-    
+    :param groups: p-length array of integers between 1 and m,
+
     Returns
     -------
     sizes : np.ndarray
@@ -80,11 +82,11 @@ def calc_group_sizes(groups):
 
 ### Matrix helpers for S-matrix computation
 def cov2corr(M, invM=None):
-    """ 
+    """
     Rescales a p x p cov. matrix M to be a correlation matrix.
     If invM is not None, also rescales invM to be the inverse
     of M.
-     """
+    """
     scale = np.sqrt(np.diag(M))
     if invM is None:
         return M / np.outer(scale, scale)
@@ -93,15 +95,14 @@ def cov2corr(M, invM=None):
 
 
 def chol2inv(X):
-    """ Uses cholesky decomp to get inverse of matrix """
+    """Uses cholesky decomp to get inverse of matrix"""
     triang = np.linalg.cholesky(X)
-    tinv, _ = scipy.linalg.lapack.dtrtri(
-        c=triang, lower=True, overwrite_c=False
-    )
+    tinv, _ = scipy.linalg.lapack.dtrtri(c=triang, lower=True, overwrite_c=False)
     return np.dot(tinv.T, tinv)
 
+
 def calc_mineig(M):
-    """ 
+    """
     Calculates the minimum eigenvalue of a square symmetric matrix M
     """
     if M.shape[0] < 1500:
@@ -109,20 +110,14 @@ def calc_mineig(M):
     else:
         try:
             return eigsh(
-                M, 
-                1,
-                which='SA',
-                return_eigenvectors=False,
-                maxiter=1000,
-                tol=1e-5
+                M, 1, which="SA", return_eigenvectors=False, maxiter=1000, tol=1e-5
             )[0]
         except scipy.sparse.linalg.eigen.arpack.ArpackNoConvergence:
             return np.linalg.eigh(M)[0].min()
 
 
-
 def shift_until_PSD(M, tol):
-    """ Add the identity until a p x p matrix M has eigenvalues of at least tol"""
+    """Add the identity until a p x p matrix M has eigenvalues of at least tol"""
     p = M.shape[0]
     mineig = calc_mineig(M)
     if mineig < tol:
@@ -132,10 +127,10 @@ def shift_until_PSD(M, tol):
 
 
 def scale_until_PSD(Sigma, S, tol, num_iter):
-    """ 
+    """
     Perform a binary search to find the largest ``gamma`` such that the minimum
     eigenvalue of ``2*Sigma - gamma*S`` is at least ``tol``.
-    
+
     Returns
     -------
     gamma * S : np.ndarray
@@ -151,8 +146,8 @@ def scale_until_PSD(Sigma, S, tol, num_iter):
         S = shift_until_PSD(S, tol)
 
     # Binary search to find minimum gamma
-    lower_bound = 0 # max feasible gamma
-    upper_bound = 1 # min infeasible gamma
+    lower_bound = 0  # max feasible gamma
+    upper_bound = 1  # min infeasible gamma
     for j in range(num_iter):
         gamma = (lower_bound + upper_bound) / 2
         V = 2 * Sigma - gamma * S
@@ -215,7 +210,7 @@ def blockdiag_to_blocks(M, groups):
 
 ### Feature-statistic helpers
 def random_permutation_inds(length):
-    """ Returns indexes which will randomly permute/unpermute a numpy
+    """Returns indexes which will randomly permute/unpermute a numpy
     array of length `length`. Also returns indices which will
     undo this permutation.
 
@@ -225,14 +220,14 @@ def random_permutation_inds(length):
         ``(length,)``-shaped ndarray corresponding to a random permutation
         from 0 to `length`-1.
     rev_inds : np.ndarray
-        ``(length,)``-shaped ndarray such that for any ``(length,)``-shaped 
+        ``(length,)``-shaped ndarray such that for any ``(length,)``-shaped
         array called ``x``, ``x[inds][rev_inds]`` equals ``x``.
     """
     # Create inds and rev inds
     inds = np.arange(0, length, 1)
     np.random.shuffle(inds)
     rev_inds = [0 for _ in range(length)]
-    for (i, j) in enumerate(inds):
+    for i, j in enumerate(inds):
         rev_inds[j] = i
 
     return inds, rev_inds
@@ -261,26 +256,26 @@ def estimate_factor(Sigma, num_factors=20, num_iter=10):
     D : np.ndarray
         ``(p,)``-shaped array of diagonal elements.
     U : np.ndarray
-        ``(p, num_factors)``-shaped array. 
+        ``(p, num_factors)``-shaped array.
     """
     p = Sigma.shape[0]
-    # Problem is trivial in this case 
+    # Problem is trivial in this case
     if num_factors >= p:
         return np.zeros((p, p)), sp.linalg.sqrtm(Sigma)
 
     # Coordinate ascent
     D = np.zeros(p)
     for i in range(num_iter):
-        evals, evecs = eigsh(Sigma-np.diag(D), num_factors, which='LM')
+        evals, evecs = eigsh(Sigma - np.diag(D), num_factors, which="LM")
         U = np.dot(evecs, np.diag(np.maximum(0, np.sqrt(evals))))
         D = np.diag(Sigma - np.power(U, 2).sum(axis=1))
-        #loss = np.power(Sigma - np.diag(D) - np.dot(U, U.T), 2).sum()
+        # loss = np.power(Sigma - np.diag(D) - np.dot(U, U.T), 2).sum()
 
     return D, U
 
 
 def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
-    """ Estimates covariance matrix of X. 
+    """Estimates covariance matrix of X.
 
     Parameters
     ----------
@@ -288,7 +283,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         ``(n, p)``-shaped design matrix
     shrinkage : str
         The type of shrinkage to apply during estimation. One of
-        "ledoitwolf", "graphicallasso", or None (no shrinkage). 
+        "ledoitwolf", "graphicallasso", or None (no shrinkage).
     tol : float
         If shrinkage is None but the minimum eigenvalue of the MLE
         is below tol, apply LedoitWolf shrinkage anyway.
@@ -303,14 +298,14 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         ``(p, p)``-shaped estimated precision matrix of X
     """
     # Parse none strng
-    if str(shrinkage).lower() == "none" or str(shrinkage).lower() == 'mle':
+    if str(shrinkage).lower() == "none" or str(shrinkage).lower() == "mle":
         shrinkage = None
 
     if shrinkage is None:
         Sigma = np.cov(X.T)
         mineig = calc_mineig(Sigma)
         if mineig < tol:
-            shrinkage = 'ledoitwolf'
+            shrinkage = "ledoitwolf"
 
     # Possibly shrink Sigma
     if shrinkage is not None:
@@ -318,7 +313,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
         if str(shrinkage).lower() == "ledoitwolf":
             ShrinkEst = sklearn.covariance.LedoitWolf(**kwargs)
         elif str(shrinkage).lower() == "graphicallasso":
-            kwargs['alpha'] = kwargs.get('alpha', 0.1) # Default regularization
+            kwargs["alpha"] = kwargs.get("alpha", 0.1)  # Default regularization
             ShrinkEst = sklearn.covariance.GraphicalLasso(**kwargs)
         else:
             raise ValueError(
@@ -332,7 +327,7 @@ def estimate_covariance(X, tol=1e-4, shrinkage="ledoitwolf", **kwargs):
                 warnings.simplefilter("ignore")
                 ShrinkEst.fit(X)
         except FloatingPointError:
-            warnings.warn(f"Graphical lasso failed, LedoitWolf matrix")
+            warnings.warn("Graphical lasso failed, LedoitWolf matrix")
             ShrinkEst = sklearn.covariance.LedoitWolf()
             ShrinkEst.fit(X)
 
@@ -352,7 +347,7 @@ def _one_arg_function(list_of_inputs, args, func, kwargs):
     :param list of inputs: List of inputs to a function
     :param args: Names/args for those inputs
     :param func: A function
-    :param kwargs: Other kwargs to pass to the function. 
+    :param kwargs: Other kwargs to pass to the function.
     """
     new_kwargs = {}
     for i, inp in enumerate(list_of_inputs):
@@ -363,8 +358,8 @@ def _one_arg_function(list_of_inputs, args, func, kwargs):
 def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
     """
     Spawns num_processes processes to apply func to many different arguments.
-    This wraps the multiprocessing.pool object plus the functools partial function. 
-    
+    This wraps the multiprocessing.pool object plus the functools partial function.
+
     Parameters
     ----------
     func : function
@@ -405,7 +400,10 @@ def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
 
     # Construct partial function
     partial_func = partial(
-        _one_arg_function, args=args, func=func, kwargs=constant_inputs,
+        _one_arg_function,
+        args=args,
+        func=func,
+        kwargs=constant_inputs,
     )
 
     # Don't use the pool object if num_processes=1
@@ -424,16 +422,27 @@ def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
 ### Dependency management
 def check_kpytorch_available(purpose):
     try:
-        import torch
+        import torch as torch
     except ImportError as err:
         raise ValueError(
             f"Pytorch is required for {purpose}, but importing torch raised {err}. See https://pytorch.org/get-started/."
         )
 
+
 def check_pyglmnet_available(purpose):
     try:
-        import pyglmnet
+        import pyglmnet as pyglmnet
     except ImportError as err:
         raise ValueError(
             f"pyglmnet is required for {purpose}, but importing pyglmnet raised {err}. See https://github.com/glm-tools/pyglmnet/."
         )
+
+
+def srand(val: int) -> None:
+    """
+    Some knockpy functions invoke the C rand() function to generate random numbers. Invoking
+    srand() with some fixed value can help ensure repeatable results.
+    """
+    libc = ctypes.CDLL(None)
+    libc.srand.argtypes = [ctypes.c_uint]
+    libc.srand(val)

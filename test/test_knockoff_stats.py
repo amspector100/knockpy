@@ -1,16 +1,22 @@
-import numpy as np
 import unittest
+
+import numpy as np
 import sklearn.naive_bayes
 import sklearn.neural_network
-# for regular pytest calls
-try:
-    from .context import knockpy
-# for running directly with python
-except ImportError:
-    from context import knockpy
+
+import knockpy
+from knockpy import dgp, utilities
 from knockpy import knockoff_stats as kstats
-from knockpy import utilities, dgp
 from knockpy.knockoff_stats import data_dependent_threshhold
+from knockpy.utilities import srand
+
+try:
+    import torch as torch
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+
 
 DEFAULT_SAMPLE_KWARGS = {
     "coeff_size": 5,
@@ -18,12 +24,6 @@ DEFAULT_SAMPLE_KWARGS = {
     "gamma": 0,
     "sparsity": 0.5,
 }
-
-try:
-    import torch
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
 
 
 class KStatVal(unittest.TestCase):
@@ -38,7 +38,7 @@ class KStatVal(unittest.TestCase):
         group_features=False,
         **sample_kwargs,
     ):
-        """ fstat should be a class instance inheriting from FeatureStatistic """
+        """fstat should be a class instance inheriting from FeatureStatistic"""
 
         # Add defaults to sample kwargs
         if "method" not in sample_kwargs:
@@ -79,14 +79,18 @@ class KStatVal(unittest.TestCase):
             S=(1 - rho) * np.eye(p),
         )
         Xk = ksampler.sample_knockoffs()
-        S = ksampler.fetch_S()
+        ksampler.fetch_S()
 
         # Fit and extract coeffs/T
         fstat.fit(
-            X, Xk, y, groups=groups, **fstat_kwargs,
+            X,
+            Xk,
+            y,
+            groups=groups,
+            **fstat_kwargs,
         )
         W = fstat.W
-        T = data_dependent_threshhold(W, fdr=0.2)        
+        T = data_dependent_threshhold(W, fdr=0.2)
 
         # Test L2 norm
         m = np.unique(groups).shape[0]
@@ -106,21 +110,20 @@ class KStatVal(unittest.TestCase):
         selections = (W >= T).astype("float32")
         group_nnulls = utilities.fetch_group_nonnulls(beta, groups)
         power = ((group_nnulls != 0) * selections).sum() / np.sum(group_nnulls != 0)
-        fdp = ((group_nnulls == 0) * selections).sum() / max(np.sum(selections), 1)
+        ((group_nnulls == 0) * selections).sum() / max(np.sum(selections), 1)
         self.assertTrue(
             power >= min_power,
             msg=f"Power {power} for {fstat_name} in equicor case (n={n},p={p},rho={rho}, y_dist {y_dist}, grouped={group_features}) should be > {min_power}. W stats are {W}, beta is {beta}",
         )
 
         # Test symmetric property of null W
-        
 
 
 class TestFeatureStatistics(KStatVal):
-    """ Tests fitting of ols, lasso, ridge, margcorr, random forest """
+    """Tests fitting of ols, lasso, ridge, margcorr, random forest"""
 
     def test_combine_Z_stats(self):
-        """ Tests the combine_Z_stats function """
+        """Tests the combine_Z_stats function"""
 
         # Fake data
         Z = np.array([-1, -2, -1, 0, 1, 0, 0, 0, 0, -1, 0, 0])
@@ -144,13 +147,12 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_margcorr_statistic(self):
-
         # Fake data (p = 5)
         n = 10000
         p = 5
         X = np.random.randn(n, p)
         knockoffs = np.random.randn(n, p)
-        groups = np.array([1, 1, 2, 2, 2])
+        np.array([1, 1, 2, 2, 2])
 
         # Calc y
         beta = np.array([1, 1, 0, 0, 0])
@@ -166,7 +168,7 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_lars_solver_fit(self):
-        """ Tests power of lars lasso solver """
+        """Tests power of lars lasso solver"""
 
         self.check_kstat_fit(
             fstat=kstats.LassoStatistic(),
@@ -183,7 +185,7 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_lars_path_fit(self):
-        """ Tests power of lars path statistic """
+        """Tests power of lars path statistic"""
         # Get DGP, knockoffs, S matrix
 
         self.check_kstat_fit(
@@ -203,7 +205,7 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_ols_fit(self):
-        """ Good old OLS """
+        """Good old OLS"""
 
         self.check_kstat_fit(
             fstat=kstats.OLSStatistic(),
@@ -218,7 +220,6 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_lasso_fit(self):
-
         # Lasso fit for Gaussian data
         self.check_kstat_fit(
             fstat=kstats.LassoStatistic(),
@@ -269,21 +270,20 @@ class TestFeatureStatistics(KStatVal):
         dgprocess = knockpy.dgp.DGP()
         dgprocess.sample_data(n=300, p=100, sparsity=0.1)
         kfilter = knockpy.knockoff_filter.KnockoffFilter(
-            fstat='lasso', ksampler='gaussian'
+            fstat="lasso", ksampler="gaussian"
         )
         kfilter.forward(
             X=dgprocess.X,
             y=dgprocess.y,
             Sigma=dgprocess.Sigma,
-            fstat_kwargs={"alphas":alpha}
+            fstat_kwargs={"alphas": alpha},
         )
         self.assertTrue(
             np.all(kfilter.W == 0),
-            f"lasso with alpha={alpha} should zero out coefs, instead W={kfilter.W}"
+            f"lasso with alpha={alpha} should zero out coefs, instead W={kfilter.W}",
         )
 
     def test_antisymmetric_fns(self):
-
         n = 100
         p = 20
         np.random.seed(110)
@@ -291,7 +291,7 @@ class TestFeatureStatistics(KStatVal):
         X, y, beta, _, corr_matrix = dgprocess.sample_data(
             n=n, p=p, y_dist="gaussian", coeff_size=100, sign_prob=1
         )
-        groups = np.arange(1, p + 1, 1)
+        np.arange(1, p + 1, 1)
 
         # These are not real, just helpful syntatically
         fake_knockoffs = np.zeros((n, p))
@@ -337,7 +337,6 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_cv_scoring(self):
-
         # Create data generating process
         n = 100
         p = 20
@@ -346,7 +345,7 @@ class TestFeatureStatistics(KStatVal):
         X, y, beta, _, corr_matrix = dgprocess.sample_data(
             n=n, p=p, y_dist="gaussian", coeff_size=100, sign_prob=1
         )
-        groups = np.arange(1, p + 1, 1)
+        np.arange(1, p + 1, 1)
 
         # These are not real, just helpful syntatically
         knockoffs = np.zeros((n, p))
@@ -354,7 +353,11 @@ class TestFeatureStatistics(KStatVal):
         # 1. Test lars cv scoring
         lars_stat = kstats.LassoStatistic()
         lars_stat.fit(
-            X, knockoffs, y, use_lars=True, cv_score=True,
+            X,
+            knockoffs,
+            y,
+            use_lars=True,
+            cv_score=True,
         )
         self.assertTrue(
             lars_stat.score_type == "mse_cv",
@@ -364,7 +367,10 @@ class TestFeatureStatistics(KStatVal):
         # 2. Test OLS cv scoring
         ols_stat = kstats.OLSStatistic()
         ols_stat.fit(
-            X, knockoffs, y, cv_score=True,
+            X,
+            knockoffs,
+            y,
+            cv_score=True,
         )
         self.assertTrue(
             ols_stat.score_type == "mse_cv",
@@ -376,7 +382,6 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_debiased_lasso(self):
-
         # Create data generating process
         n = 200
         p = 20
@@ -437,7 +442,13 @@ class TestFeatureStatistics(KStatVal):
 
         def binomial_debiased_lasso():
             dlasso_stat.fit(
-                X, knockoffs, y, use_lars=False, cv_score=False, debias=True, Ginv=Ginv,
+                X,
+                knockoffs,
+                y,
+                use_lars=False,
+                cv_score=False,
+                debias=True,
+                Ginv=Ginv,
             )
 
         self.assertRaisesRegex(
@@ -447,7 +458,6 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_ridge_fit(self):
-
         # Ridge fit for Gaussian data
         self.check_kstat_fit(
             fstat=kstats.RidgeStatistic(),
@@ -493,7 +503,6 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_randomforest_fit(self):
-
         # RF power on trunclinear data
         self.check_kstat_fit(
             fstat=kstats.RandomForestStatistic(),
@@ -546,7 +555,7 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_randomforest_feature_importances(self):
-        """ Just makes sure the other efature importance measures don't error """
+        """Just makes sure the other efature importance measures don't error"""
 
         # Check that these feature importance scores throw
         # no errors
@@ -592,7 +601,6 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_deeppink_fit(self):
-
         if not TORCH_AVAILABLE:
             return None
 
@@ -631,7 +639,6 @@ class TestFeatureStatistics(KStatVal):
         )
 
     def test_deeppink_feature_importances(self):
-
         if not TORCH_AVAILABLE:
             return None
 
@@ -693,14 +700,13 @@ class TestFeatureStatistics(KStatVal):
 
 
 class TestBaseFeatureStatistic(KStatVal):
-    """ Tests performance of Vanilla feature statistic """
+    """Tests performance of Vanilla feature statistic"""
 
     def test_errors(self):
-
-        fstat = kstats.FeatureStatistic()
+        kstats.FeatureStatistic()
 
     def test_nbayes(self):
-        """ Checks that a random sklearn class works with feature stat"""
+        """Checks that a random sklearn class works with feature stat"""
 
         gnb = sklearn.naive_bayes.GaussianNB()
         for feature_imp in ["swap", "swapint"]:
@@ -720,10 +726,12 @@ class TestBaseFeatureStatistic(KStatVal):
             )
 
     def test_mlp(self):
-        """ Checks that MLP regressor works """
+        """Checks that MLP regressor works"""
 
         mlp = sklearn.neural_network.MLPRegressor(
-            solver="lbfgs", alpha=1e-5, hidden_layer_sizes=(10, 2),
+            solver="lbfgs",
+            alpha=1e-5,
+            hidden_layer_sizes=(10, 2),
         )
         self.check_kstat_fit(
             fstat=kstats.FeatureStatistic(model=mlp),
@@ -742,19 +750,15 @@ class TestBaseFeatureStatistic(KStatVal):
 
 
 class TestDataThreshhold(unittest.TestCase):
-    """ Tests data-dependent threshhold """
+    """Tests data-dependent threshhold"""
 
     def check_T(self, W, T, q):
-        self.assertTrue(
-            T != 0,
-            msg=f"T={T} should not equal zero."
-        )
+        self.assertTrue(T != 0, msg=f"T={T} should not equal zero.")
         if T != np.inf:
             # Check FDR control
             hat_fdr = (1 + np.sum(W <= -T)) / np.sum(W >= T)
             self.assertTrue(
-                hat_fdr <= q,
-                msg=f"hat_fdr={hat_fdr} > q={q} for T={T}, W={W}"
+                hat_fdr <= q, msg=f"hat_fdr={hat_fdr} > q={q} for T={T}, W={W}"
             )
             # Check that this is the largest threshold controlling FDR
             absW = np.unique(np.abs(W))
@@ -763,22 +767,18 @@ class TestDataThreshhold(unittest.TestCase):
                 hat_fdr2 = (1 + np.sum(W <= -T2)) / np.sum(W >= T2)
                 self.assertTrue(
                     hat_fdr2 > q,
-                    msg=f"With T={T}, using T={T2} controls hat_fdr={hat_fdr} <= q={q}."
+                    msg=f"With T={T}, using T={T2} controls hat_fdr={hat_fdr} <= q={q}.",
                 )
         else:
             # Check that we truly cannot make any discoveries
-            inds = np.argsort(-np.abs(W))
+            inds = np.argsort(-np.abs(W), stable="stable")
             W_sorted = W[inds]
             positives = np.cumsum(W_sorted > 0)
             negatives = np.cumsum(W_sorted <= 0)
             hat_fdrs = (negatives + 1) / np.maximum(positives, 1)
-            self.assertTrue(
-                np.all(hat_fdrs > q),
-                msg=f"hat_fdrs={hat_fdrs} but T=inf"
-            )
+            self.assertTrue(np.all(hat_fdrs > q), msg=f"hat_fdrs={hat_fdrs} but T=inf")
 
     def test_unbatched(self):
-
         # Three manual checks
         q1 = 0.2
         W1 = np.array([1, -2, 3, 6, 3, -2, 1, 2, 5, 3, 0.5, 1, 1, 1, 1, 1, 1, 1])
@@ -818,7 +818,7 @@ class TestDataThreshhold(unittest.TestCase):
                 self.check_T(W, T, q)
 
     def test_batched(self):
-
+        srand(42)
         q = 0.2
         W1 = np.array([1] * 10)
         W2 = np.array([-2, -1, 1, 2, 3, 4, 5, 6, 7, 8])
@@ -835,8 +835,9 @@ class TestDataThreshhold(unittest.TestCase):
             self.check_T(W=combined[:, j], T=Ts[j], q=q)
 
     def test_zero_handling(self):
-        """ Makes sure Ts != 0 """
+        """Makes sure Ts != 0"""
 
+        srand(42)
         q = 0.2
         W1 = np.array([1] * 10 + [0] * 10)
         W2 = np.array([-2, -1, 1, 2, 3, 4, 5, 6, 7, 8] + [0] * 10)
@@ -851,15 +852,15 @@ class TestDataThreshhold(unittest.TestCase):
                 err_msg=f"Incorrect data dependent threshhold (batched): T should = {expected}, not {T}",
             )
 
+
 class TestHelpers(unittest.TestCase):
-    """ tests miscallaneous helper functions """
+    """tests miscallaneous helper functions"""
 
     def test_resid_variance_estimation(self):
-
         # Create fake data and knockoffs in low and high-dimensional setting
         np.random.seed(111)
         p = 100
-        for n in [int(p / 2), int(2 * p) + 5, int(3 * p)]:      
+        for n in [int(p / 2), int(2 * p) + 5, int(3 * p)]:
             dgprocess = knockpy.dgp.DGP()
             dgprocess.sample_data(n=n, p=p, sparsity=0.1)
             if n > 2 * p:
@@ -876,11 +877,14 @@ class TestHelpers(unittest.TestCase):
             if n > p:
                 self.assertTrue(
                     hat_sigma2 < 1.5 and hat_sigma2 > 0.66,
-                    f"Resid. var. est is poor: hat_sigma2={hat_sigma2} (target=1) for n={n}, p={p}"
+                    f"Resid. var. est is poor: hat_sigma2={hat_sigma2} (target=1) for n={n}, p={p}",
                 )
 
+
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
+
     pytest.main(sys.argv)
-    #unittest.main()
+    # unittest.main()

@@ -1,35 +1,31 @@
 import warnings
+
 import numpy as np
-import scipy as sp
-from scipy import stats
 import scipy.linalg
+from scipy import stats
 
-from .utilities import calc_group_sizes, preprocess_groups
-from .utilities import shift_until_PSD, scale_until_PSD
-from . import utilities, smatrix, constants
-
+from . import constants, smatrix, utilities
+from .utilities import shift_until_PSD
 
 ### Base Knockoff Class and Gaussian Knockoffs
 
 
 class KnockoffSampler:
-    """ Base class for sampling knockoffs."""
+    """Base class for sampling knockoffs."""
 
     def __init__(self):
-
         pass
 
     def sample_knockoffs(self):
-
         raise NotImplementedError()
 
     def fetch_S(self):
-        """ Fetches knockoff S-matrix."""
+        """Fetches knockoff S-matrix."""
 
         raise NotImplementedError
 
     def check_PSD_condition(self, Sigma, S):
-        """ Checks that the feature-knockoff cov matrix is PSD.
+        """Checks that the feature-knockoff cov matrix is PSD.
 
         Parameters
         ----------
@@ -38,11 +34,11 @@ class KnockoffSampler:
             is estimated using the ``shrinkage`` option. This is ignored for
             fixed-X knockoffs.
         S : np.ndarray
-            the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs. 
+            the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs.
 
         Raises
         ------
-        Raises an error if S is not PSD or 2 Sigma - S is not PSD.          
+        Raises an error if S is not PSD or 2 Sigma - S is not PSD.
         """
 
         # Check PSD condition
@@ -68,7 +64,7 @@ class KnockoffSampler:
         pvals = np.array(pvals)
 
         # Naive Bonferroni correction
-        adj_pvals = np.minimum(pvals.shape[0]*pvals, 1)
+        adj_pvals = np.minimum(pvals.shape[0] * pvals, 1)
         return pvals, adj_pvals
 
     def check_xk_validity(self, X, Xk, testname="", alpha=0.001):
@@ -88,7 +84,7 @@ class KnockoffSampler:
         alpha : float
             The significance level. Defaults to 0.001
         """
-        n = X.shape[0]
+        X.shape[0]
         p = X.shape[1]
 
         # Marginal KS tests
@@ -125,7 +121,6 @@ class KnockoffSampler:
 
 
 def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies):
-
     # Calculate MX knockoff moments...
     n, p = X.shape
     invSigma_S = np.dot(invSigma, S)
@@ -144,7 +139,7 @@ def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies):
         Lk = np.linalg.cholesky(Vk)
 
     # ...and sample MX knockoffs!
-    knockoffs = np.dot(Lk, np.random.randn(n, p, copies)) # result is (p, n, copies)
+    knockoffs = np.dot(Lk, np.random.randn(n, p, copies))  # result is (p, n, copies)
     knockoffs = np.transpose(knockoffs, [1, 0, 2])
 
     # Add mu
@@ -154,7 +149,7 @@ def produce_MX_gaussian_knockoffs(X, mu, invSigma, S, sample_tol, copies):
 
 
 class GaussianSampler(KnockoffSampler):
-    """ 
+    """
     Samples MX Gaussian (group) knockoffs.
 
     Parameters
@@ -169,11 +164,11 @@ class GaussianSampler(KnockoffSampler):
         ``(p, p)``-shaped covariance matrix of the features. If None, this
         is estimated using the ``utilities.estimate_covariance`` function.
     groups : np.ndarray
-                For group knockoffs, a p-length array of integers from 1 to 
+                For group knockoffs, a p-length array of integers from 1 to
                 num_groups such that ``groups[j] == i`` indicates that variable `j`
-                is a member of group `i`. Defaults to None (regular knockoffs). 
+                is a member of group `i`. Defaults to None (regular knockoffs).
     S : np.ndarray
-        the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs. This 
+        the ``(p, p)``-shaped knockoff S-matrix used to generate knockoffs. This
         is defined such that Cov(X, tilde(X)) = Sigma - S. When None,
         will be constructed by knockoff generator. Defaults to None.
     method : str
@@ -184,11 +179,11 @@ class GaussianSampler(KnockoffSampler):
             - 'ci': Conditional independence knockoffs.
             - 'sdp': minimize the mean absolute covariance (MAC) between the features
             and the knockoffs.
-            - 'equicorrelated': Minimizes the MAC under the constraint that the 
+            - 'equicorrelated': Minimizes the MAC under the constraint that the
             the correlation between each feature and its knockoff is the same.
         The default is to use mvr for non-group knockoffs, and to use the group-SDP
         for grouped knockoffs (the implementation for group mvr knockoffs is currently
-        fairly slow). In both cases we use a block-diagonal approximation 
+        fairly slow). In both cases we use a block-diagonal approximation
         if the number if features is greater than 1000.
     objective : str
         How to optimize the S matrix if using the SDP for group knockoffs.
@@ -200,13 +195,13 @@ class GaussianSampler(KnockoffSampler):
             - 'norm': minimize different type of matrix norm
             (see norm_type below).
     sample_tol : float
-        Minimum eigenvalue allowed for feature-knockoff covariance 
+        Minimum eigenvalue allowed for feature-knockoff covariance
         matrix. Keep this small but nonzero (1e-5) to prevent numerical errors.
     verbose : bool
         If True, prints progress over time
     rec_prop : float
         The proportion of knockoffs to recycle (see Barber and Candes 2018,
-        https://arxiv.org/abs/1602.03574). If method = 'mvr', then S_generation 
+        https://arxiv.org/abs/1602.03574). If method = 'mvr', then S_generation
         takes this into account and should increase the power of recycled knockoffs.    sparsely-correlated, high-dimensional settings.
     kwargs : dict
         Other kwargs for S-matrix solvers.
@@ -225,7 +220,6 @@ class GaussianSampler(KnockoffSampler):
         verbose=False,
         **kwargs,
     ):
-
         # Save parameters with defaults
         self.X = X
         self.n = X.shape[0]
@@ -251,7 +245,7 @@ class GaussianSampler(KnockoffSampler):
         self.kwargs = kwargs
         if self.S is None:
             if self.verbose:
-                print(f"Computing knockoff S matrix...")
+                print("Computing knockoff S matrix...")
             self.S = smatrix.compute_smatrix(
                 Sigma=self.Sigma, groups=self.groups, method=self.method, **self.kwargs
             )
@@ -260,7 +254,7 @@ class GaussianSampler(KnockoffSampler):
         return self.S
 
     def sample_knockoffs(self, check_psd=False):
-        """ Samples knockoffs. returns n x p knockoff matrix.
+        """Samples knockoffs. returns n x p knockoff matrix.
 
         Parameters
         ----------
@@ -268,7 +262,7 @@ class GaussianSampler(KnockoffSampler):
             If True, will check and enforce that S is a valid S-matrix.
             Defalts to False.
         """
-        if check_psd: 
+        if check_psd:
             self.check_PSD_condition(self.Sigma, self.S)
         self.Xk = produce_MX_gaussian_knockoffs(
             X=self.X,
@@ -276,7 +270,7 @@ class GaussianSampler(KnockoffSampler):
             invSigma=self.invSigma,
             S=self.S,
             sample_tol=self.sample_tol,
-            copies=1
+            copies=1,
         )[:, :, 0]
         return self.Xk
 
@@ -301,7 +295,6 @@ def produce_FX_knockoffs(X, invSigma, S, copies=1):
     if copies > 1:
         knockoffs = []
         for j in range(copies):
-
             # Multiply U by random orthonormal matrix
             Qj, _ = scipy.linalg.qr(np.random.randn(p, p))
             Uj = np.dot(U, Qj)
@@ -318,8 +311,8 @@ def produce_FX_knockoffs(X, invSigma, S, copies=1):
 
 
 class FXSampler(KnockoffSampler):
-    """ 
-    Samples FX knockoffs. See the GaussianSampler documentation 
+    """
+    Samples FX knockoffs. See the GaussianSampler documentation
     for description of the arguments.
     """
 
@@ -333,14 +326,13 @@ class FXSampler(KnockoffSampler):
         verbose=False,
         **kwargs,
     ):
-
         # Save data
         self.X = X.copy()
         self.n = X.shape[0]
         self.p = X.shape[1]
         if self.n < 2 * self.p:
             raise np.linalg.LinAlgError(
-                f"FX knockoffs can't be generated with n ({self.n}) < 2p ({2*self.p})"
+                f"FX knockoffs can't be generated with n ({self.n}) < 2p ({2 * self.p})"
             )
         self.Sigma = np.dot(self.X.T, self.X)
         self.invSigma = np.linalg.inv(self.Sigma)
@@ -360,18 +352,18 @@ class FXSampler(KnockoffSampler):
         self.kwargs = kwargs
         if self.S is None:
             if self.verbose:
-                print(f"Computing knockoff S matrix...")
-            self.kwargs['tol'] = self.kwargs.get('tol', constants.DEFAULT_TOL / self.n)
+                print("Computing knockoff S matrix...")
+            self.kwargs["tol"] = self.kwargs.get("tol", constants.DEFAULT_TOL / self.n)
             self.S = smatrix.compute_smatrix(
                 Sigma=self.Sigma, groups=self.groups, method=self.method, **self.kwargs
             )
 
     def fetch_S(self):
-        """ Rescales S to the same scale as the initial X input """
+        """Rescales S to the same scale as the initial X input"""
         return self.S
 
     def sample_knockoffs(self, check_psd=False):
-        """ Samples knockoffs. returns n x p knockoff matrix.
+        """Samples knockoffs. returns n x p knockoff matrix.
 
         Parameters
         ----------
@@ -382,6 +374,9 @@ class FXSampler(KnockoffSampler):
         if check_psd:
             self.check_PSD_condition(self.Sigma, self.S)
         self.Xk = produce_FX_knockoffs(
-            X=self.X, invSigma=self.invSigma, S=self.S, copies=1,
+            X=self.X,
+            invSigma=self.invSigma,
+            S=self.S,
+            copies=1,
         )[:, :, 0]
         return self.Xk

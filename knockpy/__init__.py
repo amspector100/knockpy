@@ -1,6 +1,6 @@
-name = "knockpy"
-all = [
-	"constants",
+__version__ = "1.3.3"
+__all__ = [
+    "constants",
     "dgp",
     "ggm",
     "knockoff_stats",
@@ -12,21 +12,23 @@ all = [
     "mrc",
     "smatrix",
     "utilities",
+    "KnockoffFilter",
 ]
 
-__version__ = "1.3.1"
-
-from . import constants
-from . import dgp
-from . import ggm
-from . import knockoffs
-from . import knockoff_filter
-from . import knockoff_stats
-from . import mac
-from . import metro
-from . import mlr
-from . import mrc
-from . import smatrix
-from . import utilities
-
+from . import (
+    constants,
+    dgp,
+    ggm,
+    knockoff_filter,
+    knockoff_stats,
+    knockoffs,
+    mac,
+    metro,
+    mlr,
+    mrc,
+    smatrix,
+    utilities,
+)
 from .knockoff_filter import KnockoffFilter
+
+name = "knockpy"

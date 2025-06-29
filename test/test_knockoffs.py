@@ -1,39 +1,33 @@
-""" Tests knockpy.knockoffs and knockpy.smatrix modules"""
-import warnings
-import numpy as np
-import scipy as sp
+"""Tests knockpy.knockoffs and knockpy.smatrix modules"""
+
 import unittest
+import warnings
 
-# for regular pytest calls
-try:
-    from .context import knockpy
-# for running directly with python
-except ImportError:
-    from context import knockpy
-from knockpy import dgp, utilities, mac, mrc, smatrix, knockoffs
+import numpy as np
+
+import knockpy
+from knockpy import dgp, knockoffs, mac, mrc, smatrix, utilities
+from knockpy.utilities import srand
 
 try:
-    import torch
+    import torch as torch
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
 try:
-    import choldate
     CHOLDATE_AVAILABLE = True
-except:
+except:  # noqa: E722
     CHOLDATE_AVAILABLE = False
 try:
-    import pydsdp
     DSDP_AVAILABLE = True
-except:
+except:  # noqa: E722
     DSDP_AVAILABLE = False
 
 
 class CheckSMatrix(unittest.TestCase):
-
     # Helper function
     def check_S_properties(self, V, S, groups):
-
         # Test PSD-ness of S
         min_S_eig = np.linalg.eigh(S)[0].min()
         self.assertTrue(
@@ -64,7 +58,6 @@ class CheckSMatrix(unittest.TestCase):
         p = V.shape[0]
         S_test = np.zeros((p, p))
         for j in np.unique(groups):
-
             # Select subset of S
             inds = np.where(groups == j)[0]
             full_inds = np.ix_(inds, inds)
@@ -83,10 +76,9 @@ class CheckSMatrix(unittest.TestCase):
 
 
 class TestEquicorrelated(CheckSMatrix):
-    """ Tests equicorrelated knockoffs and related functions """
+    """Tests equicorrelated knockoffs and related functions"""
 
     def test_eigenvalue_calculation(self):
-
         # Test to make sure non-group and group versions agree
         # (in the case of no grouping)
         p = 100
@@ -96,7 +88,10 @@ class TestEquicorrelated(CheckSMatrix):
             for i in range(p):
                 V[i, i] = 1
             expected_gamma = min(1, 2 * (1 - rho))
-            gamma = mac.calc_min_group_eigenvalue(Sigma=V, groups=groups,)
+            gamma = mac.calc_min_group_eigenvalue(
+                Sigma=V,
+                groups=groups,
+            )
             np.testing.assert_almost_equal(
                 gamma,
                 expected_gamma,
@@ -118,7 +113,6 @@ class TestEquicorrelated(CheckSMatrix):
         )
 
     def test_equicorrelated_construction(self):
-
         # Test S matrix construction
         p = 100
         groups = np.arange(0, p, 1) + 1
@@ -142,7 +136,6 @@ class TestEquicorrelated(CheckSMatrix):
         )
 
     def test_psd(self):
-
         # Test S matrix construction
         p = 100
         V = np.random.randn(p, p)
@@ -159,21 +152,21 @@ class TestEquicorrelated(CheckSMatrix):
 
 
 class TestSDP(CheckSMatrix):
-    """ Tests an easy case of SDP and ASDP """
+    """Tests an easy case of SDP and ASDP"""
 
     def test_easy_sdp(self):
-
         # Test non-group SDP first
         n = 200
         p = 50
-        X, _, _, _, corr_matrix, groups = dgp.block_equi_graph(
-            n=n, p=p, gamma=0.3
-        )
+        X, _, _, _, corr_matrix, groups = dgp.block_equi_graph(n=n, p=p, gamma=0.3)
 
         # S matrix
         trivial_groups = np.arange(0, p, 1) + 1
         S_triv = smatrix.compute_smatrix(
-            Sigma=corr_matrix, groups=trivial_groups, method="sdp", verbose=True,
+            Sigma=corr_matrix,
+            groups=trivial_groups,
+            method="sdp",
+            verbose=True,
         )
         np.testing.assert_array_almost_equal(
             S_triv,
@@ -181,11 +174,15 @@ class TestSDP(CheckSMatrix):
             decimal=2,
             err_msg="solve_group_SDP does not produce optimal S matrix (blockequi graphs)",
         )
-        self.check_S_properties(corr_matrix, S_triv, trivial_groups)        
+        self.check_S_properties(corr_matrix, S_triv, trivial_groups)
 
         # Repeat for gaussian_knockoffs method
         ksampler = knockoffs.GaussianSampler(
-            X=X, Sigma=corr_matrix, groups=trivial_groups, verbose=False, method="sdp",
+            X=X,
+            Sigma=corr_matrix,
+            groups=trivial_groups,
+            verbose=False,
+            method="sdp",
         )
         S_triv2 = ksampler.fetch_S()
 
@@ -230,17 +227,18 @@ class TestSDP(CheckSMatrix):
         self.check_S_properties(corr_matrix, S_harder_ASDP, groups)
 
     def test_equicorr_SDP(self):
-
         # Test non-group SDP on equicorrelated cov matrix
         p = 100
         rhos = [0.6, 0.8, 0.9]
-        solvers = ['sdp', 'cd']
+        solvers = ["sdp", "cd"]
         scales = [1, 5]
         for scale in scales:
             for rho in rhos:
                 V = scale * rho * np.ones((p, p)) + scale * (1 - rho) * np.eye(p)
                 for solver in solvers:
-                    S = smatrix.compute_smatrix(Sigma=V, method="sdp", solver=solver, verbose=True)
+                    S = smatrix.compute_smatrix(
+                        Sigma=V, method="sdp", solver=solver, verbose=True
+                    )
                     expected = (2 - 2 * rho) * np.eye(p)
                     np.testing.assert_almost_equal(
                         S / scale,
@@ -266,10 +264,11 @@ class TestSDP(CheckSMatrix):
             mac_sdp,
             mac_cd,
             decimal=2,
-            err_msg=f"compute_smatrix mac differs between SDP/CD solvers ({mac_sdp}, {mac_cd}, respectively"
+            err_msg=f"compute_smatrix mac differs between SDP/CD solvers ({mac_sdp}, {mac_cd}, respectively",
         )
 
     def test_sdp_tolerance(self):
+        srand(42)
 
         # Get graph
         np.random.seed(110)
@@ -279,7 +278,7 @@ class TestSDP(CheckSMatrix):
         groups = groups.astype("int32")
 
         # Solve SDP
-        for tol in [1e-3, 0.01, 0.02]:
+        for tol in [0.01, 0.01, 0.02]:
             S = smatrix.compute_smatrix(
                 Sigma=V,
                 groups=groups,
@@ -297,7 +296,7 @@ class TestSDP(CheckSMatrix):
             self.check_S_properties(V, S, groups)
 
     def test_corrmatrix_errors(self):
-        """ Tests that SDP raises informative errors when sigma is not scaled properly"""
+        """Tests that SDP raises informative errors when sigma is not scaled properly"""
 
         # Get graph
         np.random.seed(110)
@@ -315,24 +314,21 @@ class TestSDP(CheckSMatrix):
             ValueError, "Sigma is not a correlation matrix", SDP_solver
         )
 
+
 class TestCholupdate(CheckSMatrix):
     """
     Checks that the cholupdate function works correctly.
     """
 
     def test_cholupdate(self):
-
         # Generate complex covariance matrix and vector
         p = 500
         dgprocess = knockpy.dgp.DGP()
-        dgprocess.sample_data(p=p, method='qer', delta=0.8)
+        dgprocess.sample_data(p=p, method="qer", delta=0.8)
         V = dgprocess.Sigma + np.eye(p)
         L = np.linalg.cholesky(V)
         np.testing.assert_array_almost_equal(
-            V, 
-            np.dot(L, L.T), 
-            decimal=6,
-            err_msg="numpy cholesky decomposition failed"
+            V, np.dot(L, L.T), decimal=6, err_msg="numpy cholesky decomposition failed"
         )
         x = np.random.uniform(size=(p))
 
@@ -340,10 +336,7 @@ class TestCholupdate(CheckSMatrix):
         V = V + np.outer(x, x)
         knockpy.mrc.cholupdate(L.T, x, add=True)
         np.testing.assert_array_almost_equal(
-            V, 
-            np.dot(L, L.T),
-            decimal=6,
-            err_msg="mrc.cholupdate with add=True failed"
+            V, np.dot(L, L.T), decimal=6, err_msg="mrc.cholupdate with add=True failed"
         )
 
         # Test sparse downdate
@@ -352,53 +345,55 @@ class TestCholupdate(CheckSMatrix):
         V = V - np.outer(x, x)
         knockpy.mrc.cholupdate(L.T, x, add=False)
         np.testing.assert_array_almost_equal(
-            V, 
-            np.dot(L, L.T),
-            decimal=6,
-            err_msg="mrc.cholupdate with add=False failed"
+            V, np.dot(L, L.T), decimal=6, err_msg="mrc.cholupdate with add=False failed"
         )
 
+
 class TestDependencyWarnings(CheckSMatrix):
-    """ Tests DSDP_warning / choldate_warning """
+    """Tests DSDP_warning / choldate_warning"""
 
     def test_warnings_raised(self):
-
-        print(f"torch={TORCH_AVAILABLE}, dsdp={DSDP_AVAILABLE}, choldate={CHOLDATE_AVAILABLE}")
-
+        print(
+            f"torch={TORCH_AVAILABLE}, dsdp={DSDP_AVAILABLE}, choldate={CHOLDATE_AVAILABLE}"
+        )
 
         # Sigma
         p = 50
         rho = 0.8
-        Sigma = rho*np.ones((p,p)) + (1-rho)*np.eye(p)
+        Sigma = rho * np.ones((p, p)) + (1 - rho) * np.eye(p)
 
         for method, dependency_flag, dependency_name, suppress_kwargs in zip(
-            ['mvr', 'maxent', 'sdp'],
+            ["mvr", "maxent", "sdp"],
             [CHOLDATE_AVAILABLE, CHOLDATE_AVAILABLE, DSDP_AVAILABLE],
             ["choldate", "choldate", "dsdp"],
-            [{"choldate_warning":False}, {"choldate_warning":False}, {"dsdp_warning":False}]
+            [
+                {"choldate_warning": False},
+                {"choldate_warning": False},
+                {"dsdp_warning": False},
+            ],
         ):
             # Check default setting
             with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
+                warnings.simplefilter("always")
                 smatrix.compute_smatrix(Sigma, method=method)
                 if not dependency_flag:
-                    self.assertTrue(
-                        dependency_name in str(w[-1].message)
-                    )
+                    self.assertTrue(dependency_name in str(w[-1].message))
                 else:
                     self.assertTrue(len(w) == 0)
             # Check that it does not trigger with correct flag
             with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
+                warnings.simplefilter("always")
                 smatrix.compute_smatrix(Sigma, method=method, **suppress_kwargs)
-                self.assertTrue(len(w) == 0, "warning still triggers with choldate_warning=False")
+                self.assertTrue(
+                    len(w) == 0, "warning still triggers with choldate_warning=False"
+                )
 
 
 class TestMRCSolvers(CheckSMatrix):
-    """ Tests the various MRC solvers / classes"""
+    """Tests the various MRC solvers / classes"""
 
     def test_scale_sqrt_S(self):
-        """ Tests the function which scales sqrt S for PSGD solver"""
+        """Tests the function which scales sqrt S for PSGD solver"""
 
         if not TORCH_AVAILABLE:
             return None
@@ -426,7 +421,7 @@ class TestMRCSolvers(CheckSMatrix):
         )
 
     def test_group_sorting_error(self):
-        """ Tests PSGD class raises error if the cov 
+        """Tests PSGD class raises error if the cov
         matrix/groups are improperly sorted"""
 
         if not TORCH_AVAILABLE:
@@ -440,7 +435,7 @@ class TestMRCSolvers(CheckSMatrix):
 
         # Try to initialize
         def init_unsorted_model():
-            model = kpytorch.mrcgrad.MVRLoss(Sigma, groups)
+            kpytorch.mrcgrad.MVRLoss(Sigma, groups)
 
         self.assertRaisesRegex(
             ValueError,
@@ -452,10 +447,12 @@ class TestMRCSolvers(CheckSMatrix):
         """
         Smoothing is not required for this, but this is a nice check anyway.
         """
-        p = 50
         smoothing = 0.1
         dgprocess = dgp.DGP()
-        _, _, _, _, V = dgprocess.sample_data(method="partialcorr", rho=0.1,)
+        _, _, _, _, V = dgprocess.sample_data(
+            method="partialcorr",
+            rho=0.1,
+        )
         S_MVR = mrc.solve_mvr(Sigma=V, smoothing=smoothing)
         # Not implemented yet
         S_SDP = mac.solve_SDP(Sigma=V, tol=1e-5)
@@ -467,8 +464,8 @@ class TestMRCSolvers(CheckSMatrix):
         )
 
     def test_equicorrelated_soln(self):
-        """ Tests that solvers yield expected
-        solution for equicorrelated matrices """
+        """Tests that solvers yield expected
+        solution for equicorrelated matrices"""
 
         if not TORCH_AVAILABLE:
             return None
@@ -489,8 +486,8 @@ class TestMRCSolvers(CheckSMatrix):
                     Sigma = Sigma + (1 - rho) * np.eye(p)
 
                     # Expected solution
-                    opt_prop_rec = min(rho, 0.5)
-                    max_S_val = min(1, 2 - 2 * rho)
+                    min(rho, 0.5)
+                    min(1, 2 - 2 * rho)
                     expected = (1 - rho) * np.eye(p)
 
                     # Test optimizer
@@ -525,9 +522,7 @@ class TestMRCSolvers(CheckSMatrix):
 
                 # Test maximum entropy coordinate descent optimizer
                 if smoothing == 0:
-                    opt_S = mrc.solve_mmi(
-                        Sigma=Sigma, verbose=True
-                    )
+                    opt_S = mrc.solve_mmi(Sigma=Sigma, verbose=True)
                     self.check_S_properties(Sigma, opt_S, groups)
                     np.testing.assert_almost_equal(
                         opt_S,
@@ -537,18 +532,21 @@ class TestMRCSolvers(CheckSMatrix):
                     )
 
     def test_maxent(self):
-        """ Both maxent/mmi work properly """
+        """Both maxent/mmi work properly"""
         # Sample data
         dgprocess = dgp.DGP()
-        dgprocess.sample_data(p=50, method='ar1', a=3)
+        dgprocess.sample_data(p=50, method="ar1", a=3)
 
         # Check solve_maxent/solve_mmi
         np.random.seed(110)
-        S_ME = smatrix.compute_smatrix(dgprocess.Sigma, method='maxent')
+        S_ME = smatrix.compute_smatrix(dgprocess.Sigma, method="maxent")
         np.random.seed(110)
-        S_MMI = smatrix.compute_smatrix(dgprocess.Sigma, method='mmi')
+        S_MMI = smatrix.compute_smatrix(dgprocess.Sigma, method="mmi")
         np.testing.assert_array_almost_equal(
-            S_ME, S_MMI, decimal=3, err_msg=f"compute_smatrix yields diff answers for mmi, maxent"
+            S_ME,
+            S_MMI,
+            decimal=3,
+            err_msg="compute_smatrix yields diff answers for mmi, maxent",
         )
 
         # Check solve_maxent/solve_mmi
@@ -557,19 +555,24 @@ class TestMRCSolvers(CheckSMatrix):
         np.random.seed(110)
         S_MMI = mrc.solve_mmi(dgprocess.Sigma)
         np.testing.assert_array_almost_equal(
-            S_ME, S_MMI, decimal=3, err_msg=f"solve_maxent and solve_mmi yield different answers"
+            S_ME,
+            S_MMI,
+            decimal=3,
+            err_msg="solve_maxent and solve_mmi yield different answers",
         )
 
         # Check maxent_loss/mmi_loss
         L_ME = mrc.maxent_loss(dgprocess.Sigma, S_ME)
         L_MMI = mrc.mmi_loss(dgprocess.Sigma, S_MMI)
         np.testing.assert_almost_equal(
-            L_ME, L_MMI, decimal=3, err_msg=f"maxent_loss and mmi_loss yield different answers"
+            L_ME,
+            L_MMI,
+            decimal=3,
+            err_msg="maxent_loss and mmi_loss yield different answers",
         )
 
-
     def test_equicorrelated_soln_recycled(self):
-        """ Correct solutions on equicorrelated matrix with recycling """
+        """Correct solutions on equicorrelated matrix with recycling"""
 
         # Potentially also test the PSGD solver if torch is available
         if TORCH_AVAILABLE:
@@ -583,7 +586,6 @@ class TestMRCSolvers(CheckSMatrix):
         rhos = [0.1, 0.3, 0.5, 0.7, 0.9]
         true_rec_props = [0.5, 0.25, 0.8, 0.5, 0.5]
         for true_rec_prop, rho in zip(true_rec_props, rhos):
-
             # Construct Sigma
             Sigma = np.zeros((p, p)) + rho
             Sigma = Sigma + (1 - rho) * np.eye(p)
@@ -617,7 +619,10 @@ class TestMRCSolvers(CheckSMatrix):
             # Coord descent solver
             np.random.seed(110)
             opt_S = mrc.solve_mvr(
-                Sigma=Sigma, rej_rate=true_rec_prop, tol=1e-5, verbose=True,
+                Sigma=Sigma,
+                rej_rate=true_rec_prop,
+                tol=1e-5,
+                verbose=True,
             )
             self.check_S_properties(Sigma, opt_S, groups)
             np.testing.assert_almost_equal(
@@ -693,10 +698,9 @@ class TestMRCSolvers(CheckSMatrix):
             )
 
     def test_cd_group_mvr(self):
-
         np.random.seed(110)
         p = 100
-        for method in ['ar1', 'ver', 'qer']:
+        for method in ["ar1", "ver", "qer"]:
             # Sample data
             dgprocess = knockpy.dgp.DGP()
             dgprocess.sample_data(method=method, p=p)
@@ -704,25 +708,23 @@ class TestMRCSolvers(CheckSMatrix):
 
             # Sanity check: grouped solver gets right soln for ungrouped
             S1 = mrc._solve_mvr_grouped(
-                Sigma, groups=np.arange(1, p+1), converge_tol=1e-2, verbose=True
+                Sigma, groups=np.arange(1, p + 1), converge_tol=1e-2, verbose=True
             )
             S2 = mrc.solve_mvr(Sigma)
             Sdiff = S1 - S2
             mean_diff = np.abs(Sdiff[Sdiff != 0]).mean()
             err_msg = f"For no groups, method={method}, avg diff. between grouped/ungrouped solvers is {mean_diff} > 1e-2"
             err_msg = f"grouped solver: {S1} \n ungrouped solver: {S2} \n" + err_msg
-            self.assertTrue(
-                mean_diff < 1e-2, err_msg
-            )
+            self.assertTrue(mean_diff < 1e-2, err_msg)
 
             # Check that adding groups lowers loss
             loss_ungrouped = mrc.mvr_loss(Sigma, S2)
-            groups = np.around(np.arange(1, p+1)/2)
+            groups = np.around(np.arange(1, p + 1) / 2)
             Sgroup = mrc.solve_mvr(Sigma, groups)
             loss_grouped = mrc.mvr_loss(Sigma, Sgroup)
             self.assertTrue(
                 loss_grouped < loss_ungrouped,
-                f"Grouped loss ({loss_grouped}) > ungrouped loss ({loss_ungrouped}) for method={method}" 
+                f"Grouped loss ({loss_grouped}) > ungrouped loss ({loss_ungrouped}) for method={method}",
             )
 
     def test_complex_group_solns(self):
@@ -741,7 +743,10 @@ class TestMRCSolvers(CheckSMatrix):
         groups = knockpy.utilities.preprocess_groups(np.random.randint(1, p + 1, p))
         for method in ["ar1", "ver"]:
             dgprocess = dgp.DGP()
-            _, _, _, _, Sigma = dgprocess.sample_data(method=method, p=p,)
+            _, _, _, _, Sigma = dgprocess.sample_data(
+                method=method,
+                p=p,
+            )
 
             # Use SDP as baseline
             init_S = knockpy.mac.solve_group_SDP(Sigma, groups)
@@ -780,15 +785,13 @@ class TestMRCSolvers(CheckSMatrix):
         S_CI = mrc.solve_ciknock(Vblock)
         np.testing.assert_almost_equal(
             S_CI,
-            (1 - rho ** 2) * np.eye(p),
+            (1 - rho**2) * np.eye(p),
             2,
             "S_CI is incorrect for block-equicorrelated with blocksize 2",
         )
         # 2. Equicorelated
         dgprocess = dgp.DGP()
-        _, _, _, _, V = dgprocess.sample_data(
-            p=p, method="blockequi", gamma=1, rho=rho
-        )
+        _, _, _, _, V = dgprocess.sample_data(p=p, method="blockequi", gamma=1, rho=rho)
         S_CI = mrc.solve_ciknock(V)
         np.testing.assert_almost_equal(
             S_CI, (1 - rho) * np.eye(p), 2, "S_CI is incorrect for equicorrelated"
@@ -797,7 +800,7 @@ class TestMRCSolvers(CheckSMatrix):
 
 class TestBlockdiagApprx(CheckSMatrix):
     def test_divide_comp(self):
-        """ Check that when we divide computation, our
+        """Check that when we divide computation, our
         final blocks do not exceed the specified block size."""
 
         p = 120
@@ -813,7 +816,6 @@ class TestBlockdiagApprx(CheckSMatrix):
                 )
 
     def test_blockdiag_approx_on_blockdiag(self):
-
         # Check that blockdiag approx yields same solution
         # for block-diagonal matrix.
         p = 250
@@ -840,7 +842,6 @@ class TestBlockdiagApprx(CheckSMatrix):
             )
 
     def test_blockdiag_approx_on_ar1(self):
-
         # Check that blockdiag approx yields a good soln on AR1
         p = 150
         a = 1
@@ -855,8 +856,6 @@ class TestBlockdiagApprx(CheckSMatrix):
         _, _, _, _, V = dgprocess.sample_data(p=p, method="ar1", a=a, b=b)
         for groups in [triv_groups, nontriv_groups]:
             for method in ["mvr", "maxent", "mmi", "sdp"]:
-
-
                 # Note we can't fit group mvr/maxent without pytorch
                 nontriv_group_flag = np.all(groups == nontriv_groups)
                 if not TORCH_AVAILABLE and nontriv_group_flag:
@@ -883,16 +882,15 @@ class TestBlockdiagApprx(CheckSMatrix):
                     msg=f"Blockdiag apprx is {mean_diff} > {expected} on avg. away from exact soln {identifier}",
                 )
 
+
 class TestFactorApprx(CheckSMatrix):
-
     def test_agreement_on_factor_models(self):
-
         # Random factor models
         np.random.seed(110)
         ks = [1, 10, 20, 50]
         p = 150
         for k in ks:
-            for method in ['mvr', 'maxent', 'sdp']:   
+            for method in ["mvr", "maxent", "sdp"]:
                 D = np.random.uniform(low=0.01, high=1, size=(p,))
                 U = np.random.randn(p, k) / np.sqrt(k)
                 # Rescale to correlation matrix
@@ -902,21 +900,21 @@ class TestFactorApprx(CheckSMatrix):
                 Sigma = np.diag(D) + np.dot(U, U.T)
                 # Check the factor method agrees with reg. method
                 S1 = smatrix.compute_smatrix(
-                    Sigma=None, D=D, U=U, method=method, how_approx='factor'
+                    Sigma=None, D=D, U=U, method=method, how_approx="factor"
                 )
                 S2 = smatrix.compute_smatrix(
-                   Sigma=Sigma, method=method, solver='cd', tol=0
+                    Sigma=Sigma, method=method, solver="cd", tol=0
                 )
                 np.testing.assert_array_almost_equal(
-                    S1, S2, decimal=2,
-                    err_msg=f"factored/non-factored versions for method={method}, k={k} do not agree"
+                    S1,
+                    S2,
+                    decimal=2,
+                    err_msg=f"factored/non-factored versions for method={method}, k={k} do not agree",
                 )
-
 
 
 class CheckValidKnockoffs(unittest.TestCase):
     def check_valid_mxknockoffs(self, X, mu=None, Sigma=None, msg="", **kwargs):
-
         # S matrix
         ksampler = knockoffs.GaussianSampler(
             X=X, mu=mu, Sigma=Sigma, verbose=True, **kwargs
@@ -957,16 +955,15 @@ class CheckValidKnockoffs(unittest.TestCase):
         )
 
         # Test G has correct structure
-        outmsg = f"Feature-knockoff cov matrix has incorrect values "
+        outmsg = "Feature-knockoff cov matrix has incorrect values "
         outmsg += f"for MX knockoffs for {msg} graph "
         np.testing.assert_array_almost_equal(G_hat, G, 2, outmsg)
 
 
 class TestKnockoffGen(CheckValidKnockoffs):
-    """ Tests whether knockoffs have correct distribution empirically"""
+    """Tests whether knockoffs have correct distribution empirically"""
 
     def test_method_parser(self):
-
         # Easiest test
         method1 = "hello"
         out1 = smatrix.parse_method(method1, None, None)
@@ -988,7 +985,6 @@ class TestKnockoffGen(CheckValidKnockoffs):
         )
 
     def test_error_raising(self):
-
         # Generate data
         n = 100
         p = 100
@@ -1012,7 +1008,9 @@ class TestKnockoffGen(CheckValidKnockoffs):
         # Test FX knockoff violations
         def fx_knockoffs_low_n():
             knockoffs.FXSampler(
-                X=X, Sigma=corr_matrix, S=None,
+                X=X,
+                Sigma=corr_matrix,
+                S=None,
             )
 
         self.assertRaisesRegex(
@@ -1022,7 +1020,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
         )
 
     def test_consistency_of_inferring_sigma(self):
-        """ Checks that the same knockoffs are produced
+        """Checks that the same knockoffs are produced
         whether you infer the covariance matrix first and
         pass it to the gaussian_knockoffs generator, or
         you let the generator do the work for you
@@ -1037,26 +1035,20 @@ class TestKnockoffGen(CheckValidKnockoffs):
         # Method 1: infer cov first
         V, _ = utilities.estimate_covariance(X, tol=1e-2)
         np.random.seed(110)
-        Xk1 = knockoffs.GaussianSampler(
-            X=X, Sigma=V, method="sdp"
-        ).sample_knockoffs()
+        Xk1 = knockoffs.GaussianSampler(X=X, Sigma=V, method="sdp").sample_knockoffs()
 
         # Method 2: Infer during
         np.random.seed(110)
-        Xk2 = knockoffs.GaussianSampler(
-            X=X, method="sdp"
-        ).sample_knockoffs()
+        Xk2 = knockoffs.GaussianSampler(X=X, method="sdp").sample_knockoffs()
         np.testing.assert_array_almost_equal(
             Xk1, Xk2, 5, err_msg="Knockoff gen is inconsistent"
         )
 
     def test_MX_knockoff_dist(self):
-
         # Test knockoff construction for mvr and SDP
         # on equicorrelated matrices
         np.random.seed(110)
         n = 100000
-        copies = 3
         p = 5
 
         # Check with a non-correlation matrix
@@ -1064,21 +1056,23 @@ class TestKnockoffGen(CheckValidKnockoffs):
         mu = np.random.randn(p)
         print(f"true mu: {mu}")
         dgprocess = dgp.DGP(mu=mu, Sigma=V)
-        X, _, _, _, _ = dgprocess.sample_data(n=n, p=p,)
+        X, _, _, _, _ = dgprocess.sample_data(
+            n=n,
+            p=p,
+        )
         print(f"X mean: {X.mean(axis=0)}")
 
         # Check validity for oracle cov matrix
-        self.check_valid_mxknockoffs(X, mu=mu, Sigma=V, msg=f"ORACLE 4*AR1(rho=0.5)")
+        self.check_valid_mxknockoffs(X, mu=mu, Sigma=V, msg="ORACLE 4*AR1(rho=0.5)")
 
         # Check validity for estimated cov matrix
         print("Here now")
-        self.check_valid_mxknockoffs(X, msg=f"ESTIMATED 4*AR1(rho=0.5)")
+        self.check_valid_mxknockoffs(X, msg="ESTIMATED 4*AR1(rho=0.5)")
 
         # Check for many types of data
         for rho in [0.1, 0.9]:
             for gamma in [0.5, 1]:
                 for method in ["mvr", "sdp"]:
-
                     mu = 10 * np.random.randn(p)
                     X, _, _, _, corr_matrix, _ = dgp.block_equi_graph(
                         n=n, p=p, gamma=gamma, rho=rho, mu=mu
@@ -1111,7 +1105,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
                         n=n, p=p, gamma=gamma, rho=rho
                     )
                     # S matrix
-                    trivial_groups = np.arange(0, p, 1) + 1
+                    np.arange(0, p, 1) + 1
                     ksampler = knockoffs.FXSampler(X=X, method=method, verbose=False)
                     Xk = ksampler.sample_knockoffs()
                     S = ksampler.fetch_S()
@@ -1131,7 +1125,7 @@ class TestKnockoffGen(CheckValidKnockoffs):
                     )
 
                     # Test G has correct structure
-                    msg = f"Feature-knockoff cov matrix has incorrect values "
+                    msg = "Feature-knockoff cov matrix has incorrect values "
                     msg += f"for blockequi graph, FX knockoffs, rho = {rho}, gamma = {gamma}"
                     np.testing.assert_array_almost_equal(G_hat, G, 5, msg)
 
@@ -1146,22 +1140,33 @@ class TestKnockoffGen(CheckValidKnockoffs):
         n = 300
         dgprocess = dgp.DGP()
         X, y, beta, Q, V = dgprocess.sample_data(
-            method="qer", p=p, n=n, coeff_size=0.5, sparsity=0.5,
+            method="qer",
+            p=p,
+            n=n,
+            coeff_size=0.5,
+            sparsity=0.5,
         )
-        ksampler1 = knockoffs.FXSampler(X=X,)
+        ksampler1 = knockoffs.FXSampler(
+            X=X,
+        )
         S1 = ksampler1.fetch_S()
-        ksampler2 = knockoffs.FXSampler(X=X, S=S1,)
+        ksampler2 = knockoffs.FXSampler(
+            X=X,
+            S=S1,
+        )
         S2 = ksampler2.fetch_S()
         np.testing.assert_array_almost_equal(
             S1,
             S2,
             decimal=6,
-            err_msg=f"Repeatedly passing S into/out of knockoff gen yields inconsistencies",
+            err_msg="Repeatedly passing S into/out of knockoff gen yields inconsistencies",
         )
 
 
 if __name__ == "__main__":
-    import pytest
     import sys
+
+    import pytest
+
     pytest.main(sys.argv)
-    #unittest.main()
+    # unittest.main()

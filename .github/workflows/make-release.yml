@@ -1,0 +1,49 @@
+name: Make a New Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Get the tag
+        run: |
+          echo "RELEASE_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+
+      - uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          draft: true
+          name: "${{ format('{0} {1}', env.REPO_NAME, env.RELEASE_TAG) }}"
+
+
+  build-n-publish:
+    name: Build and publish distribution PyPI
+    needs: create-release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name:  Install requirements
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libblas-dev liblapack-dev
+
+      - uses: actions/checkout@master
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build the dsitribution
+        run: |
+          make build-dist
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

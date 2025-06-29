@@ -1,19 +1,17 @@
-"""
-Note to self: should this be in "knockoff_stats.py"?
-"""
-
 import numpy as np
 import scipy.special
-from ._mlr_spikeslab_fx import _sample_mlr_spikeslab_fx
-from ._mlr_spikeslab import _sample_mlr_spikeslab
-from ._mlr_spikeslab_group import _sample_mlr_spikeslab_group
-from ._mlr_oracle import _sample_mlr_oracle_gaussian, _sample_mlr_oracle_logistic
+
 from .. import knockoff_stats as kstats
 from .. import utilities
+from ._mlr_oracle import _sample_mlr_oracle_gaussian, _sample_mlr_oracle_logistic
+from ._mlr_spikeslab import _sample_mlr_spikeslab
+from ._mlr_spikeslab_fx import _sample_mlr_spikeslab_fx
+from ._mlr_spikeslab_group import _sample_mlr_spikeslab_group
+
 
 def check_no_groups(groups, p, error=None):
     if groups is not None:
-        if np.any(groups != np.arange(1, p+1)):
+        if np.any(groups != np.arange(1, p + 1)):
             if error is not None:
                 raise ValueError(error)
             return False
@@ -25,7 +23,7 @@ def _calc_group_blocks(groups, group_sizes):
     group_blocks = -1 * np.ones((ngroups, max_gsize), dtype=int)
     for gj in range(ngroups):
         gsize = group_sizes[gj]
-        group_blocks[gj, 0:gsize] = np.where(groups == (gj+1))[0]
+        group_blocks[gj, 0:gsize] = np.where(groups == (gj + 1))[0]
     return group_blocks.astype(int)
 
 def _mlr_to_adj_mlr(mlr_sign, prob_mlr_pos, prob_mlr_pos_nonnull, fdr):
@@ -52,71 +50,61 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
     Parameters
     ----------
     X : np.ndarray
-        the ``(n, p)``-shaped design matrix
+            the ``(n, p)``-shaped design matrix
     Xk : np.ndarray
-        the ``(n, p)``-shaped matrix of knockoffs
+            the ``(n, p)``-shaped matrix of knockoffs
     y : np.ndarray
-        ``(n,)``-shaped response vector
-    groups : np.ndarray
-        For group knockoffs, a p-length array of integers from 1 to 
-        num_groups such that ``groups[j] == i`` indicates that variable `j`
-        is a member of group `i`. Defaults to None (regular knockoffs).
-    adjusted_mlr : bool
-        If True, adjusts the MLR statistics to maximize the expected number
-        of true discoveries (as opposed to the expected number of discoveries).
-        In this case, q (FDR level) must be provided.
-    fdr : float
-        FDR level. Optional; only used if adjusted_mlr=True.
+            ``(n,)``-shaped response vector
     n_iter : int
-        Number of samples per MCMC chain used to compute
-        MLR statistics. Default: 2000.
+            Number of samples per MCMC chain used to compute
+            MLR statistics. Default: 2000.
     chain : int
-        Number of MCMC chains to run. Default: 5.
+            Number of MCMC chains to run. Default: 5.
     burn_prop : float
-        The burn-in for each chain will be equal to 
-        ``n_iter * burn_prop``.
+            The burn-in for each chain will be equal to
+            ``n_iter * burn_prop``.
     p0 : float
-        Prior probability that any coefficient equals zero.
+            Prior probability that any coefficient equals zero.
     update_p0 : bool
-        If True, updates ``p0`` using a Beta hyperprior on ``p0``.
-        Else, the value of ``p0`` is fixed. Default: True.
+            If True, updates ``p0`` using a Beta hyperprior on ``p0``.
+            Else, the value of ``p0`` is fixed. Default: True.
     p0_a0 : float
-        If ``update_p0`` is True, ``p0`` has a
-        TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
-        Default: 1.0.
+            If ``update_p0`` is True, ``p0`` has a
+            TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
+            Default: 1.0.
     p0_b0 : float
-        If ``update_p0`` is True, ``p0`` has a
-        TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
-        Default: 1.0.
+            If ``update_p0`` is True, ``p0`` has a
+            TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.
+            Default: 1.0.
     min_p0 : float
-        Minimum value for ``p0`` as specified by the prior.
-        Default: 0.8.
+            Minimum value for ``p0`` as specified by the prior.
+            Default: 0.8.
     sigma2 : float
-        Variance of y given X. Default: 1.0.
+            Variance of y given X. Default: 1.0.
     update_sigma2 : bool
-        If True, imposes an InverseGamma hyperprior on ``sigma2``.
-        Else, the value of ``sigma2`` is fixed. Default: True.
+            If True, imposes an InverseGamma hyperprior on ``sigma2``.
+            Else, the value of ``sigma2`` is fixed. Default: True.
     sigma2_a0 : float
-        If ``update_sigma2`` is True, ``sigma2`` has an
-        InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.
-        Default: 2.0.
+            If ``update_sigma2`` is True, ``sigma2`` has an
+            InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.
+            Default: 2.0.
     sigma2_b0 : float
-        If ``update_sigma2`` is True, ``sigma2`` has an
-        InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.
-        Default: 1.0.
+            If ``update_sigma2`` is True, ``sigma2`` has an
+            InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.
+            Default: 1.0.
     tau2 : float
-        Prior variance on nonzero coefficients. Default: 1.0.
+            Prior variance on nonzero coefficients. Default: 1.0.
     update_tau2 : bool
-        If True, imposes an InverseGamma hyperprior on ``tau2``.
-        Else, the value of ``tau2`` is fixed. Default: True.
+            If True, imposes an InverseGamma hyperprior on ``tau2``.
+            Else, the value of ``tau2`` is fixed. Default: True.
     tau2_a0 : float
-        If ``update_tau2`` is True, ``tau2`` has an
-        InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior. 
-        Default: 2.0.
+            If ``update_tau2`` is True, ``tau2`` has an
+            InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
+            Default: 2.0.
     tau2_b0 : float
-        If ``update_tau2`` is True, ``tau2`` has an
-        InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
-        Default: 1.0.
+            If ``update_tau2`` is True, ``tau2`` has an
+            InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.
+            Default: 1.0.
 
     Returns
     -------
@@ -125,7 +113,6 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
 
     Notes
     -----
-    Does not yet support group knockoffs. 
     This is a valid FX feature statistic (obeys the sufficiency property).
     """
     def __init__(self, **kwargs):
