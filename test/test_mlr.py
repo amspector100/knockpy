@@ -34,80 +34,25 @@ class TestMLR(unittest.TestCase):
                     err_msg=f"for groups={groups}, block for group {gj} is incorrect",
                 )
 
-    # def test_fx_equals_mx(self):
-    # 	"""
-    # 	Check MX and FX give the same results for FX knockoffs.
-    # 	"""
-    # 	# Create FX knockoffs
-    # 	np.random.seed(111)
-    # 	n_iter = 1000
-    # 	chains = 10
-    # 	n = 200
-    # 	p = 20
-    # 	X = np.random.randn(n, p)
-    # 	X = X - X.mean(axis=0)
-    # 	beta = np.random.randn(p)
-    # 	y = X @ beta + np.random.randn(n)
-    # 	ksampler = knockpy.knockoffs.FXSampler(X=X)
-    # 	mlr_kwargs = dict(
-    # 		p0_a0=1.0,
-    # 		p0_b0=1.0,
-    # 		tau2_a0=2.0,
-    # 		tau2_b0=1.0,
-    # 		sigma2=1.0,
-    # 		update_p0=True,
-    # 		update_sigma2=False,
-    # 		n_iter=n_iter,
-    # 		chains=chains,
-    # 	)
-
-    # 	# 1. Fit FX MLR spikeslab
-    # 	fxmlr = mlr.MLR_FX_Spikeslab(
-    # 		num_mixture=1, **copy.deepcopy(mlr_kwargs)
-    # 	)
-    # 	kf1 = KF(ksampler=ksampler, fstat=fxmlr)
-    # 	kf1.forward(X=X, y=y)
-    # 	W1 = kf1.W
-
-    # 	# 2. Fit MX MLR spikeslab
-    # 	mxmlr = mlr.MLR_Spikeslab(
-    # 		min_p0=0.0, p0=0.1, **copy.deepcopy(mlr_kwargs)
-    # 	)
-    # 	kf2 = KF(ksampler=ksampler, fstat=mxmlr)
-    # 	kf2.forward(X=X, y=y)
-    # 	W2 = kf2.W
-
-    # 	# params are roughly equal
-    # 	params = ['p0', 'tau2', 'sigma2']
-    # 	fxests = [
-    # 		fxmlr.p0s.mean(axis=0)[0],
-    # 		fxmlr.tau2s.mean(axis=0)[0],
-    # 		fxmlr.sigma2s.mean()
-    # 	]
-    # 	mxests = [
-    # 		mxmlr.p0s.mean(),
-    # 		mxmlr.tau2s.mean(),
-    # 		mxmlr.sigma2s.mean(0)
-    # 	]
-    # 	for pname, fxest, mxest in zip(
-    # 		params, fxests, mxests
-    # 	):
-    # 		np.testing.assert_almost_equal(
-    # 			fxest,
-    # 			mxest,
-    # 			decimal=1,
-    # 			err_msg=f"Estimated {pname} for FX and MX disagree."
-    # 		)
-
-    # 	# W statistics
-    # 	print("FX W:", np.around(W1, 2))
-    # 	print("MX W:", np.around(W2, 2))
-    # 	np.testing.assert_almost_equal(
-    # 		np.abs(W1 - W2).mean(),
-    # 		0.0,
-    # 		decimal=1,
-    # 		err_msg=f"||W_FX - W_MX||_1 >= 0.1"
-    # 	)
+    def test_no_errors(self):
+        p = 20
+        n = 150
+        dgp = knockpy.dgp.DGP()
+        dgp.sample_data(p=p, n=n, rho=0.001, sparsity=1)
+        X = dgp.X
+        y = dgp.y
+        ksampler = knockpy.knockoffs.FXSampler(X=X)
+        Xk = ksampler.sample_knockoffs()
+        mlr_kwargs = dict(
+            n_iter=100,
+            chains=1,
+        )
+        for adjusted_mlr in [True, False]:
+            mlr_kwargs["adjusted_mlr"] = adjusted_mlr
+            mlr_fx = mlr.MLR_FX_Spikeslab(**mlr_kwargs)
+            mlr_fx.fit(X=X, Xk=Xk, y=y, groups=None)
+            mlr_mx = mlr.MLR_Spikeslab(**mlr_kwargs)
+            mlr_mx.fit(X=X, Xk=Xk, y=y, groups=None)
 
     def test_mlr_oracle(self):
         # Data generating process
