@@ -11,6 +11,9 @@ Feature Statistics
 .. automodule:: knockpy.knockoff_stats
   :members:
 
+.. automodule:: knockpy.mlr.mlr
+  :members:
+
 Gaussian and Fixed-X Knockoff Samplers
 --------------------------------------
 .. automodule:: knockpy.knockoffs
