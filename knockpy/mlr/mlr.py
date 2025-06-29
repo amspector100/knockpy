@@ -58,11 +58,14 @@ class MLR_Spikeslab(kstats.FeatureStatistic):
     n_iter : int
             Number of samples per MCMC chain used to compute
             MLR statistics. Default: 2000.
-    chain : int
+    chains : int
             Number of MCMC chains to run. Default: 5.
     burn_prop : float
             The burn-in for each chain will be equal to
             ``n_iter * burn_prop``.
+    adjusted_mlr : bool
+            If True, computes adjusted MLR (AMLR) statistics. Default: False.
+            See the MLR knockoffs paper for details.
     p0 : float
             Prior probability that any coefficient equals zero.
     update_p0 : bool

@@ -455,19 +455,20 @@ class FeatureStatistic:
         feature_importance : str
             Specifies how to create feature importances from ``model``.
             Two options:
-                - "swap": The default swap-statistic from
-                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.
-                These are good measures of feature importance but
-                slightly slower.
-                - "swapint": The swap-integral defined from
-                http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf
-            Defaults to 'swap'
+
+                - "swap": The default swap-statistic from http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.
+                - "swapint": The swap-integral from http://proceedings.mlr.press/v89/gimenez19a/gimenez19a.pdf.
+            
+            Defaults to 'swap'. This is ignored for most specialized classes
+            inheriting from FeatureStatistic (e.g. MLR/Lasso Statistics).
         antisym : str
             The antisymmetric function used to create (ungrouped) feature
             statistics. Three options:
+            
             - "CD" (Difference of absolute vals of coefficients),
             - "SM" (signed maximum).
             - "SCD" (Simple difference of coefficients - NOT recommended)
+
         group_agg : str
             For group knockoffs, specifies how to turn individual feature
             statistics into grouped feature statistics. Two options:
