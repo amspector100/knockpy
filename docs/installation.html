@@ -1,20 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting Started &mdash; knockpy 1.3.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <title>Getting Started &mdash; knockpy 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=e358f374"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -28,14 +32,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> knockpy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            knockpy
           </a>
               <div class="version">
-                1.3.2
+                1.3.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -67,8 +75,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Getting Started</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -78,42 +86,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
 <p>To install knockpy, first install choldate using the following command:</p>
 <p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+git://github.com/jcrudy/choldate.git</span></code></p>
 <p>Then, install knockpy using pip:</p>
 <p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">knockpy[fast]</span></code></p>
 <p>To use the (optional) kpytorch submodule, you will need to install <a class="reference external" href="https://pytorch.org/">pytorch</a>.</p>
-</div>
-<div class="section" id="what-if-installation-fails">
-<h2>What if installation fails?<a class="headerlink" href="#what-if-installation-fails" title="Permalink to this headline"></a></h2>
+</section>
+<section id="what-if-installation-fails">
+<h2>What if installation fails?<a class="headerlink" href="#what-if-installation-fails" title="Link to this heading"></a></h2>
 <p>knockpy relies on heavy-duty linear algebra routines which sometimes fail on non-Linux environments.</p>
 <p>1. To start, install a lightweight version of knockpy using
 <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">knockpy</span></code>. This should install correctly on all devices, and contains nearly all of the functionality of the prior installation. However, the algorithms for computing optimal distributions for Gaussian knockoffs, such as <a class="reference external" href="https://arxiv.org/abs/2011.14625">minimum reconstructability knockoffs</a> or <a class="reference external" href="https://arxiv.org/abs/1610.02351">SDP knockoffs</a>, may be an order of magnitude slower.</p>
@@ -135,9 +119,9 @@ should work on all platforms. Second, on Windows, you can install precompiled <a
 <ol class="arabic simple" start="3">
 <li><p>[Optional] To speed up computation for (non-default) SDP knockoffs, you will need to install <code class="docutils literal notranslate"><span class="pre">scikit-dsdp</span></code>. This can be challenging on non-Linux environments. We hope to provide more explicit instructions for installation of this package in the future.</p></li>
 </ol>
-</div>
-<div class="section" id="quickstart">
-<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline"></a></h2>
+</section>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h2>
 <p>Given a data-matrix <cite>X</cite> and a response vector <cite>y</cite>, knockpy makes it easy to use knockoffs to perform variable selection using a wide variety of machine learning algorithms (also known as “feature statistic”) and types of knockoffs. One quick example is shown below, where we use the cross-validated lasso to assign variable importances to the features and knockoffs.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">knockpy</span> <span class="k">as</span> <span class="nn">kpy</span>
 <span class="kn">from</span> <span class="nn">knockpy.knockoff_filter</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span>
@@ -163,8 +147,8 @@ should work on all platforms. Second, on Windows, you can install precompiled <a
 </pre></div>
 </div>
 <p>Most importantly, <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> is built to be modular, so researchers and analysts can easily layer functionality on top of it.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

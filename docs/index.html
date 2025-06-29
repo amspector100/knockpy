@@ -1,21 +1,27 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to knockpy’s documentation! &mdash; knockpy 1.3.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <title>Welcome to knockpy’s documentation! &mdash; knockpy 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=e358f374"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -27,14 +33,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> knockpy
+
+          
+          
+          <a href="#" class="icon icon-home">
+            knockpy
           </a>
               <div class="version">
-                1.3.2
+                1.3.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -61,8 +71,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>Welcome to knockpy’s documentation!</li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to knockpy’s documentation!</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -72,32 +82,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="welcome-to-knockpy-s-documentation">
-<h1>Welcome to knockpy’s documentation!<a class="headerlink" href="#welcome-to-knockpy-s-documentation" title="Permalink to this headline"></a></h1>
+  <section id="welcome-to-knockpy-s-documentation">
+<h1>Welcome to knockpy’s documentation!<a class="headerlink" href="#welcome-to-knockpy-s-documentation" title="Link to this heading"></a></h1>
 <p>Knockoffs are a powerful tool which can be used in combination with nearly any machine learning algorithm to control the false discovery rate (FDR) in feature selection. Knockoffs were initially developed in <a class="reference external" href="https://projecteuclid.org/download/pdfview_1/euclid.aos/1438606853">Barber and Candes 2015</a> and <a class="reference external" href="https://arxiv.org/abs/1610.02351">Candes et al 2018</a>.</p>
 <p>Knockpy is a python implementation of the knockoffs framework which makes it easy to apply knockoff-based inference in only a few lines of code. Knockpy is also built to be modular, so researchers and analysts can easily layer functionality on top of it. See usage for more details!</p>
 <div class="toctree-wrapper compound">
@@ -133,28 +119,144 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.knockoff_filter">The KnockoffFilter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.knockoff_stats">Feature Statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.knockoffs">Gaussian and Fixed-X Knockoff Samplers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.metro">Metropolized Samplers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.smatrix">S-matrix computation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#kpytorch">Kpytorch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.ggm">Gaussian graphical model discovery</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.dgp">Quickly creating data-generating processes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.utilities">Utility functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.knockoff_filter">The KnockoffFilter</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_filter.KnockoffFilter"><code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.knockoff_stats">Feature Statistics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.DeepPinkStatistic"><code class="docutils literal notranslate"><span class="pre">DeepPinkStatistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.FeatureStatistic"><code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.LassoStatistic"><code class="docutils literal notranslate"><span class="pre">LassoStatistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.MargCorrStatistic"><code class="docutils literal notranslate"><span class="pre">MargCorrStatistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.OLSStatistic"><code class="docutils literal notranslate"><span class="pre">OLSStatistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.RandomForestStatistic"><code class="docutils literal notranslate"><span class="pre">RandomForestStatistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.RidgeStatistic"><code class="docutils literal notranslate"><span class="pre">RidgeStatistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.calc_lars_path"><code class="docutils literal notranslate"><span class="pre">calc_lars_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.calc_mse"><code class="docutils literal notranslate"><span class="pre">calc_mse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.combine_Z_stats"><code class="docutils literal notranslate"><span class="pre">combine_Z_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.compute_residual_variance"><code class="docutils literal notranslate"><span class="pre">compute_residual_variance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.data_dependent_threshhold"><code class="docutils literal notranslate"><span class="pre">data_dependent_threshhold()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.fit_lasso"><code class="docutils literal notranslate"><span class="pre">fit_lasso()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.fit_ridge"><code class="docutils literal notranslate"><span class="pre">fit_ridge()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.parse_logistic_flag"><code class="docutils literal notranslate"><span class="pre">parse_logistic_flag()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoff_stats.parse_y_dist"><code class="docutils literal notranslate"><span class="pre">parse_y_dist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mlr.mlr.MLR_FX_Spikeslab"><code class="docutils literal notranslate"><span class="pre">MLR_FX_Spikeslab</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mlr.mlr.MLR_Spikeslab"><code class="docutils literal notranslate"><span class="pre">MLR_Spikeslab</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mlr.mlr.MLR_Spikeslab_Splines"><code class="docutils literal notranslate"><span class="pre">MLR_Spikeslab_Splines</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mlr.mlr.OracleMLR"><code class="docutils literal notranslate"><span class="pre">OracleMLR</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.knockoffs">Gaussian and Fixed-X Knockoff Samplers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoffs.FXSampler"><code class="docutils literal notranslate"><span class="pre">FXSampler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoffs.GaussianSampler"><code class="docutils literal notranslate"><span class="pre">GaussianSampler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoffs.KnockoffSampler"><code class="docutils literal notranslate"><span class="pre">KnockoffSampler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.knockoffs.produce_FX_knockoffs"><code class="docutils literal notranslate"><span class="pre">produce_FX_knockoffs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.metro">Metropolized Samplers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.ARTKSampler"><code class="docutils literal notranslate"><span class="pre">ARTKSampler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.BlockTSampler"><code class="docutils literal notranslate"><span class="pre">BlockTSampler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.GibbsGridSampler"><code class="docutils literal notranslate"><span class="pre">GibbsGridSampler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.MetropolizedKnockoffSampler"><code class="docutils literal notranslate"><span class="pre">MetropolizedKnockoffSampler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.gaussian_log_likelihood"><code class="docutils literal notranslate"><span class="pre">gaussian_log_likelihood()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.get_ordering"><code class="docutils literal notranslate"><span class="pre">get_ordering()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.t_log_likelihood"><code class="docutils literal notranslate"><span class="pre">t_log_likelihood()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.t_markov_loglike"><code class="docutils literal notranslate"><span class="pre">t_markov_loglike()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.metro.t_mvn_loglike"><code class="docutils literal notranslate"><span class="pre">t_mvn_loglike()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.smatrix">S-matrix computation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.smatrix.compute_smatrix"><code class="docutils literal notranslate"><span class="pre">compute_smatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.smatrix.compute_smatrix_factored"><code class="docutils literal notranslate"><span class="pre">compute_smatrix_factored()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.smatrix.divide_computation"><code class="docutils literal notranslate"><span class="pre">divide_computation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.smatrix.merge_groups"><code class="docutils literal notranslate"><span class="pre">merge_groups()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.smatrix.parse_method"><code class="docutils literal notranslate"><span class="pre">parse_method()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.cholupdate"><code class="docutils literal notranslate"><span class="pre">cholupdate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.maxent_loss"><code class="docutils literal notranslate"><span class="pre">maxent_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.mmi_loss"><code class="docutils literal notranslate"><span class="pre">mmi_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.mvr_loss"><code class="docutils literal notranslate"><span class="pre">mvr_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.solve_ciknock"><code class="docutils literal notranslate"><span class="pre">solve_ciknock()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.solve_maxent"><code class="docutils literal notranslate"><span class="pre">solve_maxent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.solve_maxent_factored"><code class="docutils literal notranslate"><span class="pre">solve_maxent_factored()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.solve_mmi"><code class="docutils literal notranslate"><span class="pre">solve_mmi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.solve_mvr"><code class="docutils literal notranslate"><span class="pre">solve_mvr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mrc.solve_mvr_factored"><code class="docutils literal notranslate"><span class="pre">solve_mvr_factored()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mac.calc_min_group_eigenvalue"><code class="docutils literal notranslate"><span class="pre">calc_min_group_eigenvalue()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mac.solve_SDP"><code class="docutils literal notranslate"><span class="pre">solve_SDP()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mac.solve_equicorrelated"><code class="docutils literal notranslate"><span class="pre">solve_equicorrelated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.mac.solve_group_SDP"><code class="docutils literal notranslate"><span class="pre">solve_group_SDP()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#kpytorch">Kpytorch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.kpytorch.deeppink.DeepPinkModel"><code class="docutils literal notranslate"><span class="pre">DeepPinkModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.kpytorch.mrcgrad.MVRLoss"><code class="docutils literal notranslate"><span class="pre">MVRLoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.kpytorch.mrcgrad.PSGDSolver"><code class="docutils literal notranslate"><span class="pre">PSGDSolver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.kpytorch.mrcgrad.block_diag_sparse"><code class="docutils literal notranslate"><span class="pre">block_diag_sparse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.kpytorch.mrcgrad.solve_mrc_psgd"><code class="docutils literal notranslate"><span class="pre">solve_mrc_psgd()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.ggm">Gaussian graphical model discovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.ggm.KnockoffGGM"><code class="docutils literal notranslate"><span class="pre">KnockoffGGM</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.ggm.compute_ggm_threshold"><code class="docutils literal notranslate"><span class="pre">compute_ggm_threshold()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.ggm.discovered_edges"><code class="docutils literal notranslate"><span class="pre">discovered_edges()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.dgp">Quickly creating data-generating processes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.AR1"><code class="docutils literal notranslate"><span class="pre">AR1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.DGP"><code class="docutils literal notranslate"><span class="pre">DGP</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.DirichletCorr"><code class="docutils literal notranslate"><span class="pre">DirichletCorr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.ErdosRenyi"><code class="docutils literal notranslate"><span class="pre">ErdosRenyi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.FactorModel"><code class="docutils literal notranslate"><span class="pre">FactorModel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.NestedAR1"><code class="docutils literal notranslate"><span class="pre">NestedAR1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.PartialCorr"><code class="docutils literal notranslate"><span class="pre">PartialCorr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.UniformDot"><code class="docutils literal notranslate"><span class="pre">UniformDot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.Wishart"><code class="docutils literal notranslate"><span class="pre">Wishart()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.block_equi_graph"><code class="docutils literal notranslate"><span class="pre">block_equi_graph()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.construct_gibbs_grid"><code class="docutils literal notranslate"><span class="pre">construct_gibbs_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.coords2num"><code class="docutils literal notranslate"><span class="pre">coords2num()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.cov2blocks"><code class="docutils literal notranslate"><span class="pre">cov2blocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.create_correlation_tree"><code class="docutils literal notranslate"><span class="pre">create_correlation_tree()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.create_grouping"><code class="docutils literal notranslate"><span class="pre">create_grouping()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.create_sparse_coefficients"><code class="docutils literal notranslate"><span class="pre">create_sparse_coefficients()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.graph2cliques"><code class="docutils literal notranslate"><span class="pre">graph2cliques()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.num2coords"><code class="docutils literal notranslate"><span class="pre">num2coords()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.sample_ar1t"><code class="docutils literal notranslate"><span class="pre">sample_ar1t()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.sample_block_tmvn"><code class="docutils literal notranslate"><span class="pre">sample_block_tmvn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.sample_gibbs"><code class="docutils literal notranslate"><span class="pre">sample_gibbs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.dgp.sample_response"><code class="docutils literal notranslate"><span class="pre">sample_response()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apiref.html#module-knockpy.utilities">Utility functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.apply_pool"><code class="docutils literal notranslate"><span class="pre">apply_pool()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.blockdiag_to_blocks"><code class="docutils literal notranslate"><span class="pre">blockdiag_to_blocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.calc_group_sizes"><code class="docutils literal notranslate"><span class="pre">calc_group_sizes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.calc_mineig"><code class="docutils literal notranslate"><span class="pre">calc_mineig()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.chol2inv"><code class="docutils literal notranslate"><span class="pre">chol2inv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.cov2corr"><code class="docutils literal notranslate"><span class="pre">cov2corr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.estimate_covariance"><code class="docutils literal notranslate"><span class="pre">estimate_covariance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.estimate_factor"><code class="docutils literal notranslate"><span class="pre">estimate_factor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.fetch_group_nonnulls"><code class="docutils literal notranslate"><span class="pre">fetch_group_nonnulls()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.permute_matrix_by_groups"><code class="docutils literal notranslate"><span class="pre">permute_matrix_by_groups()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.preprocess_groups"><code class="docutils literal notranslate"><span class="pre">preprocess_groups()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.random_permutation_inds"><code class="docutils literal notranslate"><span class="pre">random_permutation_inds()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.scale_until_PSD"><code class="docutils literal notranslate"><span class="pre">scale_until_PSD()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.shift_until_PSD"><code class="docutils literal notranslate"><span class="pre">shift_until_PSD()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apiref.html#knockpy.utilities.srand"><code class="docutils literal notranslate"><span class="pre">srand()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </div>
-<div class="section" id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline"></a></h2>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

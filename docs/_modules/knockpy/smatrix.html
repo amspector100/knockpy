@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>knockpy.smatrix &mdash; knockpy 1.3.0 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <title>knockpy.smatrix &mdash; knockpy 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=e358f374"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -26,14 +29,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> knockpy
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            knockpy
           </a>
               <div class="version">
-                1.3.0
+                1.3.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -43,8 +50,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Constructing-knockoffs">Constructing knockoffs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Knockoff-feature-statistics">Knockoff feature statistics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
@@ -62,9 +67,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>knockpy.smatrix</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">knockpy.smatrix</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -76,18 +81,18 @@
   <h1>Source code for knockpy.smatrix</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="k">as</span> <span class="nn">hierarchy</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">mrc</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">mac</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dgp</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">constants</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">constants</span><span class="p">,</span> <span class="n">dgp</span><span class="p">,</span> <span class="n">mac</span><span class="p">,</span> <span class="n">mrc</span><span class="p">,</span> <span class="n">utilities</span>
 
 <span class="c1"># These methods don&#39;t require approximation</span>
 <span class="n">NON_APPROX_METHODS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;equicorrelated&quot;</span><span class="p">,</span> <span class="s2">&quot;eq&quot;</span><span class="p">,</span> <span class="s2">&quot;ci&quot;</span><span class="p">,</span> <span class="s2">&quot;ciknock&quot;</span><span class="p">]</span>
-<span class="n">DEFAULT_SOLVERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mvr&quot;</span><span class="p">:</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span><span class="s2">&quot;cd&quot;</span><span class="p">,</span> <span class="s2">&quot;sdp&quot;</span><span class="p">:</span><span class="s2">&quot;sdp&quot;</span><span class="p">}</span>
+<span class="n">DEFAULT_SOLVERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mvr&quot;</span><span class="p">:</span> <span class="s2">&quot;cd&quot;</span><span class="p">,</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span> <span class="s2">&quot;cd&quot;</span><span class="p">,</span> <span class="s2">&quot;sdp&quot;</span><span class="p">:</span> <span class="s2">&quot;sdp&quot;</span><span class="p">}</span>
 
-<div class="viewcode-block" id="parse_method"><a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.parse_method">[docs]</a><span class="k">def</span> <span class="nf">parse_method</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Decides which method to use to create the knockoff S matrix &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="parse_method">
+<a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.parse_method">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_method</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decides which method to use to create the knockoff S matrix&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">method</span>
     <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -99,8 +104,12 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;sdp&quot;</span></div>
 
-<div class="viewcode-block" id="divide_computation"><a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.divide_computation">[docs]</a><span class="k">def</span> <span class="nf">divide_computation</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">max_block</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="divide_computation">
+<a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.divide_computation">[docs]</a>
+<span class="k">def</span> <span class="nf">divide_computation</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">max_block</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Approximates a correlation matrix Sigma as a block-diagonal matrix</span>
 <span class="sd">    using hierarchical clustering. Roughly follows the R knockoff package.</span>
 
@@ -154,8 +163,11 @@
     <span class="k">return</span> <span class="n">merge_groups</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">max_block</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="merge_groups"><a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.merge_groups">[docs]</a><span class="k">def</span> <span class="nf">merge_groups</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">max_block</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="merge_groups">
+<a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.merge_groups">[docs]</a>
+<span class="k">def</span> <span class="nf">merge_groups</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">max_block</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Merges groups of variables together while ensuring all new groups</span>
 <span class="sd">    have size less than max_block.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -186,15 +198,14 @@
 
     <span class="k">return</span> <span class="n">new_groups</span></div>
 
-<div class="viewcode-block" id="compute_smatrix_factored"><a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.compute_smatrix_factored">[docs]</a><span class="k">def</span> <span class="nf">compute_smatrix_factored</span><span class="p">(</span>
-    <span class="n">Sigma</span><span class="p">,</span>
-    <span class="n">D</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">U</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mvr&#39;</span><span class="p">,</span>
-    <span class="n">num_factors</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
+
+
+<div class="viewcode-block" id="compute_smatrix_factored">
+<a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.compute_smatrix_factored">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_smatrix_factored</span><span class="p">(</span>
+    <span class="n">Sigma</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">U</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mvr&quot;</span><span class="p">,</span> <span class="n">num_factors</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wraps S-matrix generation functions which approximate</span>
 <span class="sd">    ``Sigma = np.diag(D) + np.dot(U, U.T)``.</span>
 
@@ -203,10 +214,10 @@
 <span class="sd">    Sigma : np.ndarray</span>
 <span class="sd">    ``(p, p)``-shaped covariance matrix of X</span>
 <span class="sd">    D : np.ndarray</span>
-<span class="sd">        ``p``-shaped array of diagonal elements for factor model. Only used </span>
+<span class="sd">        ``p``-shaped array of diagonal elements for factor model. Only used</span>
 <span class="sd">        if how_approx=&#39;factor&#39;. This is optional if Sigma is not None.</span>
 <span class="sd">    U : np.ndarray</span>
-<span class="sd">        ``(p, k)``-shaped matrix for factor model. Usually k &lt;&lt; p. Only used </span>
+<span class="sd">        ``(p, k)``-shaped matrix for factor model. Usually k &lt;&lt; p. Only used</span>
 <span class="sd">        if how_approx=&#39;factor&#39;. This is optional if Sigma is not None.</span>
 <span class="sd">    method : str</span>
 <span class="sd">        Method for constructing S-matrix. One of mvr, maxent, mmi.</span>
@@ -229,33 +240,39 @@
     <span class="c1"># Compute factor model if not inputted</span>
     <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">U</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">D</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">estimate_factor</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">num_factors</span><span class="o">=</span><span class="n">num_factors</span><span class="p">)</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">k</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    
+    <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
     <span class="c1"># Solve using specialized methods</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mvr&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">solve_mvr_factored</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">U</span><span class="o">=</span><span class="n">U</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;maxent&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mmi&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mmi&quot;</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">solve_maxent_factored</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">U</span><span class="o">=</span><span class="n">U</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;sdp&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;asdp&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sdp&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;asdp&quot;</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">_solve_maxent_sdp_factored</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">U</span><span class="o">=</span><span class="n">U</span><span class="p">,</span> <span class="n">solve_sdp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> 
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Factor model solver is not implemented for method=</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Factor model solver is not implemented for method=</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
     <span class="c1"># If Sigma is provided, ensure exact validity</span>
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">DEFAULT_TOL</span><span class="p">)</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">DEFAULT_TOL</span><span class="p">)</span>
     <span class="n">S</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">Sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">S</span></div>
 
-<div class="viewcode-block" id="compute_smatrix"><a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.compute_smatrix">[docs]</a><span class="k">def</span> <span class="nf">compute_smatrix</span><span class="p">(</span>
+
+
+<div class="viewcode-block" id="compute_smatrix">
+<a class="viewcode-back" href="../../apiref.html#knockpy.smatrix.compute_smatrix">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_smatrix</span><span class="p">(</span>
     <span class="n">Sigma</span><span class="p">,</span>
     <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">solver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">how_approx</span><span class="o">=</span><span class="s1">&#39;blockdiag&#39;</span><span class="p">,</span>
+    <span class="n">how_approx</span><span class="o">=</span><span class="s2">&quot;blockdiag&quot;</span><span class="p">,</span>
     <span class="n">max_block</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
     <span class="n">num_factors</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
     <span class="n">num_processes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -264,7 +281,7 @@
     <span class="n">U</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wraps a variety of S-matrix generation functions.</span>
 <span class="sd">    For mvr, maxent, mmi, and sdp methods, this can use</span>
 <span class="sd">    a block-diagonal approximation of Sigma if the dimension</span>
@@ -275,17 +292,17 @@
 <span class="sd">    Sigma : np.ndarray</span>
 <span class="sd">    ``(p, p)``-shaped covariance matrix of X</span>
 <span class="sd">    groups : np.ndarray</span>
-<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to</span>
 <span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
-<span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs). </span>
+<span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs).</span>
 <span class="sd">    method : str</span>
 <span class="sd">        Method for constructing S-matrix. One of mvr, maxent, mmi, sdp, equicorrelated, ci.</span>
 <span class="sd">    solver : str</span>
 <span class="sd">        Method for solving for knockoffs. One of &#39;cd&#39; (coordinate descent),</span>
-<span class="sd">        &#39;sdp&#39; (default sdp solver), or &#39;psgd&#39; (projected gradient descent). </span>
+<span class="sd">        &#39;sdp&#39; (default sdp solver), or &#39;psgd&#39; (projected gradient descent).</span>
 <span class="sd">        Coordinate descent is recommended for MRC knockoffs.</span>
 <span class="sd">    how_approx : str</span>
-<span class="sd">        How to approximate the covariance matrix to speed up computation. </span>
+<span class="sd">        How to approximate the covariance matrix to speed up computation.</span>
 <span class="sd">        - If &#39;blockdiag&#39;, approximates Sigma as a block-diagonal matrix.</span>
 <span class="sd">        - If &#39;factor&#39;, approximates ``Sigma = np.diag(D) + np.dot(U, U.T)``,</span>
 <span class="sd">        a factor model.</span>
@@ -295,12 +312,12 @@
 <span class="sd">        The number of factors if how_approx=&#39;factor&#39;. Defaults to 20.</span>
 <span class="sd">    num_processes : int</span>
 <span class="sd">        Number of parallel process to use if Sigma is approximated as</span>
-<span class="sd">        a block-diagonal matrix. </span>
+<span class="sd">        a block-diagonal matrix.</span>
 <span class="sd">    D : np.ndarray</span>
-<span class="sd">        ``p``-shaped array of diagonal elements for factor model. Only used </span>
+<span class="sd">        ``p``-shaped array of diagonal elements for factor model. Only used</span>
 <span class="sd">        if how_approx=&#39;factor&#39;. This is optional if Sigma is not None.</span>
 <span class="sd">    U : np.ndarray</span>
-<span class="sd">        ``(p, k)``-shaped matrix for factor model. Usually k &lt;&lt; p. Only used </span>
+<span class="sd">        ``(p, k)``-shaped matrix for factor model. Usually k &lt;&lt; p. Only used</span>
 <span class="sd">        if how_approx=&#39;factor&#39;. This is optional if Sigma is not None.</span>
 <span class="sd">    line_search : bool</span>
 <span class="sd">        If false, mrc methods do not do a line search after blockdiag approximation.</span>
@@ -340,11 +357,11 @@
     <span class="n">solver</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
     <span class="c1"># These two are the same</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mmi&#39;</span><span class="p">:</span>
-        <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;maxent&#39;</span>
-    
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mmi&quot;</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;maxent&quot;</span>
+
     <span class="c1"># Factor-models go to a specialized helper</span>
-    <span class="k">if</span> <span class="n">how_approx</span> <span class="o">==</span> <span class="s1">&#39;factor&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">how_approx</span> <span class="o">==</span> <span class="s2">&quot;factor&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">NON_APPROX_METHODS</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
@@ -419,7 +436,7 @@
             <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span>
                 <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">maxent_loss</span>
             <span class="n">best_loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">gamma</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">gamma</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">:</span>
                 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">loss</span> <span class="o">&lt;</span> <span class="n">best_loss</span><span class="p">:</span>
                     <span class="n">best_gamma</span> <span class="o">=</span> <span class="n">gamma</span>
@@ -430,12 +447,13 @@
     <span class="c1"># Currently cd maxent solver cannot handle group knockoffs</span>
     <span class="c1"># (this is todo)</span>
     <span class="n">no_grouping</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">no_grouping</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;maxent&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">no_grouping</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">:</span>
         <span class="n">solver</span> <span class="o">=</span> <span class="s2">&quot;psgd&quot;</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maxent&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">solver</span> <span class="o">==</span> <span class="s2">&quot;psgd&quot;</span><span class="p">:</span>
         <span class="c1"># Check for imports</span>
         <span class="n">utilities</span><span class="o">.</span><span class="n">check_kpytorch_available</span><span class="p">(</span><span class="n">purpose</span><span class="o">=</span><span class="s2">&quot;group MRC knockoffs OR PSGD solver&quot;</span><span class="p">)</span>
         <span class="kn">from</span> <span class="nn">.kpytorch</span> <span class="kn">import</span> <span class="n">mrcgrad</span>
+
         <span class="n">S</span> <span class="o">=</span> <span class="n">mrcgrad</span><span class="o">.</span><span class="n">solve_mrc_psgd</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvr&quot;</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">solve_mvr</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -445,11 +463,13 @@
         <span class="c1"># Currently cd sdp solver cannot handle group knockoffs</span>
         <span class="c1"># (this is todo)</span>
         <span class="k">if</span> <span class="n">solver</span> <span class="o">==</span> <span class="s2">&quot;sdp&quot;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">no_grouping</span><span class="p">:</span>
-            <span class="n">S</span> <span class="o">=</span> <span class="n">mac</span><span class="o">.</span><span class="n">solve_group_SDP</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,)</span>
-        <span class="k">elif</span> <span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;cd&#39;</span> <span class="ow">and</span> <span class="n">no_grouping</span><span class="p">:</span>
-            <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">_solve_maxent_sdp_cd</span><span class="p">(</span>
-                <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">solve_sdp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="n">mac</span><span class="o">.</span><span class="n">solve_group_SDP</span><span class="p">(</span>
+                <span class="n">Sigma</span><span class="p">,</span>
+                <span class="n">groups</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
             <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">solver</span> <span class="o">==</span> <span class="s2">&quot;cd&quot;</span> <span class="ow">and</span> <span class="n">no_grouping</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="n">mrc</span><span class="o">.</span><span class="n">_solve_maxent_sdp_cd</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">solve_sdp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;solver=</span><span class="si">{</span><span class="n">solver</span><span class="si">}</span><span class="s2"> is not supported for </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> knockoffs&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ciknock&quot;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ci&quot;</span><span class="p">:</span>
@@ -461,6 +481,7 @@
 
     <span class="c1"># Rescale and return</span>
     <span class="k">return</span> <span class="n">S</span> <span class="o">*</span> <span class="n">scale_matrix</span></div>
+
 </pre></div>
 
            </div>

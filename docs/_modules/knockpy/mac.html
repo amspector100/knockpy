@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>knockpy.mac &mdash; knockpy 1.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <title>knockpy.mac &mdash; knockpy 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=e358f374"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -26,14 +29,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> knockpy
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            knockpy
           </a>
               <div class="version">
-                1.2
+                1.3.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -60,9 +67,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>knockpy.mac</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">knockpy.mac</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -73,26 +80,26 @@
              
   <h1>Source code for knockpy.mac</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">import</span> <span class="nn">scipy.linalg</span>
-
-<span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="n">DEFAULT_TOL</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span><span class="p">,</span> <span class="n">mrc</span><span class="p">,</span> <span class="n">constants</span>
 
 <span class="c1"># For SDP</span>
-<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">constants</span><span class="p">,</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="n">DEFAULT_TOL</span>
+
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">pydsdp.dsdp5</span> <span class="kn">import</span> <span class="n">dsdp</span>
+
     <span class="n">DSDP_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span><span class="p">:</span>
+<span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
     <span class="n">DSDP_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">choldate</span>
     <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span><span class="p">:</span>
+<span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
     <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1"># Options for group SDP solver</span>
@@ -106,9 +113,11 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sigma is not a correlation matrix. Scale it properly first.&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="calc_min_group_eigenvalue"><a class="viewcode-back" href="../../apiref.html#knockpy.mac.calc_min_group_eigenvalue">[docs]</a><span class="k">def</span> <span class="nf">calc_min_group_eigenvalue</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">DEFAULT_TOL</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the minimum &quot;group&quot; eigenvalue of a covariance </span>
+<div class="viewcode-block" id="calc_min_group_eigenvalue">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mac.calc_min_group_eigenvalue">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_min_group_eigenvalue</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">DEFAULT_TOL</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the minimum &quot;group&quot; eigenvalue of a covariance</span>
 <span class="sd">    matrix Sigma: see Dai and Barber 2016. This is useful for</span>
 <span class="sd">    constructing equicorrelated (group) knockoffs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -120,7 +129,6 @@
     <span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
-
         <span class="c1"># Select subset of cov matrix</span>
         <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">full_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">inds</span><span class="p">,</span> <span class="n">inds</span><span class="p">)</span>
@@ -153,8 +161,11 @@
     <span class="k">return</span> <span class="n">gamma</span></div>
 
 
-<div class="viewcode-block" id="solve_equicorrelated"><a class="viewcode-back" href="../../apiref.html#knockpy.mac.solve_equicorrelated">[docs]</a><span class="k">def</span> <span class="nf">solve_equicorrelated</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">DEFAULT_TOL</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Calculates the block diagonal matrix S using the </span>
+
+<div class="viewcode-block" id="solve_equicorrelated">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mac.solve_equicorrelated">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_equicorrelated</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">DEFAULT_TOL</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the block diagonal matrix S using the</span>
 <span class="sd">    equicorrelated method described by Dai and Barber 2016.</span>
 
 <span class="sd">    Parameters</span>
@@ -162,9 +173,9 @@
 <span class="sd">    Sigma : np.ndarray</span>
 <span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
 <span class="sd">    groups : np.ndarray</span>
-<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to</span>
 <span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
-<span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs). </span>
+<span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs).</span>
 <span class="sd">    tol : float</span>
 <span class="sd">        Minimum permissible eigenvalue of 2Sigma - S and S.</span>
 
@@ -187,7 +198,6 @@
         <span class="c1"># Start to fill up S</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
-
             <span class="c1"># Select subset of cov matrix</span>
             <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">full_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">inds</span><span class="p">,</span> <span class="n">inds</span><span class="p">)</span>
@@ -202,8 +212,11 @@
     <span class="k">return</span> <span class="n">S</span></div>
 
 
-<div class="viewcode-block" id="solve_SDP"><a class="viewcode-back" href="../../apiref.html#knockpy.mac.solve_SDP">[docs]</a><span class="k">def</span> <span class="nf">solve_SDP</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">DEFAULT_TOL</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; </span>
+
+<div class="viewcode-block" id="solve_SDP">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mac.solve_SDP">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_SDP</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">DEFAULT_TOL</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Solves ungrouped SDP to create S-matrix for MAC-minimizing knockoffs.</span>
 
 <span class="sd">    Parameters</span>
@@ -263,8 +276,8 @@
     <span class="c1"># Construct C (-b + vec(F0) from above)</span>
     <span class="c1"># Note the tolerance here prevents the min. val</span>
     <span class="c1"># of S from being too small.</span>
-    <span class="n">Cl1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">tol</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">p</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="n">Cl2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">p</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">Cl1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">tol</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">p</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">Cl2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">p</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">Cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">*</span> <span class="n">p</span><span class="p">])</span>
     <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">Cl1</span><span class="p">,</span> <span class="n">Cl2</span><span class="p">,</span> <span class="n">Cs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
@@ -310,14 +323,15 @@
     <span class="n">S</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">mineig</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;After SDP, mineig is </span><span class="si">{</span><span class="n">mineig</span><span class="si">}</span><span class="s2"> after </span><span class="si">{</span><span class="n">num_iter</span><span class="si">}</span><span class="s2"> line search iters.&quot;</span>
-        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After SDP, mineig is </span><span class="si">{</span><span class="n">mineig</span><span class="si">}</span><span class="s2"> after </span><span class="si">{</span><span class="n">num_iter</span><span class="si">}</span><span class="s2"> line search iters.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">S</span></div>
 
 
-<div class="viewcode-block" id="solve_group_SDP"><a class="viewcode-back" href="../../apiref.html#knockpy.mac.solve_group_SDP">[docs]</a><span class="k">def</span> <span class="nf">solve_group_SDP</span><span class="p">(</span>
+
+<div class="viewcode-block" id="solve_group_SDP">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mac.solve_group_SDP">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_group_SDP</span><span class="p">(</span>
     <span class="n">Sigma</span><span class="p">,</span>
     <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -328,20 +342,20 @@
     <span class="n">dsdp_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Solves the MAC-minimizng SDP formulation for group knockoffs:</span>
 <span class="sd">    extends Barer and Candes 2015/ Candes et al 2018.</span>
 
 <span class="sd">    Sigma : np.ndarray</span>
 <span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
 <span class="sd">    groups : np.ndarray</span>
-<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to</span>
 <span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
-<span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs). </span>
+<span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs).</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        If True, prints updates during optimization.</span>
 <span class="sd">    objective : str</span>
-<span class="sd">        How to optimize the S matrix for group knockoffs. </span>
+<span class="sd">        How to optimize the S matrix for group knockoffs.</span>
 <span class="sd">        There are several options:</span>
 <span class="sd">        - &#39;abs&#39;: minimize sum(abs(Sigma - S))</span>
 <span class="sd">        - &#39;pnorm&#39;: minimize Lp-th matrix norm.</span>
@@ -349,7 +363,7 @@
 <span class="sd">        (see norm_type below).</span>
 <span class="sd">    norm_type : str or int</span>
 <span class="sd">        - When objective == &#39;pnorm&#39;, a float specifying which Lp-th matrix norm</span>
-<span class="sd">        to use. Can be any float &gt;= 1. </span>
+<span class="sd">        to use. Can be any float &gt;= 1.</span>
 <span class="sd">        - When objective == &#39;norm&#39;, can be &#39;fro&#39;, &#39;nuc&#39;, np.inf, or 1.</span>
 <span class="sd">    num_iter : int</span>
 <span class="sd">        Number of iterations in a final binary search to account for</span>
@@ -401,7 +415,12 @@
     <span class="c1"># Possibly solve non-grouped SDP</span>
     <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">p</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">DSDP_AVAILABLE</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">solve_SDP</span><span class="p">(</span><span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="n">num_iter</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,)</span>
+            <span class="k">return</span> <span class="n">solve_SDP</span><span class="p">(</span>
+                <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="n">num_iter</span><span class="o">=</span><span class="n">num_iter</span><span class="p">,</span>
+                <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">dsdp_warning</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">DSDP_WARNING</span><span class="p">)</span>
 
@@ -416,7 +435,6 @@
     <span class="n">S_rows</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">shift</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
-
         <span class="c1"># Create block variable</span>
         <span class="n">gj</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">group_sizes</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
         <span class="n">Sj</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">((</span><span class="n">gj</span><span class="p">,</span> <span class="n">gj</span><span class="p">),</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -449,7 +467,9 @@
         <span class="n">shift</span> <span class="o">+=</span> <span class="n">gj</span>
 
     <span class="c1"># Construct S and Grahm Matrix</span>
-    <span class="n">S</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">affine</span><span class="o">.</span><span class="n">wraps</span><span class="o">.</span><span class="n">psd_wrap</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">S_rows</span><span class="p">))</span> <span class="c1"># does this improve performance?</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">affine</span><span class="o">.</span><span class="n">wraps</span><span class="o">.</span><span class="n">psd_wrap</span><span class="p">(</span>
+        <span class="n">cp</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">S_rows</span><span class="p">)</span>
+    <span class="p">)</span>  <span class="c1"># does this improve performance?</span>
     <span class="n">sortedSigma</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">sortedSigma</span><span class="p">)</span>
     <span class="n">constraints</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sortedSigma</span> <span class="o">-</span> <span class="n">S</span> <span class="o">&gt;&gt;</span> <span class="mi">0</span><span class="p">]</span>
 
@@ -485,6 +505,7 @@
 
     <span class="c1"># Return unsorted S value</span>
     <span class="k">return</span> <span class="n">S</span></div>
+
 </pre></div>
 
            </div>

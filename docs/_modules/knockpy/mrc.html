@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>knockpy.mrc &mdash; knockpy 1.3.0 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <title>knockpy.mrc &mdash; knockpy 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=e358f374"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -26,14 +29,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> knockpy
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            knockpy
           </a>
               <div class="version">
-                1.3.0
+                1.3.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -43,8 +50,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Constructing-knockoffs">Constructing knockoffs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../usage.html#Knockoff-feature-statistics">Knockoff feature statistics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../mrcknock.html">MRC Knockoffs Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Reference</a></li>
 </ul>
@@ -62,9 +67,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>knockpy.mrc</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">knockpy.mrc</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -74,24 +79,30 @@
            <div itemprop="articleBody">
              
   <h1>Source code for knockpy.mrc</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot; Methods for minimum-reconstructability knockoffs.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Methods for minimum-reconstructability knockoffs.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span><span class="p">,</span> <span class="n">constants</span><span class="p">,</span> <span class="n">mac</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">constants</span><span class="p">,</span> <span class="n">mac</span><span class="p">,</span> <span class="n">utilities</span>
+
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">choldate</span>
+
     <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span><span class="p">:</span>
+<span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
     <span class="n">CHOLDATE_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="cholupdate"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.cholupdate">[docs]</a><span class="k">def</span> <span class="nf">cholupdate</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="cholupdate">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.cholupdate">[docs]</a>
+<span class="k">def</span> <span class="nf">cholupdate</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs rank one updates to a cholesky factor `R` in place.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    R : np.ndarray</span>
@@ -106,13 +117,13 @@
 <span class="sd">    -------</span>
 <span class="sd">    R : np.ndarray</span>
 <span class="sd">        Suppose the parameter R was a cholesky factor of a matrix V.</span>
-<span class="sd">        Upon return, R is the cholesky factor of </span>
+<span class="sd">        Upon return, R is the cholesky factor of</span>
 <span class="sd">        ``V +/- np.outer(x, x)``.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    - This function modifies both ``R`` and ``x`` in place. </span>
-<span class="sd">    - The ``choldate`` package is a much faster and more </span>
+<span class="sd">    - This function modifies both ``R`` and ``x`` in place.</span>
+<span class="sd">    - The ``choldate`` package is a much faster and more</span>
 <span class="sd">    numerically stable alternative.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -120,22 +131,26 @@
     <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">T</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">add</span><span class="p">:</span>
-              <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-              <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="n">r</span><span class="o">/</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">/</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
-        <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">r</span> <span class="o">/</span> <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+        <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
         <span class="k">if</span> <span class="n">add</span><span class="p">:</span>
-            <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">])</span><span class="o">/</span><span class="n">c</span>
+            <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">])</span> <span class="o">/</span> <span class="n">c</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">])</span><span class="o">/</span><span class="n">c</span>
-        <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span><span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">*</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">p</span><span class="p">]</span>
+            <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">])</span> <span class="o">/</span> <span class="n">c</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span> <span class="o">*</span> <span class="n">R</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">p</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">R</span></div>
 
+
+
 <span class="c1">### MVR</span>
-<div class="viewcode-block" id="mvr_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mvr_loss">[docs]</a><span class="k">def</span> <span class="nf">mvr_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; </span>
+<div class="viewcode-block" id="mvr_loss">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mvr_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">mvr_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes minimum variance-based reconstructability</span>
 <span class="sd">    loss for knockoffs, e.g., the trace of the feature-knockoff</span>
 <span class="sd">    precision matrix.</span>
@@ -166,8 +181,10 @@
     <span class="n">trace_invG</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">eigs_diff</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">eigs_S</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">trace_invG</span></div>
 
+
+
 <span class="k">def</span> <span class="nf">_solve_mvr_quadratic</span><span class="p">(</span><span class="n">cn</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">sj</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_eig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">acc_rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Solves a quadratic equation to find</span>
 <span class="sd">    the optimal updates for the MVR S-matrix</span>
 <span class="sd">    based off of cn and cd.</span>
@@ -187,24 +204,20 @@
     <span class="n">upper_bound</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">cd</span>
     <span class="n">lower_bound</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">sj</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">delta</span>
-            <span class="k">for</span> <span class="n">delta</span> <span class="ow">in</span> <span class="n">options</span>
-            <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="n">upper_bound</span> <span class="ow">and</span> <span class="n">delta</span> <span class="o">&gt;</span> <span class="n">lower_bound</span>
-        <span class="p">]</span>
+        <span class="p">[</span><span class="n">delta</span> <span class="k">for</span> <span class="n">delta</span> <span class="ow">in</span> <span class="n">options</span> <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="n">upper_bound</span> <span class="ow">and</span> <span class="n">delta</span> <span class="o">&gt;</span> <span class="n">lower_bound</span><span class="p">]</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;All quadratic solutions (</span><span class="si">{</span><span class="n">orig_options</span><span class="si">}</span><span class="s2">) were infeasible or imaginary&quot;</span>
         <span class="p">)</span>
-        
+
     <span class="c1"># 3. If multiple solutions left (unlikely), pick the smaller one</span>
     <span class="n">losses</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">sj</span> <span class="o">+</span> <span class="n">options</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">options</span> <span class="o">*</span> <span class="n">cn</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">options</span> <span class="o">*</span> <span class="n">cd</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">losses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">losses</span><span class="o">.</span><span class="n">min</span><span class="p">():</span>
         <span class="n">delta</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">delta</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        
+
     <span class="c1"># 4. Account for rejections</span>
     <span class="k">if</span> <span class="n">acc_rate</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">extra_space</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_eig</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># Helps deal with coord desc</span>
@@ -215,10 +228,13 @@
             <span class="nb">max</span><span class="p">(</span><span class="n">opt_prerej_value</span><span class="p">,</span> <span class="n">extra_space</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="n">delta</span> <span class="o">=</span> <span class="n">opt_prerej_value</span> <span class="o">-</span> <span class="n">sj</span>
-        
+
     <span class="k">return</span> <span class="n">delta</span>
 
-<div class="viewcode-block" id="solve_mvr_factored"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr_factored">[docs]</a><span class="k">def</span> <span class="nf">solve_mvr_factored</span><span class="p">(</span>
+
+<div class="viewcode-block" id="solve_mvr_factored">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr_factored">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_mvr_factored</span><span class="p">(</span>
     <span class="n">D</span><span class="p">,</span>
     <span class="n">U</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
@@ -226,12 +242,12 @@
     <span class="n">num_iter</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
     <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix used to generate mvr knockoffs</span>
 <span class="sd">    using coordinate descent assuming that</span>
 <span class="sd">    the covariance matrix follows a factor model.</span>
 <span class="sd">    This means Sigma = D + UU^T for a p x p diagonal matrix</span>
-<span class="sd">    D and a p x k matrix U. </span>
+<span class="sd">    D and a p x k matrix U.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -258,54 +274,50 @@
     <span class="n">p</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
 
     <span class="c1"># TODO: this is Omega(p^3).</span>
     <span class="c1"># Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062</span>
     <span class="n">Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">D</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">diag_Sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
     <span class="n">mineig</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">mineig</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;D + UU^T is not PSD&quot;</span><span class="p">)</span>
 
     <span class="c1"># Initialize values</span>
-    <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-    <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="n">Sdiag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">mineig</span>
     <span class="c1"># These are k x k matrices</span>
-    <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">),</span> <span class="n">U</span><span class="p">))</span>
+    <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">),</span> <span class="n">U</span><span class="p">))</span>
 
-    <span class="n">quadtime</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">solvetime</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">:</span>
-
             <span class="c1"># 1. Calculate parameters cd/cn</span>
             <span class="c1"># (see https://arxiv.org/pdf/2011.14625.pdf)</span>
-            <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">diff_inv_ej</span> <span class="o">=</span>  <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">)</span>
-            <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">diff_inv_ej</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">)</span>
+            <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
             <span class="n">cd</span> <span class="o">=</span> <span class="n">diff_inv_ej</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
             <span class="n">cn</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">diff_inv_ej</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
             <span class="c1"># 2. Find optimal update</span>
             <span class="n">delta</span> <span class="o">=</span> <span class="n">_solve_mvr_quadratic</span><span class="p">(</span><span class="n">cn</span><span class="o">=</span><span class="n">cn</span><span class="p">,</span> <span class="n">cd</span><span class="o">=</span><span class="n">cd</span><span class="p">,</span> <span class="n">sj</span><span class="o">=</span><span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
-            
+
             <span class="c1"># 3. Rank one update to QR decomp</span>
-            <span class="n">muj</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
-            <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">delta</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">muj</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">delta</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
             <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
                 <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
                 <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
-                <span class="n">u</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">c</span><span class="o">*</span><span class="n">muj</span><span class="p">,</span>
+                <span class="n">u</span><span class="o">=-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="n">muj</span><span class="p">,</span>
                 <span class="n">v</span><span class="o">=</span><span class="n">muj</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="c1"># 4. Update S</span>
             <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta</span>
-            
+
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sdiag</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">_solve_mvr_ungrouped</span><span class="p">(</span>
@@ -317,7 +329,7 @@
     <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
     <span class="n">choldate_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix used to generate minimum variance-based</span>
 <span class="sd">    reconstructability knockoffs using coordinate descent.</span>
 
@@ -338,7 +350,7 @@
 <span class="sd">    converge_tol : float</span>
 <span class="sd">        A parameter specifying the criteria for convergence.</span>
 <span class="sd">    choldate_warning : bool</span>
-<span class="sd">        If True, will warn the user if choldate is not installed. </span>
+<span class="sd">        If True, will warn the user if choldate is not installed.</span>
 <span class="sd">        Defaults to True.</span>
 
 <span class="sd">    Returns</span>
@@ -382,7 +394,7 @@
             <span class="n">delta</span> <span class="o">=</span> <span class="n">_solve_mvr_quadratic</span><span class="p">(</span>
                 <span class="n">cn</span><span class="o">=</span><span class="n">cn</span><span class="p">,</span>
                 <span class="n">cd</span><span class="o">=</span><span class="n">cd</span><span class="p">,</span>
-                <span class="n">sj</span><span class="o">=</span><span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">],</span>
+                <span class="n">sj</span><span class="o">=</span><span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span>
                 <span class="n">min_eig</span><span class="o">=</span><span class="n">min_eig</span><span class="p">,</span>
                 <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
                 <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">,</span>
@@ -413,7 +425,7 @@
             <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="n">decayed_improvement</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="p">(</span><span class="n">prev_loss</span> <span class="o">-</span> <span class="n">loss</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">time0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">decayed_improvement</span> <span class="o">&lt;</span> <span class="n">converge_tol</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -422,22 +434,23 @@
 
     <span class="k">return</span> <span class="n">S</span>
 
+
 <span class="c1">### Group MVR</span>
 <span class="k">def</span> <span class="nf">_solve_mvr_quadratic_group</span><span class="p">(</span><span class="n">cn_diff</span><span class="p">,</span> <span class="n">cd_diff</span><span class="p">,</span> <span class="n">cn_S</span><span class="p">,</span> <span class="n">cd_S</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Internal helper function for group mvr.</span>
 <span class="sd">    Useful for diagonal elements.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># 1. Construct and solve quadratic equation</span>
     <span class="n">coef0</span> <span class="o">=</span> <span class="n">cn_diff</span> <span class="o">-</span> <span class="n">cn_S</span>
-    <span class="n">coef1</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">cd_S</span> <span class="o">*</span> <span class="n">cn_diff</span> <span class="o">+</span> <span class="n">cn_S</span> <span class="o">*</span> <span class="n">cd_diff</span><span class="p">)</span>
+    <span class="n">coef1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">cd_S</span> <span class="o">*</span> <span class="n">cn_diff</span> <span class="o">+</span> <span class="n">cn_S</span> <span class="o">*</span> <span class="n">cd_diff</span><span class="p">)</span>
     <span class="n">coef2</span> <span class="o">=</span> <span class="n">cn_diff</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">cd_S</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">cn_S</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">cd_diff</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">orig_options</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coef2</span><span class="p">,</span> <span class="n">coef1</span><span class="p">,</span> <span class="n">coef0</span><span class="p">]))</span>
 
     <span class="c1"># 2. Eliminate complex solutions and solutions which violate PSD-ness</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">delta</span> <span class="k">for</span> <span class="n">delta</span> <span class="ow">in</span> <span class="n">orig_options</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span>
-    <span class="n">upper_bound</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">cd_diff</span> <span class="c1"># Ensures 2 Sigma - S is PSD</span>
-    <span class="n">lower_bound</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="n">cd_S</span> <span class="c1"># Ensures S is PSD</span>
+    <span class="n">upper_bound</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">cd_diff</span>  <span class="c1"># Ensures 2 Sigma - S is PSD</span>
+    <span class="n">lower_bound</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="n">cd_S</span>  <span class="c1"># Ensures S is PSD</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="p">[(</span><span class="n">options</span> <span class="o">&lt;</span> <span class="n">upper_bound</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">options</span> <span class="o">&gt;</span> <span class="n">lower_bound</span><span class="p">)]</span>
     <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -449,8 +462,9 @@
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+
 <span class="k">def</span> <span class="nf">_mvr_group_contrib</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Internal helper function for group mvr.</span>
 <span class="sd">    Useful for off-diagonal elements.</span>
 
@@ -470,40 +484,39 @@
 <span class="sd">    max_delta : int</span>
 <span class="sd">        Maximum value of delta for which the prior matrix is PSD.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="c1"># Notational note: W = (QR)^{-1}</span>
     <span class="n">Wj</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">R</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">Q</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">lower</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">Wi</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">R</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">Q</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">lower</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">objective</span><span class="p">(</span><span class="n">delta</span><span class="p">):</span>
-        <span class="n">num</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Wj</span><span class="p">,</span> <span class="n">Wi</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">Wj</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Wj</span><span class="p">,</span> <span class="n">Wi</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">Wj</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         <span class="n">num</span> <span class="o">-=</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">Wj</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Wi</span><span class="p">,</span> <span class="n">Wi</span><span class="p">)</span>
         <span class="n">num</span> <span class="o">-=</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">Wi</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Wj</span><span class="p">,</span> <span class="n">Wj</span><span class="p">)</span>
         <span class="n">denom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">Wj</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">Wi</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">Wj</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">num</span><span class="o">/</span><span class="n">denom</span>
-    
+        <span class="k">return</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">num</span> <span class="o">/</span> <span class="n">denom</span>
+
     <span class="c1"># Binary search for min / max. value of delta</span>
-    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-        <span class="p">[</span><span class="n">Wi</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">Wj</span><span class="p">[</span><span class="n">j</span><span class="p">]],</span> 
-        <span class="p">[</span><span class="n">Wi</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Wi</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span>
-    <span class="p">])</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">Wi</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">Wj</span><span class="p">[</span><span class="n">j</span><span class="p">]],</span> <span class="p">[</span><span class="n">Wi</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Wi</span><span class="p">[</span><span class="n">j</span><span class="p">]]])</span>
     <span class="n">eigs_B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">B</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">max_delta</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">eigs_B</span><span class="p">[</span><span class="n">eigs_B</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">max_delta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">max_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">max_delta</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">max_delta</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="mf">1e-5</span>
+        <span class="n">max_delta</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">max_delta</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="mf">1e-5</span>
     <span class="n">min_delta</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">eigs_B</span><span class="p">[</span><span class="n">eigs_B</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">min_delta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">min_delta</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">min_delta</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">min_delta</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-5</span>
-    
+        <span class="n">min_delta</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">min_delta</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-5</span>
+
     <span class="k">return</span> <span class="n">objective</span><span class="p">,</span> <span class="n">min_delta</span><span class="p">,</span> <span class="n">max_delta</span>
 
+
 <span class="k">def</span> <span class="nf">_solve_cn_cd</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Solves for cn/cd using QR decomp. This is </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solves for cn/cd using QR decomp. This is</span>
 <span class="sd">    specialized for diagonal elements for group knockoffs.</span>
 <span class="sd">    See https://arxiv.org/abs/2011.14625.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -512,6 +525,7 @@
     <span class="n">cd</span> <span class="o">=</span> <span class="n">Wj</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
     <span class="n">cn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">Wj</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">cn</span><span class="p">,</span> <span class="n">cd</span>
+
 
 <span class="k">def</span> <span class="nf">_solve_mvr_grouped</span><span class="p">(</span>
     <span class="n">Sigma</span><span class="p">,</span>
@@ -523,7 +537,7 @@
     <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="n">rej_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix for minimum variance-based</span>
 <span class="sd">    reconstructability group knockoffs.</span>
 
@@ -532,7 +546,7 @@
 <span class="sd">    Sigma : np.ndarray</span>
 <span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
 <span class="sd">    groups : np.ndarray</span>
-<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to</span>
 <span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
 <span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs).</span>
 <span class="sd">    tol : float</span>
@@ -569,7 +583,7 @@
                 <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
                     <span class="k">break</span>
                 <span class="n">S_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">i_within</span><span class="p">,</span> <span class="n">j_within</span><span class="p">),</span> <span class="n">g_id</span><span class="p">))</span>
-                
+
     <span class="c1"># Basis elements</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">basis</span> <span class="o">=</span> <span class="p">[]</span>
@@ -585,24 +599,23 @@
 
     <span class="c1"># Initialize values</span>
     <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="mi">10</span>
-    <span class="n">min_eig</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
-    <span class="n">S</span> <span class="o">=</span> <span class="n">mac</span><span class="o">.</span><span class="n">solve_equicorrelated</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">calc_mineig</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">mac</span><span class="o">.</span><span class="n">solve_equicorrelated</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">groups</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
     <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span> <span class="o">+</span> <span class="n">smoothing</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
 
     <span class="c1"># Running QR decompositions of blocks of S</span>
     <span class="n">Sblock_QR</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">g_id</span> <span class="ow">in</span> <span class="n">block_inds</span><span class="p">:</span>
-        <span class="n">blocksize</span> <span class="o">=</span> <span class="n">block_inds</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">block_inds</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">Sblock</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">block_inds</span><span class="p">[</span><span class="n">g_id</span><span class="p">]][:,</span> <span class="n">block_inds</span><span class="p">[</span><span class="n">g_id</span><span class="p">]]</span>
         <span class="c1"># Easy QR decomp for diagonal matrix</span>
         <span class="n">Sblock_QR</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">Sblock</span><span class="p">)</span>
-        
+
     <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">S_elems</span><span class="p">)</span>
         <span class="c1"># i, j are the coordinates within L</span>
         <span class="c1"># i_within, j_within are the coordinates within S</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">i_within</span><span class="p">,</span> <span class="n">j_within</span><span class="p">),</span> <span class="n">g_id</span> <span class="ow">in</span> <span class="n">S_elems</span><span class="p">:</span>
-            
             <span class="c1"># Retrieve QR decomposition for this block of S</span>
             <span class="n">Q_S</span><span class="p">,</span> <span class="n">R_S</span> <span class="o">=</span> <span class="n">Sblock_QR</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span>
             <span class="c1"># Basis elements within the block</span>
@@ -611,12 +624,11 @@
             <span class="n">ei</span><span class="p">[</span><span class="n">i_within</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="n">ej</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
             <span class="n">ej</span><span class="p">[</span><span class="n">j_within</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-            
+
             <span class="c1"># For off-diagonal elements: rank-2 update</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
-               
                 <span class="c1"># 1. Find optimal delta</span>
-                <span class="c1">#stime = time.time()</span>
+                <span class="c1"># stime = time.time()</span>
                 <span class="n">loss_diff</span><span class="p">,</span> <span class="n">lb_diff</span><span class="p">,</span> <span class="n">ub_diff</span> <span class="o">=</span> <span class="n">_mvr_group_contrib</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
                 <span class="n">max_delta_diff</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">lb_diff</span>
                 <span class="n">min_delta_diff</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ub_diff</span>
@@ -626,42 +638,35 @@
                 <span class="n">lower_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">min_delta_diff</span><span class="p">,</span> <span class="n">min_delta_S</span><span class="p">)</span>
                 <span class="n">upper_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">max_delta_diff</span><span class="p">,</span> <span class="n">max_delta_S</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">lower_bound</span> <span class="o">&gt;</span> <span class="n">upper_bound</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No feasible solutions: lower bound </span><span class="si">{</span><span class="n">lower_bound</span><span class="si">}</span><span class="s2"> &gt; upper_bound </span><span class="si">{</span><span class="n">upper_bound</span><span class="si">}</span><span class="s2"> in coord descent&quot;</span><span class="p">)</span>
-    
-                <span class="n">coord_loss</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">delta</span><span class="p">:</span> <span class="o">-</span><span class="n">loss_S</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">-</span> <span class="n">loss_diff</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">delta</span><span class="p">)</span>
-                <span class="n">delta</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">fminbound</span><span class="p">(</span>
-                    <span class="n">coord_loss</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span>
-                <span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;No feasible solutions: lower bound </span><span class="si">{</span><span class="n">lower_bound</span><span class="si">}</span><span class="s2"> &gt; upper_bound </span><span class="si">{</span><span class="n">upper_bound</span><span class="si">}</span><span class="s2"> in coord descent&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="k">def</span> <span class="nf">coord_loss</span><span class="p">(</span><span class="n">delta</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="n">loss_S</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">-</span> <span class="n">loss_diff</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">delta</span><span class="p">)</span>
+
+                <span class="n">delta</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">fminbound</span><span class="p">(</span><span class="n">coord_loss</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">)</span>
                 <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">upper_bound</span><span class="p">,</span> <span class="n">delta</span><span class="p">),</span> <span class="n">lower_bound</span><span class="p">)</span>
 
                 <span class="c1"># 2. Update QR decomp for 2 Sigma - S</span>
                 <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">basis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">basis</span><span class="p">[</span><span class="n">j</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
                 <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">basis</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">basis</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
-                <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
-                    <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span> <span class="n">u</span><span class="o">=-</span><span class="mi">1</span><span class="o">*</span><span class="n">delta</span><span class="o">*</span><span class="n">U</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">V</span>
-                <span class="p">)</span>
+                <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span><span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span> <span class="n">u</span><span class="o">=-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">U</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">V</span><span class="p">)</span>
                 <span class="c1"># 3. Update QR decomp for S</span>
                 <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ei</span><span class="p">,</span> <span class="n">ej</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
                 <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ej</span><span class="p">,</span> <span class="n">ei</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
-                <span class="n">Sblock_QR</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
-                    <span class="n">Q</span><span class="o">=</span><span class="n">Q_S</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R_S</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="n">delta</span><span class="o">*</span><span class="n">U</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">V</span>
-                <span class="p">)</span>
+                <span class="n">Sblock_QR</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span><span class="n">Q</span><span class="o">=</span><span class="n">Q_S</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R_S</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="n">delta</span> <span class="o">*</span> <span class="n">U</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">V</span><span class="p">)</span>
 
                 <span class="c1"># 4. Update S</span>
                 <span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">delta</span>
                 <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">delta</span>
-
 
             <span class="c1"># For diagonal elements, rank-1 update</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">cn_diff</span><span class="p">,</span> <span class="n">cd_diff</span> <span class="o">=</span> <span class="n">_solve_cn_cd</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
 
                 <span class="c1"># 2. Compute coefficients cn and cd for S</span>
-                <span class="n">cn_S</span><span class="p">,</span> <span class="n">cd_S</span> <span class="o">=</span> <span class="n">_solve_cn_cd</span><span class="p">(</span>
-                    <span class="n">Q</span><span class="o">=</span><span class="n">Q_S</span><span class="p">,</span>
-                    <span class="n">R</span><span class="o">=</span><span class="n">R_S</span><span class="p">,</span>
-                    <span class="n">j</span><span class="o">=</span><span class="n">j_within</span>
-                <span class="p">)</span>
+                <span class="n">cn_S</span><span class="p">,</span> <span class="n">cd_S</span> <span class="o">=</span> <span class="n">_solve_cn_cd</span><span class="p">(</span><span class="n">Q</span><span class="o">=</span><span class="n">Q_S</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R_S</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="n">j_within</span><span class="p">)</span>
 
                 <span class="c1"># 2. Construct/solve quadratic equation</span>
                 <span class="n">delta</span> <span class="o">=</span> <span class="n">_solve_mvr_quadratic_group</span><span class="p">(</span>
@@ -676,16 +681,11 @@
                     <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
                     <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
                     <span class="n">u</span><span class="o">=</span><span class="n">basis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                    <span class="n">v</span><span class="o">=-</span><span class="mi">1</span><span class="o">*</span><span class="n">delta</span><span class="o">*</span><span class="n">basis</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                    <span class="n">v</span><span class="o">=-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">basis</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
                 <span class="p">)</span>
 
                 <span class="c1"># 4. Update QR decomp for Sblock</span>
-                <span class="n">Sblock_QR</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
-                    <span class="n">Q</span><span class="o">=</span><span class="n">Q_S</span><span class="p">,</span>
-                    <span class="n">R</span><span class="o">=</span><span class="n">R_S</span><span class="p">,</span>
-                    <span class="n">u</span><span class="o">=</span><span class="n">ei</span><span class="p">,</span>
-                    <span class="n">v</span><span class="o">=</span><span class="n">delta</span><span class="o">*</span><span class="n">ej</span>
-                <span class="p">)</span>
+                <span class="n">Sblock_QR</span><span class="p">[</span><span class="n">g_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span><span class="n">Q</span><span class="o">=</span><span class="n">Q_S</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R_S</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="n">ei</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">delta</span> <span class="o">*</span> <span class="n">ej</span><span class="p">)</span>
                 <span class="c1"># 5. Set new value for S</span>
                 <span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">delta</span>
 
@@ -696,7 +696,7 @@
             <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="n">decayed_improvement</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="p">(</span><span class="n">prev_loss</span> <span class="o">-</span> <span class="n">loss</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">it</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">it</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">time0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">decayed_improvement</span> <span class="o">&lt;</span> <span class="n">converge_tol</span> <span class="ow">and</span> <span class="n">decayed_improvement</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -705,7 +705,10 @@
 
     <span class="k">return</span> <span class="n">S</span>
 
-<div class="viewcode-block" id="solve_mvr"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr">[docs]</a><span class="k">def</span> <span class="nf">solve_mvr</span><span class="p">(</span>
+
+<div class="viewcode-block" id="solve_mvr">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mvr">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_mvr</span><span class="p">(</span>
     <span class="n">Sigma</span><span class="p">,</span>
     <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
@@ -716,7 +719,7 @@
     <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
     <span class="n">choldate_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix used to generate minimum variance-based</span>
 <span class="sd">    reconstructability knockoffs using coordinate descent.</span>
 
@@ -725,7 +728,7 @@
 <span class="sd">    Sigma : np.ndarray</span>
 <span class="sd">        ``(p, p)``-shaped covariance matrix of X</span>
 <span class="sd">    groups : np.ndarray</span>
-<span class="sd">        For group knockoffs, a p-length array of integers from 1 to </span>
+<span class="sd">        For group knockoffs, a p-length array of integers from 1 to</span>
 <span class="sd">        num_groups such that ``groups[j] == i`` indicates that variable `j`</span>
 <span class="sd">        is a member of group `i`. Defaults to ``None`` (regular knockoffs).</span>
 <span class="sd">    tol : float</span>
@@ -753,21 +756,21 @@
     <span class="c1"># Process groups</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">preprocess_groups</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
 
     <span class="c1"># Specialized implementations for ungrouped</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">_solve_mvr_ungrouped</span><span class="p">(</span>
-            <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> 
+            <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span>
             <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
             <span class="n">num_iter</span><span class="o">=</span><span class="n">num_iter</span><span class="p">,</span>
             <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">,</span>
             <span class="n">rej_rate</span><span class="o">=</span><span class="n">rej_rate</span><span class="p">,</span>
             <span class="n">converge_tol</span><span class="o">=</span><span class="n">converge_tol</span><span class="p">,</span>
-            <span class="n">choldate_warning</span><span class="o">=</span><span class="n">choldate_warning</span>
+            <span class="n">choldate_warning</span><span class="o">=</span><span class="n">choldate_warning</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> 
+    <span class="k">else</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">_solve_mvr_grouped</span><span class="p">(</span>
             <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span>
             <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span>
@@ -785,9 +788,12 @@
     <span class="k">return</span> <span class="n">S</span></div>
 
 
+
 <span class="c1">### Maxent/MMI</span>
-<div class="viewcode-block" id="maxent_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.maxent_loss">[docs]</a><span class="k">def</span> <span class="nf">maxent_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="maxent_loss">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.maxent_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">maxent_loss</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the log determinant of the feature-knockoff precision</span>
 <span class="sd">    matrix, which is proportional to the negative entropy of [X, tilde{X}].</span>
 
@@ -807,27 +813,35 @@
 <span class="sd">    loss : float</span>
 <span class="sd">        The maxent loss for Sigma and S. This is infinite if S is not feasible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">eigs_S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
     <span class="n">eigs_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Sigma</span> <span class="o">-</span> <span class="n">S</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigs_S</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigs_diff</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
 
-    <span class="n">det_invG</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">eigs_diff</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-    <span class="n">det_invG</span> <span class="o">=</span> <span class="n">det_invG</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">eigs_S</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">det_invG</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">eigs_diff</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">det_invG</span> <span class="o">=</span> <span class="n">det_invG</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">eigs_S</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">det_invG</span></div>
 
-<div class="viewcode-block" id="mmi_loss"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mmi_loss">[docs]</a><span class="k">def</span> <span class="nf">mmi_loss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="mmi_loss">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.mmi_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">mmi_loss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the log determinant of the feature-knockoff precision</span>
 <span class="sd">    matrix, which is proportional mutual information between X and knockoffs.</span>
 
-<span class="sd">    This is identical to ``maxent_loss`` and exists only for backwards </span>
+<span class="sd">    This is identical to ``maxent_loss`` and exists only for backwards</span>
 <span class="sd">    compatability.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">maxent_loss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="solve_maxent_factored"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_maxent_factored">[docs]</a><span class="k">def</span> <span class="nf">solve_maxent_factored</span><span class="p">(</span>
+
+
+<div class="viewcode-block" id="solve_maxent_factored">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_maxent_factored">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_maxent_factored</span><span class="p">(</span>
     <span class="n">D</span><span class="p">,</span>
     <span class="n">U</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
@@ -835,12 +849,12 @@
     <span class="n">num_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
     <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix used to generate maximum entropy</span>
 <span class="sd">    knockoffs using coordinate descent assuming that</span>
 <span class="sd">    the covariance matrix follows a factor model.</span>
 <span class="sd">    This means Sigma = D + UU^T for a p x p diagonal matrix</span>
-<span class="sd">    D and a p x k matrix U. </span>
+<span class="sd">    D and a p x k matrix U.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -869,8 +883,9 @@
         <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
         <span class="n">num_iter</span><span class="o">=</span><span class="n">num_iter</span><span class="p">,</span>
-        <span class="n">converge_tol</span><span class="o">=</span><span class="n">converge_tol</span>
+        <span class="n">converge_tol</span><span class="o">=</span><span class="n">converge_tol</span><span class="p">,</span>
     <span class="p">)</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">_solve_maxent_sdp_factored</span><span class="p">(</span>
@@ -884,7 +899,7 @@
     <span class="n">mu</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
     <span class="n">lambd</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Internal function for maxent/sdp s-matrix using</span>
 <span class="sd">    factor approximation.</span>
 
@@ -920,7 +935,6 @@
     <span class="n">p</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
 
     <span class="c1"># TODO: this is Omega(p^3).</span>
     <span class="c1"># Maybe use https://www.sciencedirect.com/science/article/pii/S2215016118300062</span>
@@ -931,16 +945,15 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;D + UU^T is not PSD&quot;</span><span class="p">)</span>
 
     <span class="c1"># Initialize values</span>
-    <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-    <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">solve_sdp</span><span class="p">:</span>
         <span class="n">Sdiag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">mineig</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">Sdiag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">mineig</span>
-    <span class="n">lambd</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mineig</span><span class="p">,</span> <span class="n">lambd</span><span class="p">)</span>
+    <span class="n">lambd</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mineig</span><span class="p">,</span> <span class="n">lambd</span><span class="p">)</span>
 
     <span class="c1"># These are all k x k matrices</span>
-    <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">),</span> <span class="n">U</span><span class="p">))</span>
+    <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">),</span> <span class="n">U</span><span class="p">))</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
@@ -950,34 +963,32 @@
             <span class="n">Qprime</span><span class="p">,</span> <span class="n">Rprime</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
                 <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
                 <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
-                <span class="n">u</span><span class="o">=</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span>
-                <span class="n">v</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-                <span class="n">overwrite_qruv</span><span class="o">=</span><span class="kc">False</span>
+                <span class="n">u</span><span class="o">=</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span>
+                <span class="n">v</span><span class="o">=-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                <span class="n">overwrite_qruv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="c1"># Calculate update for S---for notation, see</span>
             <span class="c1"># https://arxiv.org/pdf/2006.08790.pdf</span>
-            <span class="n">MjUjT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Qprime</span><span class="p">,</span> <span class="n">Rprime</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">MjUjT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Qprime</span><span class="p">,</span> <span class="n">Rprime</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span>
-                <span class="n">a</span><span class="o">=</span><span class="n">Rprime</span><span class="p">,</span>
-                <span class="n">b</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Qprime</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">MjUjT</span><span class="p">),</span>
-                <span class="n">lower</span><span class="o">=</span><span class="kc">False</span>
+                <span class="n">a</span><span class="o">=</span><span class="n">Rprime</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Qprime</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">MjUjT</span><span class="p">),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">False</span>
             <span class="p">)</span>
-            <span class="n">sub_term</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">MjUjT</span><span class="p">)</span> <span class="o">-</span> <span class="mi">8</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">MjUjT</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">sub_term</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">MjUjT</span><span class="p">)</span> <span class="o">-</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">MjUjT</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">solve_sdp</span><span class="p">:</span>
-                <span class="n">Sjstar</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">diag_Sigma</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">sub_term</span> <span class="o">-</span> <span class="n">lambd</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">Sjstar</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">diag_Sigma</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">sub_term</span> <span class="o">-</span> <span class="n">lambd</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">Sjstar</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">diag_Sigma</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">sub_term</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-            
+                <span class="n">Sjstar</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">diag_Sigma</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">sub_term</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
             <span class="c1"># Rank one update to QR decomp</span>
-            <span class="n">delta</span> <span class="o">=</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sjstar</span> 
-            <span class="n">muj</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
-            <span class="n">denom</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">delta</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
-            <span class="n">c</span> <span class="o">=</span> <span class="n">delta</span><span class="o">/</span><span class="n">denom</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sjstar</span>
+            <span class="n">muj</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Sdiag</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">/</span> <span class="n">denom</span>
             <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr_update</span><span class="p">(</span>
                 <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
                 <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
-                <span class="n">u</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">c</span><span class="o">*</span><span class="n">muj</span><span class="p">,</span>
+                <span class="n">u</span><span class="o">=-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="n">muj</span><span class="p">,</span>
                 <span class="n">v</span><span class="o">=</span><span class="n">muj</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -990,15 +1001,17 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sdiag</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="solve_maxent"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_maxent">[docs]</a><span class="k">def</span> <span class="nf">solve_maxent</span><span class="p">(</span>
-    <span class="n">Sigma</span><span class="p">,</span> 
+<div class="viewcode-block" id="solve_maxent">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_maxent">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_maxent</span><span class="p">(</span>
+    <span class="n">Sigma</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">num_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
     <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
     <span class="n">choldate_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix used to generate maximum entropy</span>
 <span class="sd">    knockoffs using coordinate descent.</span>
 
@@ -1015,7 +1028,7 @@
 <span class="sd">    converge_tol : float</span>
 <span class="sd">        A parameter specifying the criteria for convergence.</span>
 <span class="sd">    choldate_warning : bool</span>
-<span class="sd">        If True, will warn the user if choldate is not installed. </span>
+<span class="sd">        If True, will warn the user if choldate is not installed.</span>
 <span class="sd">        Defaults to True</span>
 
 <span class="sd">    Returns</span>
@@ -1034,8 +1047,9 @@
     <span class="p">)</span></div>
 
 
+
 <span class="k">def</span> <span class="nf">_solve_maxent_sdp_cd</span><span class="p">(</span>
-    <span class="n">Sigma</span><span class="p">,</span> 
+    <span class="n">Sigma</span><span class="p">,</span>
     <span class="n">solve_sdp</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1045,7 +1059,7 @@
     <span class="n">mu</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
     <span class="n">lambd</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function is internally used to compute the S-matrices</span>
 <span class="sd">    used to generate maximum entropy and SDP knockoffs. Users</span>
 <span class="sd">    should not call this function---they should call ``solve_maxent``</span>
@@ -1064,7 +1078,7 @@
 <span class="sd">    converge_tol : float</span>
 <span class="sd">        A parameter specifying the criteria for convergence.</span>
 <span class="sd">    choldate_warning : bool</span>
-<span class="sd">        If True, will warn the user if choldate is not installed. </span>
+<span class="sd">        If True, will warn the user if choldate is not installed.</span>
 <span class="sd">        Defaults to True</span>
 <span class="sd">    solve_sdp : bool</span>
 <span class="sd">        If True, will solve SDP. Otherwise, will solve maxent formulation.</span>
@@ -1098,11 +1112,13 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">mineig</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
     <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">V</span> <span class="o">-</span> <span class="n">S</span><span class="p">)</span>
-    <span class="n">lambd</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mineig</span><span class="p">,</span> <span class="n">lambd</span><span class="p">)</span>
+    <span class="n">lambd</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mineig</span><span class="p">,</span> <span class="n">lambd</span><span class="p">)</span>
 
     <span class="c1"># Loss function</span>
     <span class="k">if</span> <span class="n">solve_sdp</span><span class="p">:</span>
-        <span class="n">loss_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">:</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">maxent_loss</span>
 
@@ -1149,13 +1165,13 @@
         <span class="n">prev_loss</span> <span class="o">=</span> <span class="n">loss</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">loss_diff</span> <span class="o">=</span> <span class="n">prev_loss</span> <span class="o">-</span> <span class="n">loss</span> 
+            <span class="n">loss_diff</span> <span class="o">=</span> <span class="n">prev_loss</span> <span class="o">-</span> <span class="n">loss</span>
             <span class="k">if</span> <span class="n">solve_sdp</span><span class="p">:</span>
                 <span class="n">loss_diff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss_diff</span><span class="p">,</span> <span class="n">lambd</span><span class="p">)</span>
             <span class="n">decayed_improvement</span> <span class="o">=</span> <span class="n">decayed_improvement</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="p">(</span><span class="n">loss_diff</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;After iter </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> at time </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">time0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">, decayed_improvement=</span><span class="si">{</span><span class="n">decayed_improvement</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">decayed_improvement</span> <span class="o">&lt;</span> <span class="n">converge_tol</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -1171,18 +1187,27 @@
     <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">S</span>
 
-<div class="viewcode-block" id="solve_mmi"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mmi">[docs]</a><span class="k">def</span> <span class="nf">solve_mmi</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="solve_mmi">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_mmi">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_mmi</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix used to generate minimum mutual information</span>
 <span class="sd">    knockoffs. This is identical to ``solve_maxent``</span>
 <span class="sd">    and exists only for backwards compatability.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">solve_maxent</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="solve_ciknock"><a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_ciknock">[docs]</a><span class="k">def</span> <span class="nf">solve_ciknock</span><span class="p">(</span>
-    <span class="n">Sigma</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+
+
+<div class="viewcode-block" id="solve_ciknock">
+<a class="viewcode-back" href="../../apiref.html#knockpy.mrc.solve_ciknock">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_ciknock</span><span class="p">(</span>
+    <span class="n">Sigma</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes S-matrix used to generate conditional independence</span>
 <span class="sd">    knockoffs.</span>
 
@@ -1204,7 +1229,7 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    When the S-matrix corresponding to conditional independence knockoffs</span>
-<span class="sd">    is not feasible, this computes that S matrix and then does a binary </span>
+<span class="sd">    is not feasible, this computes that S matrix and then does a binary</span>
 <span class="sd">    search to find the maximum gamma such that gamma * S is feasible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Compute vanilla S_CI</span>
@@ -1214,6 +1239,7 @@
     <span class="n">S</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">shift_until_PSD</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
     <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">scale_until_PSD</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="n">num_iter</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">S</span></div>
+
 </pre></div>
 
            </div>

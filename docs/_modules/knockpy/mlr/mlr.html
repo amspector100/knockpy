@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>knockpy.mlr.mlr &mdash; knockpy 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            knockpy
+          </a>
+              <div class="version">
+                1.3.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mrcknock.html">MRC Knockoffs Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">knockpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">knockpy.mlr.mlr</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for knockpy.mlr.mlr</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.special</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">knockoff_stats</span> <span class="k">as</span> <span class="n">kstats</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">._mlr_oracle</span> <span class="kn">import</span> <span class="n">_sample_mlr_oracle_gaussian</span><span class="p">,</span> <span class="n">_sample_mlr_oracle_logistic</span>
+<span class="kn">from</span> <span class="nn">._mlr_spikeslab</span> <span class="kn">import</span> <span class="n">_sample_mlr_spikeslab</span>
+<span class="kn">from</span> <span class="nn">._mlr_spikeslab_fx</span> <span class="kn">import</span> <span class="n">_sample_mlr_spikeslab_fx</span>
+<span class="kn">from</span> <span class="nn">._mlr_spikeslab_group</span> <span class="kn">import</span> <span class="n">_sample_mlr_spikeslab_group</span>
+
+
+<span class="k">def</span> <span class="nf">check_no_groups</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">groups</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+<span class="k">def</span> <span class="nf">_calc_group_blocks</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">group_sizes</span><span class="p">):</span>
+    <span class="n">max_gsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">group_sizes</span><span class="p">)</span>
+    <span class="n">ngroups</span> <span class="o">=</span> <span class="n">group_sizes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">group_blocks</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">ngroups</span><span class="p">,</span> <span class="n">max_gsize</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">gj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">):</span>
+        <span class="n">gsize</span> <span class="o">=</span> <span class="n">group_sizes</span><span class="p">[</span><span class="n">gj</span><span class="p">]</span>
+        <span class="n">group_blocks</span><span class="p">[</span><span class="n">gj</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">gsize</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="p">(</span><span class="n">gj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">group_blocks</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_mlr_to_adj_mlr</span><span class="p">(</span><span class="n">mlr_sign</span><span class="p">,</span> <span class="n">prob_mlr_pos</span><span class="p">,</span> <span class="n">prob_mlr_pos_nonnull</span><span class="p">,</span> <span class="n">fdr</span><span class="p">):</span>
+    <span class="n">mlr_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">prob_mlr_pos</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">prob_mlr_pos</span><span class="p">))</span>
+    <span class="c1"># threshold</span>
+    <span class="n">thresh</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">fdr</span><span class="p">)</span>
+    <span class="n">thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">thresh</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">thresh</span><span class="p">))</span>
+    <span class="c1"># Adjusted statistics</span>
+    <span class="n">nu_ratio</span> <span class="o">=</span> <span class="n">prob_mlr_pos_nonnull</span> <span class="o">/</span> <span class="p">(</span><span class="n">thresh</span> <span class="o">-</span> <span class="n">prob_mlr_pos</span><span class="p">)</span>
+    <span class="n">amlr_abs</span> <span class="o">=</span> <span class="n">mlr_abs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">amlr_abs</span><span class="p">[</span><span class="n">mlr_abs</span> <span class="o">&lt;=</span> <span class="n">thresh</span><span class="p">]</span> <span class="o">=</span> <span class="n">thresh</span> <span class="o">*</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">expit</span><span class="p">(</span><span class="n">nu_ratio</span><span class="p">[</span><span class="n">mlr_abs</span> <span class="o">&lt;=</span> <span class="n">thresh</span><span class="p">])</span>
+    <span class="c1"># Final statistic</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">amlr_abs</span> <span class="o">*</span> <span class="n">mlr_sign</span>
+    <span class="c1"># Clip numerical errors and return</span>
+    <span class="n">W</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-15</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">W</span>
+
+<div class="viewcode-block" id="MLR_Spikeslab">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.MLR_Spikeslab">[docs]</a>
+<span class="k">class</span> <span class="nc">MLR_Spikeslab</span><span class="p">(</span><span class="n">kstats</span><span class="o">.</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Masked likelihood ratio statistics using a spike-and-slab</span>
+<span class="sd">    prior for a linear model or probit model, automatically</span>
+<span class="sd">    inferred based on y.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped design matrix</span>
+<span class="sd">    Xk : np.ndarray</span>
+<span class="sd">            the ``(n, p)``-shaped matrix of knockoffs</span>
+<span class="sd">    y : np.ndarray</span>
+<span class="sd">            ``(n,)``-shaped response vector</span>
+<span class="sd">    n_iter : int</span>
+<span class="sd">            Number of samples per MCMC chain used to compute</span>
+<span class="sd">            MLR statistics. Default: 2000.</span>
+<span class="sd">    chains : int</span>
+<span class="sd">            Number of MCMC chains to run. Default: 5.</span>
+<span class="sd">    burn_prop : float</span>
+<span class="sd">            The burn-in for each chain will be equal to</span>
+<span class="sd">            ``n_iter * burn_prop``.</span>
+<span class="sd">    adjusted_mlr : bool</span>
+<span class="sd">            If True, computes adjusted MLR (AMLR) statistics. Default: False.</span>
+<span class="sd">            See the MLR knockoffs paper for details.</span>
+<span class="sd">    p0 : float</span>
+<span class="sd">            Prior probability that any coefficient equals zero.</span>
+<span class="sd">    update_p0 : bool</span>
+<span class="sd">            If True, updates ``p0`` using a Beta hyperprior on ``p0``.</span>
+<span class="sd">            Else, the value of ``p0`` is fixed. Default: True.</span>
+<span class="sd">    p0_a0 : float</span>
+<span class="sd">            If ``update_p0`` is True, ``p0`` has a</span>
+<span class="sd">            TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.</span>
+<span class="sd">            Default: 1.0.</span>
+<span class="sd">    p0_b0 : float</span>
+<span class="sd">            If ``update_p0`` is True, ``p0`` has a</span>
+<span class="sd">            TruncBeta(``p0_a0``, ``p0_b0``, ``min_p0``) hyperprior.</span>
+<span class="sd">            Default: 1.0.</span>
+<span class="sd">    min_p0 : float</span>
+<span class="sd">            Minimum value for ``p0`` as specified by the prior.</span>
+<span class="sd">            Default: 0.8.</span>
+<span class="sd">    sigma2 : float</span>
+<span class="sd">            Variance of y given X. Default: 1.0.</span>
+<span class="sd">    update_sigma2 : bool</span>
+<span class="sd">            If True, imposes an InverseGamma hyperprior on ``sigma2``.</span>
+<span class="sd">            Else, the value of ``sigma2`` is fixed. Default: True.</span>
+<span class="sd">    sigma2_a0 : float</span>
+<span class="sd">            If ``update_sigma2`` is True, ``sigma2`` has an</span>
+<span class="sd">            InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.</span>
+<span class="sd">            Default: 2.0.</span>
+<span class="sd">    sigma2_b0 : float</span>
+<span class="sd">            If ``update_sigma2`` is True, ``sigma2`` has an</span>
+<span class="sd">            InvGamma(``sigma2_a0``, ``sigma2_b0``) hyperprior.</span>
+<span class="sd">            Default: 1.0.</span>
+<span class="sd">    tau2 : float</span>
+<span class="sd">            Prior variance on nonzero coefficients. Default: 1.0.</span>
+<span class="sd">    update_tau2 : bool</span>
+<span class="sd">            If True, imposes an InverseGamma hyperprior on ``tau2``.</span>
+<span class="sd">            Else, the value of ``tau2`` is fixed. Default: True.</span>
+<span class="sd">    tau2_a0 : float</span>
+<span class="sd">            If ``update_tau2`` is True, ``tau2`` has an</span>
+<span class="sd">            InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.</span>
+<span class="sd">            Default: 2.0.</span>
+<span class="sd">    tau2_b0 : float</span>
+<span class="sd">            If ``update_tau2`` is True, ``tau2`` has an</span>
+<span class="sd">            InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.</span>
+<span class="sd">            Default: 1.0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    W : np.ndarray</span>
+<span class="sd">        a ``p``-dimensional array of feature statistics.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a valid FX feature statistic (obeys the sufficiency property).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># dummy attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;n_iter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_iter&quot;</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;chains&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chains&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjusted_mlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;adjusted_mlr&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fdr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;fdr&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MLR_Spikeslab.fit">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.MLR_Spikeslab.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ungrouped</span> <span class="o">=</span> <span class="n">check_no_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ungrouped</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_sizes</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_group_sizes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_blocks</span> <span class="o">=</span> <span class="n">_calc_group_blocks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_sizes</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ngroup</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group_sizes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ngroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1"># kwargs that cannot be passed to the underlying cython</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;n_iter&quot;</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;chains&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">burn</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">)</span>
+
+        <span class="c1"># Defaults for model-X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tau2_a0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau2_a0&#39;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tau2_b0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau2_a0&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sigma2_a0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau2_a0&#39;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sigma2_b0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau2_a0&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;min_p0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_p0&#39;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+
+        <span class="c1"># Check whether this is binary or linear regression</span>
+        <span class="n">support</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">probit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="n">support</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">probit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Posterior sampling</span>
+        <span class="n">all_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ungrouped</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">_sample_mlr_spikeslab</span><span class="p">(</span>
+                    <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">,</span>
+                    <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                    <span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span>
+                    <span class="n">probit</span><span class="o">=</span><span class="n">probit</span><span class="p">,</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">_sample_mlr_spikeslab_group</span><span class="p">(</span>
+                    <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">,</span>
+                    <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+                    <span class="n">groups</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
+                    <span class="n">blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">group_blocks</span><span class="p">,</span>
+                    <span class="n">gsizes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">group_sizes</span><span class="p">,</span>
+                    <span class="n">max_gsize</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group_sizes</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                    <span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span>
+                    <span class="n">probit</span><span class="o">=</span><span class="n">probit</span><span class="p">,</span>
+                    <span class="c1"># **self.kwargs</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">all_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;betas&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="c1">#self.beta_logodds = np.concatenate([x[&#39;beta_logodds&#39;][self.burn:] for x in all_out])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;etas&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p0s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;p0s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;psis&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;tau2s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;sigma2s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">probit</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_latents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;y_latent&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_W</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">compute_W</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Compute default MLR statistics</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjusted_mlr</span><span class="p">:</span>
+            <span class="c1"># Compute P(choose feature)</span>
+            <span class="c1"># etas = log(P(choose feature) / P(choose knockoff))</span>
+            <span class="n">etas_cat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">etas</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngroup</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngroup</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="p">],</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+            <span class="c1"># this equals log(P(choose feature))</span>
+            <span class="n">log_prob</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">etas_cat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_prob</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">log_prob</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_prob</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+            <span class="c1"># clip numerical errors</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-15</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span>
+        <span class="c1"># Else, compute adjusted MLR statistics.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjusted_mlr</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-10</span>
+            <span class="c1"># Compute sign guess based on psis</span>
+            <span class="n">guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psis</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">guess</span><span class="p">[</span><span class="n">guess</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">guess</span><span class="p">[</span><span class="n">guess</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">guess</span><span class="p">[</span><span class="n">guess</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">guess</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">))</span>
+            <span class="c1"># Compute P_j(MLR_j &gt; 0 | D)</span>
+            <span class="n">mlr_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psis</span> <span class="o">==</span> <span class="n">guess</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">tol</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">tol</span><span class="p">)</span>
+            <span class="c1"># Compute P(MLR_j &gt; 0, j is non-null | masked data)</span>
+            <span class="n">mlr_pos_nonnull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">psis</span> <span class="o">==</span> <span class="n">guess</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">tol</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">tol</span>
+            <span class="p">)</span>
+            <span class="c1"># MLR signs</span>
+            <span class="n">mlr_sign</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">guess</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="c1"># AMLR stats</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">_mlr_to_adj_mlr</span><span class="p">(</span>
+                <span class="n">mlr_sign</span><span class="o">=</span><span class="n">mlr_sign</span><span class="p">,</span> 
+                <span class="n">prob_mlr_pos</span><span class="o">=</span><span class="n">mlr_pos</span><span class="p">,</span> 
+                <span class="n">prob_mlr_pos_nonnull</span><span class="o">=</span><span class="n">mlr_pos_nonnull</span><span class="p">,</span> 
+                <span class="n">fdr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fdr</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span></div>
+
+
+
+        
+<div class="viewcode-block" id="MLR_Spikeslab_Splines">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.MLR_Spikeslab_Splines">[docs]</a>
+<span class="k">class</span> <span class="nc">MLR_Spikeslab_Splines</span><span class="p">(</span><span class="n">MLR_Spikeslab</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Masked likelihood ratio statistics using a spike-and-slab</span>
+<span class="sd">    prior for a linear or probit model based on regression splines.</span>
+
+<span class="sd">    All parameters are the same as MLR_Spikeslab except the </span>
+<span class="sd">    following additional parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_knots : int</span>
+<span class="sd">        The number of knots to used for the regression splines.</span>
+<span class="sd">        Defaults to 1.</span>
+<span class="sd">    degree : int</span>
+<span class="sd">        The number of degrees to use for the regresison splines.</span>
+<span class="sd">        Defaults to 3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MLR_Spikeslab_Splines.fit">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.MLR_Spikeslab_Splines.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span> <span class="o">=</span> <span class="n">Xk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngroup</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">))</span>
+
+        <span class="c1"># handle kwargs</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">## 1. Handle spline kwargs and create basis representation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;n_knots&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">degree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;degree&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># Create knots for splines</span>
+        <span class="n">quantiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+            <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">quantiles</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span> <span class="c1"># knots are p x num_knots</span>
+
+        <span class="c1"># Create features</span>
+        <span class="c1"># Todo: if we can reorder the basis functions so they are next to each other,</span>
+        <span class="c1"># it may improve caching performance.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tX</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span><span class="p">]:</span>
+            <span class="c1"># spline basis representation: note `bases` has shape n x (degree*p)</span>
+            <span class="n">bases</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">tX</span><span class="o">**</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="o">+</span><span class="mi">1</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">knotdiffs</span> <span class="o">=</span> <span class="n">tX</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">knots</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span><span class="p">)</span>
+            <span class="n">knotdiffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">knotdiffs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">degree</span>
+            <span class="n">knotdiffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">knotdiffs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span><span class="p">)],</span> 
+                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span> <span class="c1"># reshape so this is n x (n_knots*p) </span>
+            <span class="c1"># combine</span>
+            <span class="n">bases</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">bases</span><span class="p">,</span> <span class="n">knotdiffs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Create dummy groups showing which bases belong to which feature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_knots</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">)],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis_group_sizes</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_group_sizes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_groups</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis_group_blocks</span> <span class="o">=</span> <span class="n">_calc_group_blocks</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_group_sizes</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_basis_groups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_group_sizes</span><span class="p">)</span>
+
+        <span class="c1">## Posterior sampling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;n_iter&quot;</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;chains&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">burn</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">)</span>
+
+        <span class="c1"># Check whether this is binary or linear regression</span>
+        <span class="n">support</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">probit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="n">support</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">probit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Posterior sampling</span>
+        <span class="n">all_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis_groups</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">_sample_mlr_spikeslab_group</span><span class="p">(</span>
+                <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">,</span>
+                <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+                <span class="n">groups</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_groups</span><span class="p">,</span>
+                <span class="n">blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_group_blocks</span><span class="p">,</span>
+                <span class="n">gsizes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_group_sizes</span><span class="p">,</span>
+                <span class="n">max_gsize</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_group_sizes</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+                <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span>
+                <span class="n">probit</span><span class="o">=</span><span class="n">probit</span><span class="p">,</span>
+                <span class="c1"># **self.kwargs</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis_groups</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">all_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;betas&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;etas&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p0s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;p0s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;psis&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;tau2s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;sigma2s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">probit</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_latents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;y_latent&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_W</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="OracleMLR">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.OracleMLR">[docs]</a>
+<span class="k">class</span> <span class="nc">OracleMLR</span><span class="p">(</span><span class="n">MLR_Spikeslab</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Oracle masked likelihood ratio statistics for generalized additive models.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    beta : np.ndarray</span>
+<span class="sd">        ``p``-dimensional array of linear coefficients.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Adjusted MLR stat, makes no difference for oracle though</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjusted_mlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;adjusted_mlr&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fdr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;fdr&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OracleMLR.fit">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.OracleMLR.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span> <span class="o">=</span> <span class="n">Xk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ungrouped</span> <span class="o">=</span> <span class="n">check_no_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="s1">&#39;Groups not implemented for OracleMLR.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1"># number of iterations to run</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;n_iter&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;chains&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">burn</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">)</span>
+
+        <span class="c1"># Check whether we are in the binary setting</span>
+        <span class="n">support</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binary</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">support</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+
+        <span class="c1"># Posterior sampling</span>
+        <span class="n">all_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">_sample_mlr_oracle_logistic</span><span class="p">(</span>
+                    <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">,</span>
+                    <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+                    <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">_sample_mlr_oracle_gaussian</span><span class="p">(</span>
+                    <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">,</span>
+                    <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+                    <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+            <span class="n">all_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;etas&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;psis&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psis</span><span class="p">))],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_W</span><span class="p">()</span></div>
+</div>
+
+
+<div class="viewcode-block" id="MLR_FX_Spikeslab">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.MLR_FX_Spikeslab">[docs]</a>
+<span class="k">class</span> <span class="nc">MLR_FX_Spikeslab</span><span class="p">(</span><span class="n">kstats</span><span class="o">.</span><span class="n">FeatureStatistic</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Masked likelihood ratio statistics using a spike-and-slab</span>
+<span class="sd">    linear model. This is a specialized class designed to lead</span>
+<span class="sd">    to slightly faster computation for fixed-X knockoffs.</span>
+
+<span class="sd">    The arguments are the same as those for MLR_Spikeslab, </span>
+<span class="sd">    with the exception of the arguments listed below.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_mixture : int</span>
+<span class="sd">        Number of mixtures for the &quot;slab&quot; component of the </span>
+<span class="sd">        spike and slab. Defaults to 1.</span>
+<span class="sd">    tau2 : float or list of floats</span>
+<span class="sd">        Prior variance on nonzero coefficients. Default: 1.0.</span>
+<span class="sd">    tau2_a0 : float or list of floats</span>
+<span class="sd">        ``tau2`` has an InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior. </span>
+<span class="sd">        When ``n_mixture`` &gt; 1, this can be a list of length</span>
+<span class="sd">        ``n_mixture``. Default: 2.0.</span>
+<span class="sd">    tau2_b0 : float or list of floats</span>
+<span class="sd">        ``tau2`` has an InvGamma(``tau2_a0``, ``tau2_b0``) hyperprior.</span>
+<span class="sd">        When ``n_mixture`` &gt; 1, this can be a list of length</span>
+<span class="sd">        ``n_mixture``. Default: 0.01.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="c1"># Dummy attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+        <span class="c1"># Defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;n_iter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_iter&quot;</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;chains&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chains&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+        <span class="c1"># adjusted MLR parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjusted_mlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;adjusted_mlr&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fdr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;fdr&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calc_whiteout_statistics</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">,</span>
+        <span class="n">Xk</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">,</span>
+        <span class="n">S</span><span class="p">,</span>
+        <span class="n">calc_hatxi</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">):</span>
+        <span class="c1"># Save inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Xk</span> <span class="o">=</span> <span class="n">Xk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diag_S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+
+        <span class="c1"># Compute tildebeta, xi, hatxi, and so on</span>
+        <span class="n">Sinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">diag_S</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tildebeta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Sinv</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">Xk</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tildebeta</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span> <span class="c1"># atb = abs(tildebeta)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">-</span> <span class="n">S</span> <span class="o">/</span> <span class="mi">2</span> <span class="c1"># covariance matrix of xi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">Xk</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">calc_hatxi</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hatxi</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MLR_FX_Spikeslab.fit">
+<a class="viewcode-back" href="../../../apiref.html#knockpy.mlr.mlr.MLR_FX_Spikeslab.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+
+        <span class="c1"># Save inputs and switch to whiteout framework</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ungrouped</span> <span class="o">=</span> <span class="n">check_no_groups</span><span class="p">(</span>
+            <span class="n">groups</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> 
+            <span class="n">error</span><span class="o">=</span><span class="s2">&quot;The specialized FX MLR class does not support group knockoffs---use the generic class instead.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">X</span> <span class="o">-</span> <span class="n">X</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Xk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_whiteout_statistics</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Xk</span><span class="o">=</span><span class="n">Xk</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">calc_hatxi</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1">#self.sigma2 = kstats.compute_residual_variance(X=X, Xk=Xk, y=y)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">XTX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Linv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span>
+            <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lapack</span><span class="o">.</span><span class="n">dtrtri</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Linv_xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Linv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">)</span>
+
+        <span class="c1"># Deal with kwargs</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="c1"># handle mixture components and size of arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_mixture</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;num_mixture&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">tau2_a0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tau2_a0&quot;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+        <span class="c1"># Inverse-Gamma prior on tau2</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tau2_a0</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tau2_a0</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">tau2_a0</span> <span class="o">=</span> <span class="p">[</span><span class="n">tau2_a0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_mixture</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau2_a0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tau2_a0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">tau2_b0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tau2_b0&quot;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tau2_b0</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tau2_b0</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">tau2_b0</span> <span class="o">=</span> <span class="p">[</span><span class="n">tau2_b0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_mixture</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau2_b0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tau2_b0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># kwargs that cannot be passed to the underlying cython</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;n_iter&quot;</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;chains&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">burn</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;burn_prop&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">)</span>
+
+        <span class="c1"># Posterior sampling</span>
+        <span class="n">all_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">_sample_mlr_spikeslab_fx</span><span class="p">(</span>
+                <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">,</span>
+                <span class="n">xi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span>
+                <span class="n">atb</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atb</span><span class="p">,</span>
+                <span class="n">XTX</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">XTX</span><span class="p">,</span>
+                <span class="n">diag_S</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">diag_S</span><span class="p">,</span>
+                <span class="n">num_mixture</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_mixture</span><span class="p">,</span>
+                <span class="n">tau2_a0s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau2_a0</span><span class="p">,</span>
+                <span class="n">tau2_b0s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tau2_b0</span><span class="p">,</span>
+                <span class="n">A</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span>
+                <span class="n">L</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span>
+                <span class="n">Linv_xi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Linv_xi</span><span class="p">,</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">all_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;betas&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;etas&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p0s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;p0s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;tau2s&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;stb&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span> <span class="c1"># sign(tildebeta)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;sigma2&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mixtures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;mixtures&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">burn</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_out</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_W</span><span class="p">(</span><span class="n">signs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">betas</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">compute_W</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">signs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">signs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">betas</span>
+
+        <span class="c1"># 1. Guess sign(beta)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">signs</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">signs</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">nzeros</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">nzeros</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrong_guesses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tildebeta</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span>
+        <span class="c1">## regular MLR statistics</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjusted_mlr</span><span class="p">:</span>			
+            <span class="c1"># 2. Compute log(P(tildebeta = sign_guess))</span>
+            <span class="n">eta_g0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">signs</span><span class="p">)</span>
+            <span class="n">adj_eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">etas</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">eta_g0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">etas_cat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">adj_eta</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> 
+                    <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="p">],</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+            <span class="c1"># This equals: log(P(sgn(tildebeta) = sign guess))</span>
+            <span class="n">log_prob</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">etas_cat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">log_prob</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">log_prob</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_prob</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+
+            <span class="c1"># 3. Compute sign(W)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">wrong_guesses</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">wrong_guesses</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span>
+        <span class="c1">## Adjusted MLR statistics</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-10</span>
+            <span class="c1"># Compute P_j(MLR_j &gt; 0 | D)</span>
+            <span class="n">mlr_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stb</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">tol</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">tol</span><span class="p">)</span>
+            <span class="c1"># Compute P(MLR_j &gt; 0, j is non-null | masked data)</span>
+            <span class="n">mlr_pos_nonnull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">stb</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_guess</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">tol</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">tol</span>
+            <span class="p">)</span>
+            <span class="c1"># MLR signs</span>
+            <span class="n">mlr_sign</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrong_guesses</span>
+            <span class="c1"># Return AMLR stats</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">_mlr_to_adj_mlr</span><span class="p">(</span>
+                <span class="n">mlr_sign</span><span class="o">=</span><span class="n">mlr_sign</span><span class="p">,</span> 
+                <span class="n">prob_mlr_pos</span><span class="o">=</span><span class="n">mlr_pos</span><span class="p">,</span> 
+                <span class="n">prob_mlr_pos_nonnull</span><span class="o">=</span><span class="n">mlr_pos_nonnull</span><span class="p">,</span> 
+                <span class="n">fdr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fdr</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Asher Spector.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

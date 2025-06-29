@@ -1,20 +1,25 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tutorials &mdash; knockpy 1.3.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <title>Tutorials &mdash; knockpy 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=e358f374"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -30,14 +35,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> knockpy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            knockpy
           </a>
               <div class="version">
-                1.3.2
+                1.3.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -85,8 +94,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Tutorials</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tutorials</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/usage.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
@@ -96,281 +105,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS for nbsphinx extension */
-
-/* remove conflicting styling from Sphinx themes */
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt *,
-div.nbinput.container div.input_area pre,
-div.nboutput.container div.output_area pre,
-div.nbinput.container div.input_area .highlight,
-div.nboutput.container div.output_area .highlight {
-    border: none;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-}
-
-div.nbinput.container > div[class*=highlight],
-div.nboutput.container > div[class*=highlight] {
-    margin: 0;
-}
-
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt * {
-    background: none;
-}
-
-div.nboutput.container div.output_area .highlight,
-div.nboutput.container div.output_area pre {
-    background: unset;
-}
-
-div.nboutput.container div.output_area div.highlight {
-    color: unset;  /* override Pygments text color */
-}
-
-/* avoid gaps between output lines */
-div.nboutput.container div[class*=highlight] pre {
-    line-height: normal;
-}
-
-/* input/output containers */
-div.nbinput.container,
-div.nboutput.container {
-    display: -webkit-flex;
-    display: flex;
-    align-items: flex-start;
-    margin: 0;
-    width: 100%;
-}
-@media (max-width: 540px) {
-    div.nbinput.container,
-    div.nboutput.container {
-        flex-direction: column;
-    }
-}
-
-/* input container */
-div.nbinput.container {
-    padding-top: 5px;
-}
-
-/* last container */
-div.nblast.container {
-    padding-bottom: 5px;
-}
-
-/* input prompt */
-div.nbinput.container div.prompt pre {
-    color: #307FC1;
-}
-
-/* output prompt */
-div.nboutput.container div.prompt pre {
-    color: #BF5B3D;
-}
-
-/* all prompts */
-div.nbinput.container div.prompt,
-div.nboutput.container div.prompt {
-    width: 4.5ex;
-    padding-top: 5px;
-    position: relative;
-    user-select: none;
-}
-
-div.nbinput.container div.prompt > div,
-div.nboutput.container div.prompt > div {
-    position: absolute;
-    right: 0;
-    margin-right: 0.3ex;
-}
-
-@media (max-width: 540px) {
-    div.nbinput.container div.prompt,
-    div.nboutput.container div.prompt {
-        width: unset;
-        text-align: left;
-        padding: 0.4em;
-    }
-    div.nboutput.container div.prompt.empty {
-        padding: 0;
-    }
-
-    div.nbinput.container div.prompt > div,
-    div.nboutput.container div.prompt > div {
-        position: unset;
-    }
-}
-
-/* disable scrollbars on prompts */
-div.nbinput.container div.prompt pre,
-div.nboutput.container div.prompt pre {
-    overflow: hidden;
-}
-
-/* input/output area */
-div.nbinput.container div.input_area,
-div.nboutput.container div.output_area {
-    -webkit-flex: 1;
-    flex: 1;
-    overflow: auto;
-}
-@media (max-width: 540px) {
-    div.nbinput.container div.input_area,
-    div.nboutput.container div.output_area {
-        width: 100%;
-    }
-}
-
-/* input area */
-div.nbinput.container div.input_area {
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    /*background: #f5f5f5;*/
-}
-
-/* override MathJax center alignment in output cells */
-div.nboutput.container div[class*=MathJax] {
-    text-align: left !important;
-}
-
-/* override sphinx.ext.imgmath center alignment in output cells */
-div.nboutput.container div.math p {
-    text-align: left;
-}
-
-/* standard error */
-div.nboutput.container div.output_area.stderr {
-    background: #fdd;
-}
-
-/* ANSI colors */
-.ansi-black-fg { color: #3E424D; }
-.ansi-black-bg { background-color: #3E424D; }
-.ansi-black-intense-fg { color: #282C36; }
-.ansi-black-intense-bg { background-color: #282C36; }
-.ansi-red-fg { color: #E75C58; }
-.ansi-red-bg { background-color: #E75C58; }
-.ansi-red-intense-fg { color: #B22B31; }
-.ansi-red-intense-bg { background-color: #B22B31; }
-.ansi-green-fg { color: #00A250; }
-.ansi-green-bg { background-color: #00A250; }
-.ansi-green-intense-fg { color: #007427; }
-.ansi-green-intense-bg { background-color: #007427; }
-.ansi-yellow-fg { color: #DDB62B; }
-.ansi-yellow-bg { background-color: #DDB62B; }
-.ansi-yellow-intense-fg { color: #B27D12; }
-.ansi-yellow-intense-bg { background-color: #B27D12; }
-.ansi-blue-fg { color: #208FFB; }
-.ansi-blue-bg { background-color: #208FFB; }
-.ansi-blue-intense-fg { color: #0065CA; }
-.ansi-blue-intense-bg { background-color: #0065CA; }
-.ansi-magenta-fg { color: #D160C4; }
-.ansi-magenta-bg { background-color: #D160C4; }
-.ansi-magenta-intense-fg { color: #A03196; }
-.ansi-magenta-intense-bg { background-color: #A03196; }
-.ansi-cyan-fg { color: #60C6C8; }
-.ansi-cyan-bg { background-color: #60C6C8; }
-.ansi-cyan-intense-fg { color: #258F8F; }
-.ansi-cyan-intense-bg { background-color: #258F8F; }
-.ansi-white-fg { color: #C5C1B4; }
-.ansi-white-bg { background-color: #C5C1B4; }
-.ansi-white-intense-fg { color: #A1A6B2; }
-.ansi-white-intense-bg { background-color: #A1A6B2; }
-
-.ansi-default-inverse-fg { color: #FFFFFF; }
-.ansi-default-inverse-bg { background-color: #000000; }
-
-.ansi-bold { font-weight: bold; }
-.ansi-underline { text-decoration: underline; }
-
-
-div.nbinput.container div.input_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight].math,
-div.nboutput.container div.output_area.rendered_html,
-div.nboutput.container div.output_area > div.output_javascript,
-div.nboutput.container div.output_area:not(.rendered_html) > img{
-    padding: 5px;
-    margin: 0;
-}
-
-/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
-div.nbinput.container div.input_area > div[class^='highlight'],
-div.nboutput.container div.output_area > div[class^='highlight']{
-    overflow-y: hidden;
-}
-
-/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt .copybtn {
-    display: none;
-}
-
-/* Some additional styling taken form the Jupyter notebook CSS */
-div.rendered_html table {
-  border: none;
-  border-collapse: collapse;
-  border-spacing: 0;
-  color: black;
-  font-size: 12px;
-  table-layout: fixed;
-}
-div.rendered_html thead {
-  border-bottom: 1px solid black;
-  vertical-align: bottom;
-}
-div.rendered_html tr,
-div.rendered_html th,
-div.rendered_html td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
-}
-div.rendered_html th {
-  font-weight: bold;
-}
-div.rendered_html tbody tr:nth-child(odd) {
-  background: #f5f5f5;
-}
-div.rendered_html tbody tr:hover {
-  background: rgba(66, 165, 245, 0.2);
-}
-
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="Tutorials">
-<h1>Tutorials<a class="headerlink" href="#Tutorials" title="Permalink to this headline"></a></h1>
+  <section id="Tutorials">
+<h1>Tutorials<a class="headerlink" href="#Tutorials" title="Link to this heading"></a></h1>
 <p>In this tutorial, we’ll review how to use <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> to apply the knockoff framework for variable selection.</p>
-<div class="section" id="A-quick-review-of-knockoffs">
-<h2>A quick review of knockoffs<a class="headerlink" href="#A-quick-review-of-knockoffs" title="Permalink to this headline"></a></h2>
+<section id="A-quick-review-of-knockoffs">
+<h2>A quick review of knockoffs<a class="headerlink" href="#A-quick-review-of-knockoffs" title="Link to this heading"></a></h2>
 <p>In this section, we briefly review the knockoff framework. Users already familiar with knockoffs may want to scroll past this section.</p>
 <p>Given a set of <span class="math notranslate nohighlight">\(p\)</span> features <span class="math notranslate nohighlight">\(X = (X_1, \dots, X_p)\)</span> and an outcome of interest <span class="math notranslate nohighlight">\(y\)</span>, knockoffs aim to select the small fraction of features on which <span class="math notranslate nohighlight">\(y\)</span> actually depends while controlling the false discovery rate. For example, if <span class="math notranslate nohighlight">\(y \mid X \sim \mathcal{N}(X \beta, \sigma^2)\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> is sparse, knockoffs aim to identify the set <span class="math notranslate nohighlight">\(\{j : \beta_j \ne 0\}\)</span>.</p>
 <p>Applying the knockoffs framework involves executing three steps.</p>
@@ -385,9 +124,9 @@ div.rendered_html tbody tr:hover {
 <li><p><strong>Fixed-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as fixed and control the false discovery rate assuming <span class="math notranslate nohighlight">\(y \mid X\)</span> follows a homoskedastic gaussian linear response. In this case, it is possible to construct valid knockoffs <span class="math notranslate nohighlight">\(\tilde{X}\)</span> with no assumptions on <span class="math notranslate nohighlight">\(X\)</span>. Note also that when using fixed-X knockoffs, the feature statistic must satisfy a slightly more restrictive <em>sufficiency</em> condition (see <a class="reference external" href="https://arxiv.org/abs/1404.5609">Barber and Candes 2015</a>).</p></li>
 <li><p><strong>Model-X</strong> knockoffs treat the design matrix <span class="math notranslate nohighlight">\(X\)</span> as random. Model-X knockoffs control the false discovery rate for any conditional distribution <span class="math notranslate nohighlight">\(y \mid X\)</span>, but they assume that the distribution of <span class="math notranslate nohighlight">\(X\)</span> is known. Thus, to construct model-X knockoffs, one must know (or estimate) the distribution of <span class="math notranslate nohighlight">\(X\)</span>. See <a class="reference external" href="https://arxiv.org/abs/1610.02351">Candes et al. (2018)</a> for details.</p></li>
 </ol>
-</div>
-<div class="section" id="The-KnockoffFilter-class">
-<h2>The <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class<a class="headerlink" href="#The-KnockoffFilter-class" title="Permalink to this headline"></a></h2>
+</section>
+<section id="The-KnockoffFilter-class">
+<h2>The <code class="docutils literal notranslate"><span class="pre">KnockoffFilter</span></code> class<a class="headerlink" href="#The-KnockoffFilter-class" title="Link to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">knockpy.KnockoffFilter</span></code> is the most important class in <code class="docutils literal notranslate"><span class="pre">knockpy</span></code>: it generates knockoffs, fits the feature statistics, and applies the data-dependent threshhold all at once. This is demonstrated below.</p>
 <p>First we create a synthetic dataset where <span class="math notranslate nohighlight">\(X \sim \mathcal{N}(0, \Sigma)\)</span> for some <span class="math notranslate nohighlight">\(\Sigma\)</span> and <span class="math notranslate nohighlight">\(y \mid X\)</span> Gaussian with homoskedastic errors. The details of this dataset are commented below, but they aren’t too important.</p>
 <div class="nbinput nblast docutils container">
@@ -400,9 +139,9 @@ div.rendered_html tbody tr:hover {
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">300</span> <span class="c1"># number of data points</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">300</span>  <span class="c1"># number of data points</span>
 <span class="n">p</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># number of features</span>
-<span class="n">Sigma</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># Stationary AR1 process with correlation 0.5</span>
+<span class="n">Sigma</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># Stationary AR1 process with correlation 0.5</span>
 
 <span class="c1"># Sample X</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">cov</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,))</span>
@@ -419,9 +158,10 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">knockpy</span> <span class="kn">import</span> <span class="n">KnockoffFilter</span>
+
 <span class="n">kfilter</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span>
-    <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
-    <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lasso&#39;</span><span class="p">,</span>
+    <span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+    <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;lasso&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -436,12 +176,14 @@ div.rendered_html tbody tr:hover {
     <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
     <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
     <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span>
-    <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span> <span class="c1"># desired level of false discovery rate control</span>
+    <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># desired level of false discovery rate control</span>
 <span class="p">)</span>
 <span class="c1"># Check the number of discoveries we made</span>
 <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -459,12 +201,14 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 4.0%
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Try again with estimated cov matrix</span>
-<span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lasso&#39;</span><span class="p">)</span>
+<span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;lasso&quot;</span><span class="p">)</span>
 <span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">shrinkage</span><span class="o">=</span><span class="s2">&quot;ledoitwolf&quot;</span><span class="p">)</span>
 <span class="c1"># Check the number of discoveries we made</span>
 <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="n">fdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rejections</span><span class="p">,</span> <span class="n">beta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">rejections</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;The knockoff filter has discovered </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">power</span><span class="si">}</span><span class="s2">% of the non-nulls with a FDP of </span><span class="si">{</span><span class="n">fdp</span><span class="si">}</span><span class="s2">%&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -476,11 +220,11 @@ The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 4.0%
 The knockoff filter has discovered 100.0% of the non-nulls with a FDP of 9.09%
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Constructing-knockoffs">
-<h2>Constructing knockoffs<a class="headerlink" href="#Constructing-knockoffs" title="Permalink to this headline"></a></h2>
-<div class="section" id="Gaussian-knockoffs-galore">
-<h3>Gaussian knockoffs galore<a class="headerlink" href="#Gaussian-knockoffs-galore" title="Permalink to this headline"></a></h3>
+</section>
+<section id="Constructing-knockoffs">
+<h2>Constructing knockoffs<a class="headerlink" href="#Constructing-knockoffs" title="Link to this heading"></a></h2>
+<section id="Gaussian-knockoffs-galore">
+<h3>Gaussian knockoffs galore<a class="headerlink" href="#Gaussian-knockoffs-galore" title="Link to this heading"></a></h3>
 <p>There are many ways to generate Gaussian knockoffs. The default option is to generate MVR knockoffs, which (informally) maximize <span class="math notranslate nohighlight">\(\text{Var}(X_j \mid X_{-j}, \tilde{X})\)</span> for each feature <span class="math notranslate nohighlight">\(X_j\)</span>, where <span class="math notranslate nohighlight">\(X_{-j}\)</span> denotes all of the features except the <span class="math notranslate nohighlight">\(j\)</span>th feature. Intuitively, this <em>minimizes the varianced-based reconstructability (MVR)</em> between the features and their knockoffs, preventing a feature statistic like a lasso or a randomforest from using the other features
 and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference external" href="https://arxiv.org/abs/2011.14625">Spector and Janson (2020)</a> for more details.</p>
 <p>There are a variety of other options to choose from, including:</p>
@@ -496,13 +240,13 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This uses gaussian maxent knockoffs</span>
-<span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;maxent&#39;</span><span class="p">})</span>
+<span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;maxent&quot;</span><span class="p">})</span>
 
 <span class="c1"># This uses fixed-X SDP knockoffs</span>
-<span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;fx&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;sdp&#39;</span><span class="p">})</span>
+<span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;fx&quot;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;sdp&quot;</span><span class="p">})</span>
 
 <span class="c1"># Metropolized sampler for heavy-tailed t markov chain using MVR-guided proposals</span>
-<span class="n">kfilter3</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;artk&#39;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;mvr&#39;</span><span class="p">})</span>
+<span class="n">kfilter3</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;artk&quot;</span><span class="p">,</span> <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;mvr&quot;</span><span class="p">})</span>
 
 <span class="c1"># The &#39;method&#39; options include: equicorrelated, sdp, mvr, maxent, and ci.</span>
 </pre></div>
@@ -517,16 +261,18 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 
 <span class="c1"># Solve MVR, maxent, and SDP optimization problems for p = 500</span>
 <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-<span class="n">S_MVR</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mvr&#39;</span><span class="p">)</span>
+<span class="n">S_MVR</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mvr&quot;</span><span class="p">)</span>
 <span class="n">time1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">mvr_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time1</span> <span class="o">-</span> <span class="n">time0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">S_MAXENT</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;maxent&#39;</span><span class="p">)</span>
+<span class="n">S_MAXENT</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;maxent&quot;</span><span class="p">)</span>
 <span class="n">time2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">maxent_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time2</span> <span class="o">-</span> <span class="n">time1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">S_SDP</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;sdp&#39;</span><span class="p">)</span>
+<span class="n">S_SDP</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">smatrix</span><span class="o">.</span><span class="n">compute_smatrix</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;sdp&quot;</span><span class="p">)</span>
 <span class="n">time3</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 <span class="n">sdp_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">time3</span> <span class="o">-</span> <span class="n">time2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;For p=</span><span class="si">{</span><span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, MVR took </span><span class="si">{</span><span class="n">mvr_time</span><span class="si">}</span><span class="s2"> sec, Maxent took </span><span class="si">{</span><span class="n">maxent_time</span><span class="si">}</span><span class="s2"> sec, SDP took </span><span class="si">{</span><span class="n">sdp_time</span><span class="si">}</span><span class="s2"> sec&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;For p=</span><span class="si">{</span><span class="n">Sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, MVR took </span><span class="si">{</span><span class="n">mvr_time</span><span class="si">}</span><span class="s2"> sec, Maxent took </span><span class="si">{</span><span class="n">maxent_time</span><span class="si">}</span><span class="s2"> sec, SDP took </span><span class="si">{</span><span class="n">sdp_time</span><span class="si">}</span><span class="s2"> sec&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -538,9 +284,9 @@ and knockoffs to <em>reconstruct</em> non-null features. See <a class="reference
 For p=500, MVR took 2.6 sec, Maxent took 6.0 sec, SDP took 7.8 sec
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Metropolized-knockoff-sampling">
-<h3>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Permalink to this headline"></a></h3>
+</section>
+<section id="Metropolized-knockoff-sampling">
+<h3>Metropolized knockoff sampling<a class="headerlink" href="#Metropolized-knockoff-sampling" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> implements a fully general covariance-guided Metropolized knockoff sampler, which is capable of sampling model-X knockoffs for any <span class="math notranslate nohighlight">\(X\)</span> distribution given an (unnormalized) density function of <span class="math notranslate nohighlight">\(X\)</span>. This Metropolized knockoff sampler uses a variety of computational tricks to make it orders of magnitude faster than a naive implementation, although these tricks only work when the distribution of <span class="math notranslate nohighlight">\(X\)</span> has conditional independence properties, as specified by an undirected
 graphical model. See <a class="reference external" href="https://arxiv.org/abs/1903.00434">Bates et al. (2020)</a> for more details.</p>
 <p>The API reference as well as the source for the metro module details more advanced usage of metro; however, for now, we simply demonstrate how to pass in an arbitrary log-likelihood function to the <code class="docutils literal notranslate"><span class="pre">MetropolizedKnockoffSampler</span></code> class and use it to sample knockoffs.</p>
@@ -559,14 +305,17 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 
 <span class="c1"># An arbitrary (unnormalized) log-likelihood function</span>
 <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
 <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">rhos</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">rhos</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]))</span>
+
 
 <span class="c1"># Undirected graph</span>
-<span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">p</span><span class="p">,</span><span class="n">p</span><span class="p">))</span>
+<span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">xcoord</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
-        <span class="n">ycoord</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">xcoord</span> <span class="o">+</span> <span class="n">offset</span><span class="p">),</span> <span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ycoord</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">xcoord</span> <span class="o">+</span> <span class="n">offset</span><span class="p">),</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">U</span><span class="p">[</span><span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
@@ -583,7 +332,7 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kfilter_metro</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="n">metrosampler</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;ridge&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kfilter_metro</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="n">metrosampler</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -597,12 +346,12 @@ graphical model. See <a class="reference external" href="https://arxiv.org/abs/1
 </div>
 </div>
 <p>The metro module can also accept clique potentials from an undirected graphical model in place of the likelihood function to get a <span class="math notranslate nohighlight">\(O(p)\)</span> speedup, as discussed in the API reference.</p>
-</div>
-</div>
-<div class="section" id="Knockoff-feature-statistics">
-<h2>Knockoff feature statistics<a class="headerlink" href="#Knockoff-feature-statistics" title="Permalink to this headline"></a></h2>
-<div class="section" id="Built-in-feature-statistics">
-<h3>Built-in feature statistics<a class="headerlink" href="#Built-in-feature-statistics" title="Permalink to this headline"></a></h3>
+</section>
+</section>
+<section id="Knockoff-feature-statistics">
+<h2>Knockoff feature statistics<a class="headerlink" href="#Knockoff-feature-statistics" title="Link to this heading"></a></h2>
+<section id="Built-in-feature-statistics">
+<h3>Built-in feature statistics<a class="headerlink" href="#Built-in-feature-statistics" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">knockpy</span></code> offers a suite of built-in feature statistics, including cross-validated lasso and ridge coefficients, lasso-path statistics, masked likelihood ratio statistics <a class="reference external" href="https://amspector100.github.io/assets/docs/mlrknock.pdf">(Spector and Fithian, 2022)</a>, the deepPINK statistic <a class="reference external" href="https://arxiv.org/abs/1809.01185">(Lu et. al 2018)</a>, and random forest statistics with swap and swap integral importances <a class="reference external" href="https://arxiv.org/abs/1807.06214">(Giminez et. al 2018)</a>. One can easily call these
 use these feature statistics by modifying the <code class="docutils literal notranslate"><span class="pre">fstat</span></code> argument and <code class="docutils literal notranslate"><span class="pre">fstat_kwarg</span></code> arguments in the KnockoffFilter class, as exemplified below. See the API reference for more flags and options.</p>
 <div class="nbinput nblast docutils container">
@@ -610,19 +359,19 @@ use these feature statistics by modifying the <code class="docutils literal notr
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Random forest statistics with swap importances</span>
-<span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;randomforest&#39;</span><span class="p">)</span>
+<span class="n">kfilter1</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;randomforest&quot;</span><span class="p">)</span>
 <span class="c1"># Random forest with swap integral importances</span>
 <span class="n">kfilter2</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span>
-    <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
-    <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;randomforest&#39;</span><span class="p">,</span>
-    <span class="n">fstat_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;feature_importance&#39;</span><span class="p">:</span><span class="s1">&#39;swapint&#39;</span><span class="p">}</span>
+    <span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+    <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;randomforest&quot;</span><span class="p">,</span>
+    <span class="n">fstat_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;feature_importance&quot;</span><span class="p">:</span> <span class="s2">&quot;swapint&quot;</span><span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Masked-likelihood-ratio-(MLR)-statistics">
-<h3>Masked likelihood ratio (MLR) statistics<a class="headerlink" href="#Masked-likelihood-ratio-(MLR)-statistics" title="Permalink to this headline"></a></h3>
+</section>
+<section id="Masked-likelihood-ratio-(MLR)-statistics">
+<h3>Masked likelihood ratio (MLR) statistics<a class="headerlink" href="#Masked-likelihood-ratio-(MLR)-statistics" title="Link to this heading"></a></h3>
 <p>New in version 1.3.0, <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> now contains cython-based implementations of <em>masked likelihood ratio</em> (MLR) knockoff statistics <a class="reference external" href="https://amspector100.github.io/assets/docs/mlrknock.pdf">(Spector and Fithian, 2022)</a>. In particular, knockpy contains three types of MLR statistics: (a) MLR statistics for Gaussian linear models, (b) MLR statistics for binary regression, (c) MLR statistics for generalized additive models based on regression splines</p>
 <p>To use MLR statistics, simply create a knockoff filter and specify <code class="docutils literal notranslate"><span class="pre">fstat='mlr'</span></code> for options (a) and (b) or <code class="docutils literal notranslate"><span class="pre">fstat='mlr_spline'</span></code> for option (c), as shown below.</p>
 <div class="nbinput nblast docutils container">
@@ -630,9 +379,9 @@ use these feature statistics by modifying the <code class="docutils literal notr
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># default MLR statistics; these work for both continuous and binary responses</span>
-<span class="n">kfilter_mlr</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+<span class="n">kfilter_mlr</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;mlr&quot;</span><span class="p">)</span>
 <span class="c1"># masked likelihood ratio statistics based on regression splines</span>
-<span class="n">kfilter_mlr_splines</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;mlr_spline&#39;</span><span class="p">)</span>
+<span class="n">kfilter_mlr_splines</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;mlr_spline&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -645,17 +394,15 @@ reduces the power of knockoffs.</p>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create highly correlated design matrix</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
 <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">200</span>
-<span class="n">Sigma</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># AR1 process</span>
+<span class="n">Sigma</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">AR1</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># AR1 process</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
 <span class="c1"># Create random sparse coefficients and sample y | X from a linear model</span>
-<span class="n">beta</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">create_sparse_coefficients</span><span class="p">(</span>
-    <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">coeff_size</span><span class="o">=</span><span class="mf">0.8</span>
-<span class="p">)</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">create_sparse_coefficients</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">coeff_size</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 
 <span class="c1"># Fit lasso signed maximum stat with fixed-X knockoffs</span>
-<span class="n">kf_lasso</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lsm&#39;</span><span class="p">,</span> <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;fx&#39;</span><span class="p">)</span>
+<span class="n">kf_lasso</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;lsm&quot;</span><span class="p">,</span> <span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;fx&quot;</span><span class="p">)</span>
 <span class="n">kf_lasso</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">)</span>
 <span class="c1"># Plot</span>
 <span class="n">kf_lasso</span><span class="o">.</span><span class="n">seqstep_plot</span><span class="p">()</span>
@@ -674,7 +421,7 @@ reduces the power of knockoffs.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kfilter_mlr</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;fx&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kfilter_mlr</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;fx&quot;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;mlr&quot;</span><span class="p">)</span>
 <span class="n">kfilter_mlr</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">Sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">)</span>
 <span class="n">kfilter_mlr</span><span class="o">.</span><span class="n">seqstep_plot</span><span class="p">()</span>
 </pre></div>
@@ -687,9 +434,9 @@ reduces the power of knockoffs.</p>
 <img alt="_images/usage_42_0.png" src="_images/usage_42_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Custom-feature-statistics-with-FeatureStatistic">
-<h3>Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code><a class="headerlink" href="#Custom-feature-statistics-with-FeatureStatistic" title="Permalink to this headline"></a></h3>
+</section>
+<section id="Custom-feature-statistics-with-FeatureStatistic">
+<h3>Custom feature statistics with <code class="docutils literal notranslate"><span class="pre">FeatureStatistic</span></code><a class="headerlink" href="#Custom-feature-statistics-with-FeatureStatistic" title="Link to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">knockpy.knockoff_stats.FeatureStatistic</span></code> class also has the ability to turn any model class with a <code class="docutils literal notranslate"><span class="pre">fit</span></code> or <code class="docutils literal notranslate"><span class="pre">train</span></code> method and a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method into a knockoff feature statistic using the swap or swap integral importances introduced in swap and swap integral importances <a class="reference external" href="https://arxiv.org/abs/1807.06214">(Giminez et. al 2018)</a>. This means that after training a predictive model on <span class="math notranslate nohighlight">\([X, \tilde{X}]\)</span> and <span class="math notranslate nohighlight">\(y\)</span>, to obtain a variable importance for variable <span class="math notranslate nohighlight">\(X_j\)</span>, the
 FeatureStatistic class temporarily replaces <span class="math notranslate nohighlight">\(X_j\)</span> with <span class="math notranslate nohighlight">\(\tilde{X}_j\)</span> and records the decrease in predictive performance of the trained model. After repeating this for all features and knockoffs, this yields knockoff variable importances which can be transformed via an antisymmetric function to create valid feature statistics.</p>
 <p>Using this is easier than it sounds! To do so, begin by initializing any arbitrary model with train/fit and predict methods. Second, wrap it with a FeatureStatistic class. Lastly, pass the FeatureStatistic class to the KnockoffFilter, as shown below:</p>
@@ -703,19 +450,18 @@ FeatureStatistic class temporarily replaces <span class="math notranslate nohigh
 
 <span class="c1"># Step 1: Initialize the kernel ridge regression object</span>
 <span class="kn">import</span> <span class="nn">sklearn.kernel_ridge</span>
-<span class="n">kridge</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">kernel_ridge</span><span class="o">.</span><span class="n">KernelRidge</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;polynomial&#39;</span><span class="p">)</span>
+
+<span class="n">kridge</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">kernel_ridge</span><span class="o">.</span><span class="n">KernelRidge</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;polynomial&quot;</span><span class="p">)</span>
 
 <span class="c1"># Step 2: Wrap it with a feature statistic</span>
 <span class="n">kridge_fstat</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">knockoff_stats</span><span class="o">.</span><span class="n">FeatureStatistic</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">kridge</span><span class="p">)</span>
 
 <span class="c1"># Step 3: Pass to a knockoff filter</span>
-<span class="n">kfilter</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="n">kridge_fstat</span><span class="p">)</span>
+<span class="n">kfilter</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span><span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="n">fstat</span><span class="o">=</span><span class="n">kridge_fstat</span><span class="p">)</span>
 
 <span class="c1"># Create synthetic dataset with nonlinear response</span>
 <span class="n">dgprocess</span> <span class="o">=</span> <span class="n">knockpy</span><span class="o">.</span><span class="n">dgp</span><span class="o">.</span><span class="n">DGP</span><span class="p">()</span>
-<span class="n">Xnonlin</span><span class="p">,</span> <span class="n">ynonlin</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">dgprocess</span><span class="o">.</span><span class="n">sample_data</span><span class="p">(</span>
-    <span class="n">n</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">cond_mean</span><span class="o">=</span><span class="s1">&#39;cubic&#39;</span>
-<span class="p">)</span>
+<span class="n">Xnonlin</span><span class="p">,</span> <span class="n">ynonlin</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">dgprocess</span><span class="o">.</span><span class="n">sample_data</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">cond_mean</span><span class="o">=</span><span class="s2">&quot;cubic&quot;</span><span class="p">)</span>
 
 <span class="c1"># Run the knockoff filter</span>
 <span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">Xnonlin</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">ynonlin</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
@@ -731,12 +477,12 @@ FeatureStatistic class temporarily replaces <span class="math notranslate nohigh
 Made 20.0 rejections!
 </pre></div></div>
 </div>
-</div>
-</div>
-<div class="section" id="Other-functionality:-group-knockoffs-and-graphical-model-discovery">
-<h2>Other functionality: group knockoffs and graphical model discovery<a class="headerlink" href="#Other-functionality:-group-knockoffs-and-graphical-model-discovery" title="Permalink to this headline"></a></h2>
-<div class="section" id="Group-knockoffs">
-<h3>Group knockoffs<a class="headerlink" href="#Group-knockoffs" title="Permalink to this headline"></a></h3>
+</section>
+</section>
+<section id="Other-functionality:-group-knockoffs-and-graphical-model-discovery">
+<h2>Other functionality: group knockoffs and graphical model discovery<a class="headerlink" href="#Other-functionality:-group-knockoffs-and-graphical-model-discovery" title="Link to this heading"></a></h2>
+<section id="Group-knockoffs">
+<h3>Group knockoffs<a class="headerlink" href="#Group-knockoffs" title="Link to this heading"></a></h3>
 <p>The KnockoffFilter offers some support for sampling group knockoffs for the gaussian and fixed-X knockoff types (see the API reference for more details). New in version 1.1.0, knockpy supports fast computation of group MVR and ME knockoffs, as demonstrated below.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
@@ -744,12 +490,12 @@ Made 20.0 rejections!
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="c1"># Create arbitrary groupings of variables</span>
-<span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">groups</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+<span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">groups</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
 <span class="c1"># Initialize the filter as normal</span>
 <span class="n">kfilter3</span> <span class="o">=</span> <span class="n">KnockoffFilter</span><span class="p">(</span>
-    <span class="n">ksampler</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
-    <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lasso&#39;</span><span class="p">,</span>
+    <span class="n">ksampler</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+    <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;lasso&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># When running the filter, specify the groups</span>
 <span class="n">rejections</span> <span class="o">=</span> <span class="n">kfilter3</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
@@ -765,9 +511,9 @@ Made 20.0 rejections!
 Made 60.0 rejections!
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Gaussian-graphical-models">
-<h3>Gaussian graphical models<a class="headerlink" href="#Gaussian-graphical-models" title="Permalink to this headline"></a></h3>
+</section>
+<section id="Gaussian-graphical-models">
+<h3>Gaussian graphical models<a class="headerlink" href="#Gaussian-graphical-models" title="Link to this heading"></a></h3>
 <p>New in version 1.2.0, <code class="docutils literal notranslate"><span class="pre">knockpy</span></code> includes methods for detecting edges in Gaussian Graphical models, as exemplified below. See <a class="reference external" href="https://arxiv.org/pdf/1908.11611.pdf">Li and Maathuis (2019)</a> for details.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -779,9 +525,10 @@ Made 60.0 rejections!
 
 <span class="c1"># LCD statistic with FX knockoffs</span>
 <span class="kn">from</span> <span class="nn">knockpy.ggm</span> <span class="kn">import</span> <span class="n">KnockoffGGM</span>
+
 <span class="n">gkf</span> <span class="o">=</span> <span class="n">KnockoffGGM</span><span class="p">(</span>
-    <span class="n">fstat</span><span class="o">=</span><span class="s1">&#39;lcd&#39;</span><span class="p">,</span>
-    <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span><span class="s2">&quot;mvr&quot;</span><span class="p">},</span>
+    <span class="n">fstat</span><span class="o">=</span><span class="s2">&quot;lcd&quot;</span><span class="p">,</span>
+    <span class="n">knockoff_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;mvr&quot;</span><span class="p">},</span>
 <span class="p">)</span>
 <span class="n">edges</span> <span class="o">=</span> <span class="n">gkf</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
@@ -797,13 +544,13 @@ Made 60.0 rejections!
 False
 </pre></div></div>
 </div>
-</div>
-</div>
-<div class="section" id="To-dos">
-<h2>To-dos<a class="headerlink" href="#To-dos" title="Permalink to this headline"></a></h2>
+</section>
+</section>
+<section id="To-dos">
+<h2>To-dos<a class="headerlink" href="#To-dos" title="Link to this heading"></a></h2>
 <p>We plan to release additional functionality for <a class="reference external" href="https://dmhuang.github.io/tutorials/cknockoff/index.html">conditional knockoffs</a>, more flavors of non-Gaussian knockoff samplers, and more, as well as performance improvements—stay tuned!</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
