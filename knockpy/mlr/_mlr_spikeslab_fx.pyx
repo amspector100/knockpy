@@ -56,10 +56,6 @@ cdef int _weighted_choice(
 		if cumsum >= u:
 			return ii
 
-@cython.wraparound(False)
-@cython.boundscheck(False)
-@cython.nonecheck(False)
-@cython.cdivision(True)
 def _sample_mlr_spikeslab_fx(
 	int N,
 	double[::1] xi,

@@ -33,10 +33,6 @@ cdef double random_uniform():
 	cdef double r = rand()
 	return r / RAND_MAX
 
-@cython.wraparound(False)
-@cython.boundscheck(False)
-@cython.nonecheck(False)
-@cython.cdivision(True)
 def _sample_mlr_oracle_gaussian(
 	int N,
 	double[:, ::1] features,
@@ -162,10 +158,6 @@ def _sample_mlr_oracle_gaussian(
 	return output
 
 
-@cython.wraparound(False)
-@cython.boundscheck(False)
-@cython.nonecheck(False)
-@cython.cdivision(True)
 def _sample_mlr_oracle_logistic(
 	int N,
 	double[:, ::1] features,
