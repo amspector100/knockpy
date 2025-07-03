@@ -142,6 +142,15 @@ def compute_residual_variance(X, Xk, y):
     resid = np.power(model.predict(features) - y, 2).sum()
     return resid / max(10, n - np.sum(model.coef_ != 0))
 
+def default_regularization(X, Xk, y):
+    """
+    Returns the default regularization parameter for the lasso based on 
+    the heuristic from https://arxiv.org/pdf/1508.02757.
+    
+    """
+    n, p = X.shape
+    return 8 * np.sqrt(compute_residual_variance(X, Xk, y) * np.log(p) / n)
+
 
 # ------------------------------ Lasso Stuff ---------------------------------------#
 def calc_lars_path(X, Xk, y, groups=None, **kwargs):
@@ -207,7 +216,7 @@ def calc_lars_path(X, Xk, y, groups=None, **kwargs):
     return Z[rev_inds]
 
 
-def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
+def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, mx=True, **kwargs):
     """
     Fits cross-validated lasso on [X, Xk] and y.
 
@@ -247,20 +256,26 @@ def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
         Indices which reverse the effect of ``inds.`` In particular, if
         M is any ``(n, 2p)``-dimensional array, then ```M==M[:, inds][:, rev_inds]```
     """
+    n, p = X.shape
 
     # Parse some kwargs/defaults
     max_iter = kwargs.pop("max_iter", 500)
     tol = kwargs.pop("tol", 1e-3)
     cv = kwargs.pop("cv", 5)
-    if alphas is None:
+
+    # Default regularization parameter depends on MX vs. FX
+    if alphas is None and mx:
         alphas = DEFAULT_REG_VALS
+    else:
+        alphas = [default_regularization(X, Xk, y)]
+
+    # ensure everything is in the right format
     if isinstance(alphas, float) or isinstance(alphas, int):
         alphas = [alphas]
     if y_dist is None:
         y_dist = parse_y_dist(y)
 
     # Bind data
-    p = X.shape[1]
     features = np.concatenate([X, Xk], axis=1)
 
     # Randomize coordinates to make sure everything is symmetric
@@ -308,7 +323,7 @@ def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, **kwargs):
     return gl, inds, rev_inds
 
 
-def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
+def fit_ridge(X, Xk, y, y_dist=None, mx: bool=True, **kwargs):
     """
     Fits cross-validated ridge on [X, Xk] and y.
 
@@ -351,19 +366,35 @@ def fit_ridge(X, Xk, y, y_dist=None, **kwargs):
     inds, rev_inds = utilities.random_permutation_inds(2 * p)
     features = features[:, inds]
 
+    # Default regularization parameter depends on MX vs. FX
+    if mx:
+        alphas = DEFAULT_REG_VALS
+    else:
+        alphas = [default_regularization(X, Xk, y)]
+
     # Fit lasso
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         if y_dist == "gaussian":
-            ridge = linear_model.RidgeCV(
-                alphas=DEFAULT_REG_VALS,
-                store_cv_values=True,
-                scoring="neg_mean_squared_error",
-                **kwargs,
-            ).fit(features, y)
+            try:
+                ridge = linear_model.RidgeCV(
+                    alphas=alphas,
+                    store_cv_values=True,
+                    scoring="neg_mean_squared_error",
+                    **kwargs,
+                )
+            # compatability with sklearn 1.7.0+
+            except TypeError:
+                ridge = linear_model.RidgeCV(
+                    alphas=alphas,
+                    store_cv_results=True,
+                    scoring="neg_mean_squared_error",
+                    **kwargs,
+                )
+            ridge.fit(features, y)
         elif y_dist == "binomial":
             ridge = linear_model.LogisticRegressionCV(
-                Cs=1 / DEFAULT_REG_VALS,
+                Cs=1 / alphas,
                 penalty="l2",
                 solver="liblinear",
                 **kwargs,
@@ -705,10 +736,20 @@ class FeatureStatistic:
 
 
 class RidgeStatistic(FeatureStatistic):
-    """Ridge statistic wrapper class"""
+    """
+    Wraps the FeatureStatistic class but uses Ridge
+    coefficients as variable importances.
+    
+    Parameters
+    ----------
+    mx : bool
+        If True, the ridge is fit using cross validation. For FX knockoffs,
+        this is invalid, and we use the heuristic alpha=8 * np.sqrt(hatsigma2 * np.log(p) / n).
+    """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, mx: bool=True, **kwargs):
+        super().__init__(**kwargs)
+        self.mx = mx
 
     def fit(
         self,
@@ -776,13 +817,17 @@ class RidgeStatistic(FeatureStatistic):
             X=X,
             Xk=Xk,
             y=y,
+            mx=self.mx,
             **kwargs,
         )
 
         # Retrieve Z statistics and save cv scores
         if y_dist == "gaussian":
             Z = self.model.coef_[self.rev_inds]
-            self.score = -1 * self.model.cv_values_.mean(axis=1).min()
+            try:
+                self.score = -1 * self.model.cv_values_.mean(axis=1).min()
+            except AttributeError:
+                self.score = np.nan
             self.score_type = "mse_cv"
         elif y_dist == "binomial":
             Z = self.model.coef_[0, self.rev_inds]
@@ -804,10 +849,21 @@ class RidgeStatistic(FeatureStatistic):
 
 
 class LassoStatistic(FeatureStatistic):
-    """Lasso Statistic wrapper class"""
+    """
+    Wraps the FeatureStatistic class but uses cross-validated Lasso
+    coefficients or Lasso path statistics as variable importances.
 
-    def __init__(self):
-        super().__init__()
+
+    Parameters
+    ----------
+    mx : bool
+        If True, the lasso is fit using cross validation. For FX knockoffs,
+        this is invalid, and we use the heuristic alpha=8 * np.sqrt(hatsigma2 * np.log(p) / n).
+    """
+
+    def __init__(self, mx: bool=True, **kwargs):
+        super().__init__(**kwargs)
+        self.mx = mx
 
     def fit(
         self,
@@ -824,9 +880,6 @@ class LassoStatistic(FeatureStatistic):
         **kwargs,
     ):
         """
-        Wraps the FeatureStatistic class but uses cross-validated Lasso
-        coefficients or Lasso path statistics as variable importances.
-
         Parameters
         ----------
         X : np.ndarray
@@ -868,9 +921,9 @@ class LassoStatistic(FeatureStatistic):
 
         Notes
         -----
-        When not using the group lasso, one can specify choice(s) of
-        regularization parameter using the ``alphas`` keyword argument.
-        Otherwise, use the ``reg_vals`` keyword argument.
+        When mx=True, the lasso is fit using cross validation. For FX knockoffs,
+        this is invalid, and we use the heuristic 
+        alpha=8 * np.sqrt(hatsigma2 * np.log(p) / n).
 
         Returns
         -------
@@ -897,6 +950,7 @@ class LassoStatistic(FeatureStatistic):
                 X=X,
                 Xk=Xk,
                 y=y,
+                mx=self.mx,
                 **kwargs,
             )
 
@@ -967,7 +1021,7 @@ class LassoStatistic(FeatureStatistic):
 
 
 class MargCorrStatistic(FeatureStatistic):
-    """Lasso Statistic wrapper class"""
+    """Marginal correlation statistic"""
 
     def __init__(self):
         super().__init__()

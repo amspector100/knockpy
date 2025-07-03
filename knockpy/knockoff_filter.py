@@ -151,16 +151,16 @@ class KnockoffFilter:
             pass
         # Else parse flags
         elif fstat == "lasso" or fstat == "lcd":
-            fstat = kstats.LassoStatistic()
+            fstat = kstats.LassoStatistic(mx=self._mx)
         elif fstat == "lsm":
             fstat = kstats.LassoStatistic()
             self.fstat_kwargs["zstat"] = "lars_path"
             self.fstat_kwargs["antisym"] = "sm"
         elif fstat == "dlasso":
-            fstat = kstats.LassoStatistic()
+            fstat = kstats.LassoStatistic(mx=self._mx)
             self.fstat_kwargs["debias"] = True
         elif fstat == "ridge":
-            fstat = kstats.RidgeStatistic()
+            fstat = kstats.RidgeStatistic(mx=self._mx)
         elif fstat == "ols":
             fstat = kstats.OLSStatistic()
         elif fstat == "margcorr":
