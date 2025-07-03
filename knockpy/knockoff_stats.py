@@ -266,7 +266,7 @@ def fit_lasso(X, Xk, y, y_dist=None, alphas=None, use_lars=False, mx=True, **kwa
     # Default regularization parameter depends on MX vs. FX
     if alphas is None and mx:
         alphas = DEFAULT_REG_VALS
-    else:
+    elif alphas is None:
         alphas = [default_regularization(X, Xk, y)]
 
     # ensure everything is in the right format
